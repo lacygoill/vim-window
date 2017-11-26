@@ -216,7 +216,9 @@ nno <silent> <c-j>    :<c-u>call window#navigate('j')<cr>
 nno <silent> <c-k>    :<c-u>call window#navigate('k')<cr>
 nno <silent> <c-l>    :<c-u>call window#navigate('l')<cr>
 
-" q  Q  u {{{2
+" q  Q  u                                               {{{2
+
+nno <silent>  <space>q  :<c-u>exe my_lib#quit()<cr>
 " FIXME:{{{
 " When  an  instruction causes  several  errors,  and  it's  executed in  a  try
 " conditional, the  first error can be  catched and converted into  an exception
@@ -224,6 +226,9 @@ nno <silent> <c-l>    :<c-u>call window#navigate('l')<cr>
 " However, for  some reason,  I can't display  its message.  All  I have  is the
 " hit-enter prompt,  which usually accompanies  a multi-line message (as  if Vim
 " was trying to display all the error messages).
+"
+" MWE:
+" Create a modified buffer, and source this mapping:
 "
 "         nno cd :exe Func()<cr>
 "
@@ -235,13 +240,14 @@ nno <silent> <c-l>    :<c-u>call window#navigate('l')<cr>
 "             endtry
 "             return ''
 "         endfu
+"
+" Press `cd`.
 "}}}
 " Temporary_solution:{{{
 " Call the  function silently, to  bypass the hit-enter prompt. And,  inside the
 " function, when  an error  occurs, call  a timer to  display the  message right
 " afterwards.
 "}}}
-nno <silent>  <space>q  :<c-u>exe my_lib#quit()<cr>
 nno <silent>  <space>Q  :<c-u>sil! call window#quit_everything()<cr>
 nno <silent>  <space>u  :<c-u>exe my_lib#restore_closed_window(v:count1)<cr>
 
