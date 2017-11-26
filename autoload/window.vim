@@ -23,3 +23,10 @@ fu! window#get_modifier_to_open_window() abort "{{{1
 
     return mod
 endfu
+
+fu! window#navigate(dir) abort "{{{1
+    try
+        exe 'wincmd '.a:dir
+    catch
+    endtry
+endfu

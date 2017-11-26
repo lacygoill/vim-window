@@ -98,13 +98,6 @@ fu! s:ignore_this_window(nr) abort "{{{2
     "                                                  └ or it's alone in the tab page
 endfu
 
-fu! s:navigate(dir) abort "{{{2
-    try
-        exe 'wincmd '.a:dir
-    catch
-    endtry
-endfu
-
 fu! s:quit_everything() abort "{{{2
     try
         " We must force the wiping the terminal buffers if we want to be able to quit.
@@ -272,10 +265,10 @@ endfu
 " Mappings {{{1
 " C-hjkl               move across windows/tmux panes {{{2
 
-nno <silent> <c-h>    :<c-u>call <sid>navigate('h')<cr>
-nno <silent> <c-j>    :<c-u>call <sid>navigate('j')<cr>
-nno <silent> <c-k>    :<c-u>call <sid>navigate('k')<cr>
-nno <silent> <c-l>    :<c-u>call <sid>navigate('l')<cr>
+nno <silent> <c-h>    :<c-u>call window#navigate('h')<cr>
+nno <silent> <c-j>    :<c-u>call window#navigate('j')<cr>
+nno <silent> <c-k>    :<c-u>call window#navigate('k')<cr>
+nno <silent> <c-l>    :<c-u>call window#navigate('l')<cr>
 
 " q  Q  u {{{2
 " FIXME:{{{
