@@ -23,53 +23,16 @@ augroup preserve_view_and_pos_in_changelist
     " Otherwise it wouldn't be restored correctly.
 augroup END
 
+augroup my_preview_window
+    au!
+    au WinLeave * if &l:pvw | call s:scroll_preview_mappings(1) | endif
+augroup END
 
-" Save current view settings on a per-window, per-buffer basis.
-fu! s:save_view() abort
-    if !exists('w:saved_views')
-        let w:saved_views = {}
-    endif
-    let w:saved_views[bufnr('%')] = winsaveview()
-endfu
-
-" Restore current view settings.
-fu! s:restore_view() abort
-    let n = bufnr('%')
-    if exists('w:saved_views') && has_key(w:saved_views, n)
-        if !&l:diff
-            call winrestview(w:saved_views[n])
-        endif
-        unlet w:saved_views[n]
-    endif
-endfu
-
-
-fu! s:save_change_position() abort
-    let changelist = split(execute('changes'), '\n')
-    let b:my_change_position = index(changelist, matchstr(changelist, '^>'))
-    if b:my_change_position == -1
-        let b:my_change_position = 100
-    endif
-endfu
-
-fu! s:restore_change_position() abort
-    "  ┌─ from `:h :sil`:
-    "  │                  When [!] is added, […], commands and mappings will
-    "  │                  not be aborted when an error is detected.
-    "  │
-    "  │  If our position in the list is somewhere in the middle, `99g;` will
-    "  │  raise an error.
-    "  │  Without `sil!`, `norm!` would stop typing the key sequence.
-    "  │
-    sil! exe 'norm! '.(exists('b:my_change_position') ? '99g;' : '99g,')
-    \                .(b:my_change_position - 1) .'g,'
-endfu
-
-
-" TODO:
-" This function is used by `qf#open()`  and `term_open()` to determine the right
-" modifier. Move it inside a plugin (`vim-resize-window`).
-fu! Get_modifier_to_open_window() abort
+" Functions {{{1
+fu! window#get_modifier_to_open_window() abort "{{{2
+"   └─────┤
+"         └ public so that it can be called in `vim-qf` (`qf#open()` in autoload/),
+"           and in our vimrc
     let origin = winnr()
 
     " are we at the bottom of the tabpage?
@@ -92,33 +55,27 @@ fu! Get_modifier_to_open_window() abort
     return mod
 endfu
 
-" TODO:
-" We  install  the autocmds  from  a  function to  be  able  to toggle  them  in
-" `vim-toggle-settings`. Move them in a dedicated plugin (`vim-resize-window`).
-fu! Window_height() abort
-    augroup window_height
-        au!
-        if has('nvim')
-            " In  Neovim, when  we open  a  terminal and  BufWinEnter is  fired,
-            " `&l:buftype` is not yet set.
-            au TermOpen * if winnr('$') > 1 | resize 10 | endif
-        else
-            " In Vim,  the OptionSet event (to  set 'buftype') is not  fired …
-            " weird
-            au BufWinEnter * if &l:buftype ==# 'terminal' && winnr('$') > 1 | resize 10 | endif
-        endif
-        " The preview window is special, when you open one, 2 WinEnter are fired;{{{
-        " one when you:
-        "
-        "         1. enter preview window (&l:pvw is NOT yet set)
-        "         2. go back to original window (now, &l:pvw IS set in the preview window)
-    "}}}
-        au WinEnter * call s:set_window_height()
-    augroup END
-endfu
-call Window_height()
+fu! s:if_special_get_id_and_height(i,v) abort "{{{2
+"     │                            │ │
+"     │                            │ └─ a window id
+"     │                            │
+"     │                            └─ an index in a list of window ids
+"     │
+"     └─ if it's a special window, get me its ID and the desired height
 
-fu! s:ignore_this_window(nr) abort
+    return getwinvar(a:v, '&pvw', 0)
+    \?         [ a:v, &pvh ]
+    \:     getbufvar(winbufnr(a:v), '&bt', '') ==# 'terminal'
+    \?         [ a:v, 10 ]
+    \:     getbufvar(winbufnr(a:v), '&bt', '') ==# 'quickfix'
+    \?         [ a:v, min([ 10, len(getbufline(winbufnr(a:v),
+    \                                          1, 10))
+    \                     ])
+    \          ]
+    \:         []
+endfu
+
+fu! s:ignore_this_window(nr) abort "{{{2
     " You want a condition to test whether a window is maximized vertically?{{{
     " Try this:
     "
@@ -147,7 +104,91 @@ fu! s:ignore_this_window(nr) abort
     "                                                  └ or it's alone in the tab page
 endfu
 
-fu! s:set_window_height() abort
+fu! window#install_autocmd_to_set_height() abort "{{{2
+"   └─────┤
+"         └ public so that it can be called in `vim-toggle-settings` (for a mapping)
+    augroup window_height
+        au!
+        if has('nvim')
+            " In  Neovim, when  we open  a  terminal and  BufWinEnter is  fired,
+            " `&l:buftype` is not yet set.
+            au TermOpen * if winnr('$') > 1 | resize 10 | endif
+        else
+            " In Vim,  the OptionSet event (to  set 'buftype') is not  fired …
+            " weird
+            au BufWinEnter * if &l:buftype ==# 'terminal' && winnr('$') > 1 | resize 10 | endif
+        endif
+        " The preview window is special, when you open one, 2 WinEnter are fired;{{{
+        " one when you:
+        "
+        "         1. enter preview window (&l:pvw is NOT yet set)
+        "         2. go back to original window (now, &l:pvw IS set in the preview window)
+    "}}}
+        au WinEnter * call s:set_window_height()
+    augroup END
+endfu
+call window#install_autocmd_to_set_height()
+
+fu! s:save_change_position() abort "{{{2
+    let changelist = split(execute('changes'), '\n')
+    let b:my_change_position = index(changelist, matchstr(changelist, '^>'))
+    if b:my_change_position == -1
+        let b:my_change_position = 100
+    endif
+endfu
+
+fu! s:save_view() abort "{{{2
+" Save current view settings on a per-window, per-buffer basis.
+    if !exists('w:saved_views')
+        let w:saved_views = {}
+    endif
+    let w:saved_views[bufnr('%')] = winsaveview()
+endfu
+
+fu! s:scroll_preview(fwd) abort "{{{2
+    if empty(filter(map(range(1, winnr('$')), 'getwinvar(v:val, "&l:pvw")'), 'v:val == 1'))
+        sil! unmap <buffer> J
+        sil! unmap <buffer> K
+        sil! exe 'norm! '.(a:fwd ? 'J' : 'K')
+    else
+        if a:fwd
+            "                ┌────── go to preview window
+            "                │     ┌ scroll down
+            "          ┌─────┤┌────┤
+            exe "norm! \<c-w>P\<c-e>Lzv``\<c-w>p"
+            "                       │└──┤└─────┤
+            "                       │   │      └ get back to previous window
+            "                       │   └ unfold and come back
+            "                       └ go to last line of window
+            "
+            "                         in reality, we should do:
+            "
+            "                                 'L'.&so.'j'
+            "
+            "                         … but for some reason, when we reach the bottom of the window
+            "                         the `j` motion makes it close automatically
+        else
+            exe "norm! \<c-w>P\<c-y>Hzv``\<c-w>p"
+        endif
+    endif
+    return ''
+endfu
+
+fu! s:scroll_preview_mappings(later) abort "{{{2
+    if a:later
+        augroup my_scroll_preview_window
+            au!
+            au WinEnter * call s:scroll_preview_mappings(0)
+        augroup END
+    else
+        nno <buffer> <nowait> <silent> J :<c-u>exe <sid>scroll_preview(1)<cr>
+        nno <buffer> <nowait> <silent> K :<c-u>exe <sid>scroll_preview(0)<cr>
+        au!  my_scroll_preview_window
+        aug! my_scroll_preview_window
+    endif
+endfu
+
+fu! s:set_window_height() abort "{{{2
     " Goal:{{{
     "
     " Maximize  the  height of  all  windows,  except  the  ones which  are  not
@@ -203,70 +244,28 @@ fu! s:set_window_height() abort
     endfor
 endfu
 
-"     ┌─ if it's a special window, get me its ID and the desired height
-"     │
-fu! s:if_special_get_id_and_height(i,v) abort
-    "                              │ │
-    "                              │ └─ a window id
-    "                              └─ an index in a list of window ids
-    return getwinvar(a:v, '&pvw', 0)
-    \?         [ a:v, &pvh ]
-    \:     getbufvar(winbufnr(a:v), '&bt', '') ==# 'terminal'
-    \?         [ a:v, 10 ]
-    \:     getbufvar(winbufnr(a:v), '&bt', '') ==# 'quickfix'
-    \?         [ a:v, min([ 10, len(getbufline(winbufnr(a:v),
-    \                                          1, 10))
-    \                     ])
-    \          ]
-    \:         []
+fu! s:restore_change_position() abort "{{{2
+    "  ┌─ from `:h :sil`:
+    "  │                  When [!] is added, […], commands and mappings will
+    "  │                  not be aborted when an error is detected.
+    "  │
+    "  │  If our position in the list is somewhere in the middle, `99g;` will
+    "  │  raise an error.
+    "  │  Without `sil!`, `norm!` would stop typing the key sequence.
+    "  │
+    sil! exe 'norm! '.(exists('b:my_change_position') ? '99g;' : '99g,')
+    \                .(b:my_change_position - 1) .'g,'
 endfu
 
-augroup my_preview_window
-    au!
-    au WinLeave * if &l:pvw | call s:scroll_preview_mappings(1) | endif
-augroup END
-
-fu! s:scroll_preview_mappings(later) abort
-    if a:later
-        augroup my_scroll_preview_window
-            au!
-            au WinEnter * call s:scroll_preview_mappings(0)
-        augroup END
-    else
-        nno <buffer> <nowait> <silent> J :<c-u>exe <sid>scroll_preview(1)<cr>
-        nno <buffer> <nowait> <silent> K :<c-u>exe <sid>scroll_preview(0)<cr>
-        au!  my_scroll_preview_window
-        aug! my_scroll_preview_window
-    endif
-endfu
-
-fu! s:scroll_preview(fwd) abort
-    if empty(filter(map(range(1, winnr('$')), 'getwinvar(v:val, "&l:pvw")'), 'v:val == 1'))
-        sil! unmap <buffer> J
-        sil! unmap <buffer> K
-        sil! exe 'norm! '.(a:fwd ? 'J' : 'K')
-    else
-        if a:fwd
-            "                ┌────── go to preview window
-            "                │     ┌ scroll down
-            "          ┌─────┤┌────┤
-            exe "norm! \<c-w>P\<c-e>Lzv``\<c-w>p"
-            "                       │└──┤└─────┤
-            "                       │   │      └ get back to previous window
-            "                       │   └ unfold and come back
-            "                       └ go to last line of window
-            "
-            "                         in reality, we should do:
-            "
-            "                                 'L'.&so.'j'
-            "
-            "                         … but for some reason, when we reach the bottom of the window
-            "                         the `j` motion makes it close automatically
-        else
-            exe "norm! \<c-w>P\<c-y>Hzv``\<c-w>p"
+fu! s:restore_view() abort "{{{2
+" Restore current view settings.
+    let n = bufnr('%')
+    if exists('w:saved_views') && has_key(w:saved_views, n)
+        if !&l:diff
+            call winrestview(w:saved_views[n])
         endif
+        unlet w:saved_views[n]
     endif
-    return ''
 endfu
 
 " Options {{{1
@@ -277,4 +276,3 @@ set splitbelow
 
 " and a new vertical one should be displayed on the right
 set splitright
-
