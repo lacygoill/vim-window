@@ -98,31 +98,6 @@ fu! s:ignore_this_window(nr) abort "{{{2
     "                                                  └ or it's alone in the tab page
 endfu
 
-fu! s:quit_everything() abort "{{{2
-    try
-        " We must force the wiping the terminal buffers if we want to be able to quit.
-        if !has('nvim')
-            let term_buffers = term_list()
-            if !empty(term_buffers)
-                exe 'bw! '.join(term_buffers)
-            endif
-        endif
-        qall
-    catch
-        let exception = string(v:exception)
-        call timer_start(0, {-> execute('echohl ErrorMsg | echo '.exception.' | echohl NONE', '')})
-        "                                                         │
-        "                         can't use `string(v:exception)` ┘
-        "
-        " …  because when  the timer  will be  executed `v:exception`  will be
-        " empty; we  need to save `v:exception`  in a variable: any  scope would
-        " probably works, but a function-local one is the most local.
-        " Here, it works because a lambda can access its outer scope.
-        " This seems to indicate that the callback of a timer is executed in the
-        " context of the function where it was started.
-    endtry
-endfu
-
 fu! s:save_change_position() abort "{{{2
     let changelist = split(execute('changes'), '\n')
     let b:my_change_position = index(changelist, matchstr(changelist, '^>'))
@@ -139,35 +114,6 @@ fu! s:save_view() abort "{{{2
     let w:saved_views[bufnr('%')] = winsaveview()
 endfu
 
-fu! s:scroll_preview(fwd) abort "{{{2
-    if empty(filter(map(range(1, winnr('$')), 'getwinvar(v:val, "&l:pvw")'), 'v:val == 1'))
-        sil! unmap <buffer> J
-        sil! unmap <buffer> K
-        sil! exe 'norm! '.(a:fwd ? 'J' : 'K')
-    else
-        if a:fwd
-            "                ┌────── go to preview window
-            "                │     ┌ scroll down
-            "          ┌─────┤┌────┤
-            exe "norm! \<c-w>P\<c-e>Lzv``\<c-w>p"
-            "                       │└──┤└─────┤
-            "                       │   │      └ get back to previous window
-            "                       │   └ unfold and come back
-            "                       └ go to last line of window
-            "
-            "                         in reality, we should do:
-            "
-            "                                 'L'.&so.'j'
-            "
-            "                         … but for some reason, when we reach the bottom of the window
-            "                         the `j` motion makes it close automatically
-        else
-            exe "norm! \<c-w>P\<c-y>Hzv``\<c-w>p"
-        endif
-    endif
-    return ''
-endfu
-
 fu! s:scroll_preview_mappings(later) abort "{{{2
     if a:later
         augroup my_scroll_preview_window
@@ -175,8 +121,8 @@ fu! s:scroll_preview_mappings(later) abort "{{{2
             au WinEnter * call s:scroll_preview_mappings(0)
         augroup END
     else
-        nno <buffer> <nowait> <silent> J :<c-u>exe <sid>scroll_preview(1)<cr>
-        nno <buffer> <nowait> <silent> K :<c-u>exe <sid>scroll_preview(0)<cr>
+        nno <buffer> <nowait> <silent> J :<c-u>exe window#scroll_preview(1)<cr>
+        nno <buffer> <nowait> <silent> K :<c-u>exe window#scroll_preview(0)<cr>
         au!  my_scroll_preview_window
         aug! my_scroll_preview_window
     endif
@@ -296,7 +242,7 @@ nno <silent> <c-l>    :<c-u>call window#navigate('l')<cr>
 " afterwards.
 "}}}
 nno <silent>  <space>q  :<c-u>exe my_lib#quit()<cr>
-nno <silent>  <space>Q  :<c-u>sil! call <sid>quit_everything()<cr>
+nno <silent>  <space>Q  :<c-u>sil! call window#quit_everything()<cr>
 nno <silent>  <space>u  :<c-u>exe my_lib#restore_closed_window(v:count1)<cr>
 
 " Z                    simpler window prefix {{{2
@@ -320,33 +266,9 @@ nmap Z <c-w>
 
 " Z(  Z{  Z}           open/close window preview {{{2
 
-nno <silent> Z(  :<c-u>exe <sid>open_preview(1)<cr>
-nno <silent> Z{  :<c-u>exe <sid>open_preview(0)<cr>
+nno <silent> Z(  :<c-u>exe window#open_preview(1)<cr>
+nno <silent> Z{  :<c-u>exe window#open_preview(0)<cr>
 nno          Z}  <c-w>z
-
-fu! s:open_preview(auto_close) abort
-    try
-        exe "norm! \<c-w>}\<c-w>PzMzvzz\<c-w>p"
-        if a:auto_close
-            augroup close_preview_after_motion
-                au!
-                "              ┌─ don't use `<buffer>` because I suspect `CursorMoved`
-                "              │  could happen in another buffer; example, after `gf`
-                "              │  or sth similar
-                "              │  we want the preview window to be closed no matter
-                "              │  where the cursor moves
-                "              │
-                au CursorMoved * pclose
-                              \| wincmd _
-                              \| exe 'au! close_preview_after_motion'
-                              \| aug! close_preview_after_motion
-            augroup END
-        endif
-    catch
-        return 'echoerr '.string(v:exception)
-    endtry
-    return ''
-endfu
 
 " Zh  Zl  Zj  Zk       split in any direction {{{2
 
@@ -380,17 +302,10 @@ nmap           <c-w>v  Zv
 " Con:
 " WinLeave/WinEnter is not fired after moving a window.
 
-nno <expr> <silent>  ZH      <sid>disable_wrap_when_moving_to_vert_split('H')
-nno <expr> <silent>  ZL      <sid>disable_wrap_when_moving_to_vert_split('L')
+nno <expr> <silent>  ZH      window#disable_wrap_when_moving_to_vert_split('H')
+nno <expr> <silent>  ZL      window#disable_wrap_when_moving_to_vert_split('L')
 nmap                 <c-w>L  ZL
 nmap                 <c-w>H  ZH
-
-fu! s:disable_wrap_when_moving_to_vert_split(dir) abort
-    call setwinvar(winnr('#'), '&wrap', 0)
-    exe 'wincmd '.a:dir
-    setl nowrap
-    return ''
-endfu
 
 " ZQ {{{2
 
