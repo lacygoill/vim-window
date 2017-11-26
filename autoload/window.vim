@@ -93,25 +93,18 @@ fu! window#scroll_preview(fwd) abort "{{{1
         sil! unmap <buffer> K
         sil! exe 'norm! '.(a:fwd ? 'J' : 'K')
     else
-        if a:fwd
-            "                ┌────── go to preview window
-            "                │     ┌ scroll down
-            "          ┌─────┤┌────┤
-            exe "norm! \<c-w>P\<c-e>Lzv``\<c-w>p"
-            "                       │└──┤└─────┤
-            "                       │   │      └ get back to previous window
-            "                       │   └ unfold and come back
-            "                       └ go to last line of window
-            "
-            "                         in reality, we should do:
-            "
-            "                                 'L'.&so.'j'
-            "
-            "                         … but for some reason, when we reach the bottom of the window
-            "                         the `j` motion makes it close automatically
-        else
-            exe "norm! \<c-w>P\<c-y>Hzv``\<c-w>p"
-        endif
+        " go to preview window
+        exe "norm! \<c-w>P"
+        "                           ┌ scroll down
+        "                      ┌────┤
+        exe 'norm! '.(a:fwd ? "\<c-e>L" : "\<c-y>H")
+        "                        │
+        "                        └ go to last line of window
+
+        " unfold and get back
+        exe 'norm! zv``'
+        " get back to previous window
+        exe "norm! \<c-w>p"
     endif
     return ''
 endfu
