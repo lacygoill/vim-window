@@ -98,8 +98,8 @@ fu! window#scroll_preview(fwd) abort "{{{1
         "                           ┌ scroll down
         "                      ┌────┤
         exe 'norm! '.(a:fwd ? "\<c-e>L" : "\<c-y>H")
-        "                        │
-        "                        └ go to last line of window
+        "                            │
+        "                            └ go to last line of window
 
         " unfold and get back
         exe 'norm! zv``'
