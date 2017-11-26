@@ -1,0 +1,280 @@
+if exists('g:loaded_window')
+    finish
+endif
+let g:loaded_window = 1
+
+" Autocmds {{{1
+
+" When we switch buffers in the same window, sometimes the view is altered.
+" We want it to be preserved.
+"
+" Inspiration:
+"         https://stackoverflow.com/a/31581929/8243465
+"
+" Similar_issue:
+" The position in the changelist is local to the window. It should be local
+" to the buffer. We want it to be also preserved when switching buffers.
+
+augroup preserve_view_and_pos_in_changelist
+    au!
+    au BufWinLeave * call s:save_view() | call s:save_change_position()
+    au BufWinEnter * call s:restore_change_position() | call s:restore_view()
+    " You must restore the view AFTER the position in the change list.
+    " Otherwise it wouldn't be restored correctly.
+augroup END
+
+
+" Save current view settings on a per-window, per-buffer basis.
+fu! s:save_view() abort
+    if !exists('w:saved_views')
+        let w:saved_views = {}
+    endif
+    let w:saved_views[bufnr('%')] = winsaveview()
+endfu
+
+" Restore current view settings.
+fu! s:restore_view() abort
+    let n = bufnr('%')
+    if exists('w:saved_views') && has_key(w:saved_views, n)
+        if !&l:diff
+            call winrestview(w:saved_views[n])
+        endif
+        unlet w:saved_views[n]
+    endif
+endfu
+
+
+fu! s:save_change_position() abort
+    let changelist = split(execute('changes'), '\n')
+    let b:my_change_position = index(changelist, matchstr(changelist, '^>'))
+    if b:my_change_position == -1
+        let b:my_change_position = 100
+    endif
+endfu
+
+fu! s:restore_change_position() abort
+    "  ┌─ from `:h :sil`:
+    "  │                  When [!] is added, […], commands and mappings will
+    "  │                  not be aborted when an error is detected.
+    "  │
+    "  │  If our position in the list is somewhere in the middle, `99g;` will
+    "  │  raise an error.
+    "  │  Without `sil!`, `norm!` would stop typing the key sequence.
+    "  │
+    sil! exe 'norm! '.(exists('b:my_change_position') ? '99g;' : '99g,')
+    \                .(b:my_change_position - 1) .'g,'
+endfu
+
+
+" TODO:
+" This function is used by `qf#open()`  and `term_open()` to determine the right
+" modifier. Move it inside a plugin (`vim-resize-window`).
+fu! Get_modifier_to_open_window() abort
+    let origin = winnr()
+
+    " are we at the bottom of the tabpage?
+    wincmd b
+    if winnr() == origin
+        let mod = 'botright'
+    else
+        wincmd p
+        " or maybe at the top?
+        wincmd t
+        if winnr() == origin
+            let mod = 'topleft'
+        else
+            " ok we're in a middle window
+            wincmd p
+            let mod = 'vert belowright'
+        endif
+    endif
+
+    return mod
+endfu
+
+" TODO:
+" We  install  the autocmds  from  a  function to  be  able  to toggle  them  in
+" `vim-toggle-settings`. Move them in a dedicated plugin (`vim-resize-window`).
+fu! Window_height() abort
+    augroup window_height
+        au!
+        if has('nvim')
+            " In  Neovim, when  we open  a  terminal and  BufWinEnter is  fired,
+            " `&l:buftype` is not yet set.
+            au TermOpen * if winnr('$') > 1 | resize 10 | endif
+        else
+            " In Vim,  the OptionSet event (to  set 'buftype') is not  fired …
+            " weird
+            au BufWinEnter * if &l:buftype ==# 'terminal' && winnr('$') > 1 | resize 10 | endif
+        endif
+        " The preview window is special, when you open one, 2 WinEnter are fired;{{{
+        " one when you:
+        "
+        "         1. enter preview window (&l:pvw is NOT yet set)
+        "         2. go back to original window (now, &l:pvw IS set in the preview window)
+    "}}}
+        au WinEnter * call s:set_window_height()
+    augroup END
+endfu
+call Window_height()
+
+fu! s:ignore_this_window(nr) abort
+    " You want a condition to test whether a window is maximized vertically?{{{
+    " Try this:
+    "
+    "         ┌ no viewport above/below:
+    "         │
+    "         │         every time you open a viewport above/below
+    "         │         the difference increases by 2,
+    "         │         for the new stl + the visible line in the other viewport
+    "         │
+    "         ├───────────────────────────────┐
+    "         &lines - winheight(a:nr) <= &ch+2
+    "                                  └┤ └─┤ │
+    "                                   │   │ └ status line + tabline
+    "                                   │   │
+    "                                   │   └ command-line
+    "                                   │
+    "                                   └ there could be a tabline,
+    "                                     if there are several tabpages,
+    "                                     or not (if there's a single tabpage)
+"}}}
+    "
+    "                               ┌ the window is NOT maximized horizontally
+    "      ┌────────────────────────┤
+    return winwidth(a:nr) != &columns || winnr('$') <= 1
+    "                                    └─────────────┤
+    "                                                  └ or it's alone in the tab page
+endfu
+
+fu! s:set_window_height() abort
+    " Goal:{{{
+    "
+    " Maximize  the  height of  all  windows,  except  the  ones which  are  not
+    " horizontally maximized.
+    "
+    " Preview/qf/terminal windows  which are horizontally maximized  should have
+    " their height fixed to:
+    "
+    "         • &pvh for the preview window
+    "         • 10 for a qf/terminal window
+"}}}
+    " Issue:{{{
+    " Create a tab page with a qf window + a terminal.
+    " The terminal is  big when we switch  to the qf window, then  small when we
+    " switch back to the terminal.
+    "
+    " More generally, I think this undesired change of height occur whenever we move
+    " in a tab page where there are several windows, but ALL are special.
+    " This is  a unique  and probably  rare case. So, I  don't think  it's worth
+    " trying and fix it.
+"}}}
+
+    " if we enter a special window, set its height and stop
+    if &l:pvw || &l:buftype =~# '^\%(quickfix\|terminal\)$'
+        " but make sure it's horizontally maximized,
+        " and not alone in the tab page
+        if winwidth(0) == &columns && winnr('$') > 1
+            exe 'resize '.(&l:pvw
+            \?                 &l:pvh
+            \:             &l:bt ==# 'quickfix'
+            \?                 min([ 10, line('$') ])
+            \:             10)
+        endif
+        return
+    else
+        " if we enter a regular window, maximize it, but don't stop yet
+        wincmd _
+    endif
+
+    " If we've maximized a  regular window, we may have altered  the height of a
+    " special window somewhere else in the current tab page.
+    " In this case, we need to reset their height.
+    let special_windows = filter(map(
+    \                                gettabinfo(tabpagenr())[0].windows,
+    \                                function('s:if_special_get_id_and_height')
+    \                               ),
+    \                            { i,v ->     v != []
+    \                                     && !s:ignore_this_window(v[0])
+    \                            })
+
+    for [ id, height ] in special_windows
+        exe win_id2win(id).'wincmd w | resize '.height.' | wincmd p'
+    endfor
+endfu
+
+"     ┌─ if it's a special window, get me its ID and the desired height
+"     │
+fu! s:if_special_get_id_and_height(i,v) abort
+    "                              │ │
+    "                              │ └─ a window id
+    "                              └─ an index in a list of window ids
+    return getwinvar(a:v, '&pvw', 0)
+    \?         [ a:v, &pvh ]
+    \:     getbufvar(winbufnr(a:v), '&bt', '') ==# 'terminal'
+    \?         [ a:v, 10 ]
+    \:     getbufvar(winbufnr(a:v), '&bt', '') ==# 'quickfix'
+    \?         [ a:v, min([ 10, len(getbufline(winbufnr(a:v),
+    \                                          1, 10))
+    \                     ])
+    \          ]
+    \:         []
+endfu
+
+augroup my_preview_window
+    au!
+    au WinLeave * if &l:pvw | call s:scroll_preview_mappings(1) | endif
+augroup END
+
+fu! s:scroll_preview_mappings(later) abort
+    if a:later
+        augroup my_scroll_preview_window
+            au!
+            au WinEnter * call s:scroll_preview_mappings(0)
+        augroup END
+    else
+        nno <buffer> <nowait> <silent> J :<c-u>exe <sid>scroll_preview(1)<cr>
+        nno <buffer> <nowait> <silent> K :<c-u>exe <sid>scroll_preview(0)<cr>
+        au!  my_scroll_preview_window
+        aug! my_scroll_preview_window
+    endif
+endfu
+
+fu! s:scroll_preview(fwd) abort
+    if empty(filter(map(range(1, winnr('$')), 'getwinvar(v:val, "&l:pvw")'), 'v:val == 1'))
+        sil! unmap <buffer> J
+        sil! unmap <buffer> K
+        sil! exe 'norm! '.(a:fwd ? 'J' : 'K')
+    else
+        if a:fwd
+            "                ┌────── go to preview window
+            "                │     ┌ scroll down
+            "          ┌─────┤┌────┤
+            exe "norm! \<c-w>P\<c-e>Lzv``\<c-w>p"
+            "                       │└──┤└─────┤
+            "                       │   │      └ get back to previous window
+            "                       │   └ unfold and come back
+            "                       └ go to last line of window
+            "
+            "                         in reality, we should do:
+            "
+            "                                 'L'.&so.'j'
+            "
+            "                         … but for some reason, when we reach the bottom of the window
+            "                         the `j` motion makes it close automatically
+        else
+            exe "norm! \<c-w>P\<c-y>Hzv``\<c-w>p"
+        endif
+    endif
+    return ''
+endfu
+
+" Options {{{1
+
+" when we create a new horizontal viewport, it should be displayed at the
+" bottom of the screen
+set splitbelow
+
+" and a new vertical one should be displayed on the right
+set splitright
+
