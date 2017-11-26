@@ -3,6 +3,114 @@ if exists('g:loaded_window')
 endif
 let g:loaded_window = 1
 
+" Mappings {{{1
+" C-hjkl               move across windows/tmux panes {{{2
+
+nno <silent> <c-h>    :<c-u>call <sid>navigate('h')<cr>
+nno <silent> <c-j>    :<c-u>call <sid>navigate('j')<cr>
+nno <silent> <c-k>    :<c-u>call <sid>navigate('k')<cr>
+nno <silent> <c-l>    :<c-u>call <sid>navigate('l')<cr>
+
+" Z                    simpler window prefix {{{2
+
+" we need the recursiveness, so that, when we type, we can replace <c-w>
+" with Z in custom mappings (own+third party)
+"
+" Watch:
+"
+"        nno  <c-w><cr>  :echo 'hello'<cr>
+"        nno  Z          <c-w>
+"                Z cr    ✘
+"
+"        nno  <c-w><cr>  :echo 'hello'<cr>
+"        nmap Z          <c-w>
+"                Z cr    ✔
+"
+" Indeed,  once `Z`  has been  expanded into  `C-w`, we  may need  to expand  it
+" FURTHER for custom mappings using `C-w` in their lhs.
+nmap Z <c-w>
+
+" Z(  Z{  Z}           open/close window preview {{{2
+
+nno <silent> Z(  :<c-u>exe <sid>open_preview(1)<cr>
+nno <silent> Z{  :<c-u>exe <sid>open_preview(0)<cr>
+nno          Z}  <c-w>z
+
+fu! s:open_preview(auto_close) abort
+    try
+        exe "norm! \<c-w>}\<c-w>PzMzvzz\<c-w>p"
+        if a:auto_close
+            augroup close_preview_after_motion
+                au!
+                "              ┌─ don't use `<buffer>` because I suspect `CursorMoved`
+                "              │  could happen in another buffer; example, after `gf`
+                "              │  or sth similar
+                "              │  we want the preview window to be closed no matter
+                "              │  where the cursor moves
+                "              │
+                au CursorMoved * pclose
+                              \| wincmd _
+                              \| exe 'au! close_preview_after_motion'
+                              \| aug! close_preview_after_motion
+            augroup END
+        endif
+    catch
+        return 'echoerr '.string(v:exception)
+    endtry
+    return ''
+endfu
+
+" Zh  Zl  Zj  Zk       split in any direction {{{2
+
+nno <silent>   Zh     :<c-u>setl nowrap <bar> leftabove vsplit  <bar> setl nowrap<cr>
+nno <silent>   Zl     :<c-u>setl nowrap <bar> rightbelow vsplit <bar> setl nowrap<cr>
+nno <silent>   Zj     :<c-u>belowright split<cr>
+nno <silent>   Zk     :<c-u>aboveleft split<cr>
+
+nmap           <c-w>h  Zh
+nmap           <c-w>l  Zl
+nmap           <c-w>j  Zj
+nmap           <c-w>k  Zk
+
+" ZH  ZL  Zv           disable 'wrap' in vert splits when splitting or moving a window {{{2
+
+" disable wrapping of long lines when we create a vertical split
+nno  <silent>  Zv      :<c-u>setl nowrap <bar> vsplit <bar> setl nowrap<cr>
+nmap           <c-w>v  Zv
+
+" Alternative:
+"
+"     augroup nowrap_in_vert_splits
+"         au!
+"         au WinLeave * if winwidth(0) != &columns | setl nowrap | endif
+"         au WinEnter * if winwidth(0) != &columns | setl nowrap | endif
+"     augroup END
+"
+" Pro:
+" Will probably cover more cases.
+"
+" Con:
+" WinLeave/WinEnter is not fired after moving a window.
+
+nno <expr> <silent>  ZH      <sid>disable_wrap_when_moving_to_vert_split('H')
+nno <expr> <silent>  ZL      <sid>disable_wrap_when_moving_to_vert_split('L')
+nmap                 <c-w>L  ZL
+nmap                 <c-w>H  ZH
+
+fu! s:disable_wrap_when_moving_to_vert_split(dir) abort
+    call setwinvar(winnr('#'), '&wrap', 0)
+    exe 'wincmd '.a:dir
+    setl nowrap
+    return ''
+endfu
+
+" ZQ {{{2
+
+" Our <space>q mapping is special, it creates a session file so that we can undo
+" the closing of the window. `ZQ` should behave in the same way.
+
+nmap ZQ <space>q
+
 " Autocmds {{{1
 
 " When we switch buffers in the same window, sometimes the view is altered.
@@ -27,6 +135,31 @@ augroup my_preview_window
     au!
     au WinLeave * if &l:pvw | call s:scroll_preview_mappings(1) | endif
 augroup END
+
+fu! window#install_autocmd_to_set_height() abort
+"   └─────┤
+"         └ public so that it can be called in `vim-toggle-settings` (for a mapping)
+    augroup window_height
+        au!
+        if has('nvim')
+            " In  Neovim, when  we open  a  terminal and  BufWinEnter is  fired,
+            " `&l:buftype` is not yet set.
+            au TermOpen * if winnr('$') > 1 | resize 10 | endif
+        else
+            " In Vim,  the OptionSet event (to  set 'buftype') is not  fired …
+            " weird
+            au BufWinEnter * if &l:buftype ==# 'terminal' && winnr('$') > 1 | resize 10 | endif
+        endif
+        " The preview window is special, when you open one, 2 WinEnter are fired;{{{
+        " one when you:
+        "
+        "         1. enter preview window (&l:pvw is NOT yet set)
+        "         2. go back to original window (now, &l:pvw IS set in the preview window)
+    "}}}
+        au WinEnter * call s:set_window_height()
+    augroup END
+endfu
+call window#install_autocmd_to_set_height()
 
 " Functions {{{1
 fu! window#get_modifier_to_open_window() abort "{{{2
@@ -104,30 +237,12 @@ fu! s:ignore_this_window(nr) abort "{{{2
     "                                                  └ or it's alone in the tab page
 endfu
 
-fu! window#install_autocmd_to_set_height() abort "{{{2
-"   └─────┤
-"         └ public so that it can be called in `vim-toggle-settings` (for a mapping)
-    augroup window_height
-        au!
-        if has('nvim')
-            " In  Neovim, when  we open  a  terminal and  BufWinEnter is  fired,
-            " `&l:buftype` is not yet set.
-            au TermOpen * if winnr('$') > 1 | resize 10 | endif
-        else
-            " In Vim,  the OptionSet event (to  set 'buftype') is not  fired …
-            " weird
-            au BufWinEnter * if &l:buftype ==# 'terminal' && winnr('$') > 1 | resize 10 | endif
-        endif
-        " The preview window is special, when you open one, 2 WinEnter are fired;{{{
-        " one when you:
-        "
-        "         1. enter preview window (&l:pvw is NOT yet set)
-        "         2. go back to original window (now, &l:pvw IS set in the preview window)
-    "}}}
-        au WinEnter * call s:set_window_height()
-    augroup END
+fu! s:navigate(dir) abort "{{{2
+    try
+        exe 'wincmd '.a:dir
+    catch
+    endtry
 endfu
-call window#install_autocmd_to_set_height()
 
 fu! s:save_change_position() abort "{{{2
     let changelist = split(execute('changes'), '\n')
