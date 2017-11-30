@@ -88,7 +88,9 @@ fu! window#quit_everything() abort "{{{1
 endfu
 
 fu! window#scroll_preview(fwd) abort "{{{1
-    if empty(filter(map(range(1, winnr('$')), 'getwinvar(v:val, "&l:pvw")'), 'v:val == 1'))
+    if empty(filter(map(range(1, winnr('$')),
+    \                   { k,v -> getwinvar(v, '&l:pvw') }),
+    \               { k,v -> v == 1 }))
         sil! unmap <buffer> J
         sil! unmap <buffer> K
         sil! exe 'norm! '.(a:fwd ? 'J' : 'K')
