@@ -185,6 +185,10 @@ fu! s:set_window_height() abort "{{{2
 endfu
 
 fu! s:restore_change_position() abort "{{{2
+    if !exists('b:my_change_position')
+        sil! norm! 99g,
+        return
+    endif
     "  ┌─ from `:h :sil`:
     "  │                  When [!] is added, […], commands and mappings will
     "  │                  not be aborted when an error is detected.
@@ -193,8 +197,7 @@ fu! s:restore_change_position() abort "{{{2
     "  │  raise an error.
     "  │  Without `sil!`, `norm!` would stop typing the key sequence.
     "  │
-    sil! exe 'norm! '.(exists('b:my_change_position') ? '99g;' : '99g,')
-    \                .(b:my_change_position - 1) .'g,'
+    sil! exe 'norm! 99g;'.(b:my_change_position - 1).'g,'
 endfu
 
 fu! s:restore_view() abort "{{{2
