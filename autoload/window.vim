@@ -12,18 +12,18 @@ fu! window#get_modifier_to_open_window() abort "{{{1
     let origin = winnr()
 
     " are we at the bottom of the tabpage?
-    wincmd b
+    noautocmd wincmd b
     if winnr() == origin
         let mod = 'botright'
     else
-        wincmd p
+        noautocmd wincmd p
         " or maybe at the top?
-        wincmd t
+        noautocmd wincmd t
         if winnr() == origin
             let mod = 'topleft'
         else
             " ok we're in a middle window
-            wincmd p
+            noautocmd wincmd p
             let mod = 'vert belowright'
         endif
     endif
