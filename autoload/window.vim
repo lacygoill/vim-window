@@ -89,8 +89,8 @@ endfu
 
 fu! window#scroll_preview(fwd) abort "{{{1
     if empty(filter(map(range(1, winnr('$')),
-    \                   { k,v -> getwinvar(v, '&l:pvw') }),
-    \               { k,v -> v == 1 }))
+    \                   { i,v -> getwinvar(v, '&l:pvw') }),
+    \               { i,v -> v == 1 }))
         sil! unmap <buffer> J
         sil! unmap <buffer> K
         sil! exe 'norm! '.(a:fwd ? 'J' : 'K')

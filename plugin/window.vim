@@ -175,7 +175,7 @@ fu! s:set_window_height() abort "{{{2
     \                                gettabinfo(tabpagenr())[0].windows,
     \                                function('s:if_special_get_id_and_height')
     \                               ),
-    \                            { k,v ->     v != []
+    \                            { i,v ->     v != []
     \                                     && !s:ignore_this_window(v[0])
     \                            })
 
