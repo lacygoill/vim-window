@@ -214,14 +214,14 @@ endfu
 " Mappings {{{1
 " C-hjkl               move across windows/tmux panes {{{2
 
-nno <silent> <c-h>    :<c-u>call window#navigate('h')<cr>
-nno <silent> <c-j>    :<c-u>call window#navigate('j')<cr>
-nno <silent> <c-k>    :<c-u>call window#navigate('k')<cr>
-nno <silent> <c-l>    :<c-u>call window#navigate('l')<cr>
+nno  <silent><unique>  <c-h>  :<c-u>call window#navigate('h')<cr>
+nno  <silent><unique>  <c-j>  :<c-u>call window#navigate('j')<cr>
+nno  <silent><unique>  <c-k>  :<c-u>call window#navigate('k')<cr>
+nno  <silent><unique>  <c-l>  :<c-u>call window#navigate('l')<cr>
 
 " q  Q  u                                               {{{2
 
-nno <silent>  <space>q  :<c-u>exe my_lib#quit()<cr>
+nno  <silent><unique>  <space>q  :<c-u>exe my_lib#quit()<cr>
 " FIXME:{{{
 " When  an  instruction causes  several  errors,  and  it's  executed in  a  try
 " conditional, the  first error can be  catched and converted into  an exception
@@ -251,8 +251,8 @@ nno <silent>  <space>q  :<c-u>exe my_lib#quit()<cr>
 " function, when  an error  occurs, call  a timer to  display the  message right
 " afterwards.
 "}}}
-nno <silent>  <space>Q  :<c-u>sil! call window#quit_everything()<cr>
-nno <silent>  <space>u  :<c-u>exe my_lib#restore_closed_window(v:count1)<cr>
+nno  <silent><unique>  <space>Q  :<c-u>sil! call window#quit_everything()<cr>
+nno  <silent><unique>  <space>u  :<c-u>exe my_lib#restore_closed_window(v:count1)<cr>
 
 " Z                    simpler window prefix {{{2
 
@@ -271,31 +271,31 @@ nno <silent>  <space>u  :<c-u>exe my_lib#restore_closed_window(v:count1)<cr>
 "
 " Indeed,  once `Z`  has been  expanded into  `C-w`, we  may need  to expand  it
 " FURTHER for custom mappings using `C-w` in their lhs.
-nmap Z <c-w>
+nmap  <unique>  Z  <c-w>
 
 " Z(  Z{  Z}           open/close window preview {{{2
 
-nno <silent> Z(  :<c-u>exe window#open_preview(1)<cr>
-nno <silent> Z{  :<c-u>exe window#open_preview(0)<cr>
-nno          Z}  <c-w>z
+nno  <silent><unique>  Z(  :<c-u>exe window#open_preview(1)<cr>
+nno  <silent><unique>  Z{  :<c-u>exe window#open_preview(0)<cr>
+nno          <unique>  Z}  <c-w>z
 
 " Zh  Zl  Zj  Zk       split in any direction {{{2
 
-nno <silent>   Zh     :<c-u>setl nowrap <bar> leftabove vsplit  <bar> setl nowrap<cr>
-nno <silent>   Zl     :<c-u>setl nowrap <bar> rightbelow vsplit <bar> setl nowrap<cr>
-nno <silent>   Zj     :<c-u>belowright split<cr>
-nno <silent>   Zk     :<c-u>aboveleft split<cr>
+nno  <silent><unique>  Zh  :<c-u>setl nowrap <bar> leftabove vsplit  <bar> setl nowrap<cr>
+nno  <silent><unique>  Zl  :<c-u>setl nowrap <bar> rightbelow vsplit <bar> setl nowrap<cr>
+nno  <silent><unique>  Zj  :<c-u>belowright split<cr>
+nno  <silent><unique>  Zk  :<c-u>aboveleft split<cr>
 
-nmap           <c-w>h  Zh
-nmap           <c-w>l  Zl
-nmap           <c-w>j  Zj
-nmap           <c-w>k  Zk
+nmap  <unique>  <c-w>h  Zh
+nmap  <unique>  <c-w>l  Zl
+nmap  <unique>  <c-w>j  Zj
+nmap  <unique>  <c-w>k  Zk
 
 " ZH  ZL  Zv           disable 'wrap' in vert splits when splitting or moving a window {{{2
 
 " disable wrapping of long lines when we create a vertical split
-nno  <silent>  Zv      :<c-u>setl nowrap <bar> vsplit <bar> setl nowrap<cr>
-nmap           <c-w>v  Zv
+nno   <silent><unique>  Zv      :<c-u>setl nowrap <bar> vsplit <bar> setl nowrap<cr>
+nmap                    <c-w>v  Zv
 
 " Alternative:
 "
@@ -311,17 +311,17 @@ nmap           <c-w>v  Zv
 " Con:
 " WinLeave/WinEnter is not fired after moving a window.
 
-nno <expr> <silent>  ZH      window#disable_wrap_when_moving_to_vert_split('H')
-nno <expr> <silent>  ZL      window#disable_wrap_when_moving_to_vert_split('L')
-nmap                 <c-w>L  ZL
-nmap                 <c-w>H  ZH
+nno   <expr><silent><unique>  ZH      window#disable_wrap_when_moving_to_vert_split('H')
+nno   <expr><silent><unique>  ZL      window#disable_wrap_when_moving_to_vert_split('L')
+nmap                          <c-w>L  ZL
+nmap                          <c-w>H  ZH
 
 " ZQ {{{2
 
 " Our `SPC q` mapping is special, it creates a session file so that we can undo
 " the closing of the window. `ZQ` should behave in the same way.
 
-nmap ZQ <space>q
+nmap  <unique>  ZQ  <space>q
 
 " Options {{{1
 
