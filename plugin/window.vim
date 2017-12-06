@@ -295,7 +295,7 @@ nmap  <unique>  <c-w>k  Zk
 
 " disable wrapping of long lines when we create a vertical split
 nno   <silent><unique>  Zv      :<c-u>setl nowrap <bar> vsplit <bar> setl nowrap<cr>
-nmap                    <c-w>v  Zv
+nmap          <unique>  <c-w>v  Zv
 
 " Alternative:
 "
@@ -313,8 +313,8 @@ nmap                    <c-w>v  Zv
 
 nno   <expr><silent><unique>  ZH      window#disable_wrap_when_moving_to_vert_split('H')
 nno   <expr><silent><unique>  ZL      window#disable_wrap_when_moving_to_vert_split('L')
-nmap                          <c-w>L  ZL
-nmap                          <c-w>H  ZH
+nmap                <unique>  <c-w>L  ZL
+nmap                <unique>  <c-w>H  ZH
 
 " ZQ {{{2
 
