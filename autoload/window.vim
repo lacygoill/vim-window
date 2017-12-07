@@ -104,7 +104,9 @@ fu! window#scroll_preview(fwd) abort "{{{1
         "                            └ go to last line of window
 
         " unfold and get back
-        exe 'norm! zv``'
+        " note: for some reason the double backticks breaks `J`,
+        " that's why we don't use it when we move forward
+        exe 'norm! zv'.(a:fwd ? '' : '``')
         " get back to previous window
         exe "norm! \<c-w>p"
     endif
