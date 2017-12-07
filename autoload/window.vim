@@ -38,24 +38,35 @@ fu! window#navigate(dir) abort "{{{1
     endtry
 endfu
 
-fu! window#open_preview(auto_close) abort "{{{1
+fu! window#open_preview() abort "{{{1
     try
         exe "norm! \<c-w>}\<c-w>PzMzvzz\<c-w>p"
-        if a:auto_close
-            augroup close_preview_after_motion
-                au!
-                "              ┌─ don't use `<buffer>` because I suspect `CursorMoved`
-                "              │  could happen in another buffer; example, after `gf`
-                "              │  or sth similar
-                "              │  we want the preview window to be closed no matter
-                "              │  where the cursor moves
-                "              │
-                au CursorMoved * pclose
-                              \| wincmd _
-                              \| exe 'au! close_preview_after_motion'
-                              \| aug! close_preview_after_motion
-            augroup END
-        endif
+        " OLD:{{{
+        "
+        " Previously, we mapped  this function to 2 mappings: z< and z{
+        " Each one passed a different argument (`auto_close`) to the function.
+        " When the  argument, `auto_close`,  was 1, we  installed an  autocmd to
+        " automatically close the preview window when we moved the cursor.
+        "
+        "     if a:auto_close
+        "         augroup close_preview_after_motion
+        "             au!
+        "             "              ┌─ don't use `<buffer>` because I suspect `CursorMoved`
+        "             "              │  could happen in another buffer; example, after `gf`
+        "             "              │  or sth similar
+        "             "              │  we want the preview window to be closed no matter
+        "             "              │  where the cursor moves
+        "             "              │
+        "             au CursorMoved * pclose
+        "                           \| wincmd _
+        "                           \| exe 'au! close_preview_after_motion'
+        "                           \| aug! close_preview_after_motion
+        "         augroup END
+        "     endif
+        "
+        " I think  that was too much. One  mapping should be enough. It  frees a
+        " key binding, and restores symmetry. Indeed, `z>` was not used.
+        "}}}
     catch
         return 'echoerr '.string(v:exception)
     endtry
