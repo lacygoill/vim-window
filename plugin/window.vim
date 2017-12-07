@@ -121,8 +121,8 @@ fu! s:scroll_preview_mappings(later) abort "{{{2
             au WinEnter * call s:scroll_preview_mappings(0)
         augroup END
     else
-        nno <buffer> <nowait> <silent> J :<c-u>exe window#scroll_preview(1)<cr>
-        nno <buffer> <nowait> <silent> K :<c-u>exe window#scroll_preview(0)<cr>
+        nno  <buffer><nowait><silent>  J  :<c-u>exe window#scroll_preview(1)<cr>
+        nno  <buffer><nowait><silent>  K  :<c-u>exe window#scroll_preview(0)<cr>
         au!  my_scroll_preview_window
         aug! my_scroll_preview_window
     endif
