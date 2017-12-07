@@ -273,9 +273,11 @@ nno  <silent><unique>  <space>u  :<c-u>exe my_lib#restore_closed_window(v:count1
 " FURTHER for custom mappings using `C-w` in their lhs.
 nmap  <unique>  Z  <c-w>
 
-" Z(  Z{  Z}           open/close window preview {{{2
+" Z<  Z{  Z}           open/close window preview {{{2
 
-nno  <silent><unique>  Z(  :<c-u>exe window#open_preview(1)<cr>
+"                                                        ┌ auto close
+"                                                        │
+nno  <silent><unique>  Z<  :<c-u>exe window#open_preview(1)<cr>
 nno  <silent><unique>  Z{  :<c-u>exe window#open_preview(0)<cr>
 nno          <unique>  Z}  <c-w>z
 
