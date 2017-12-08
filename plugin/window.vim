@@ -252,7 +252,7 @@ nno  <silent><unique>  <space>q  :<c-u>call my_lib#quit()<cr>
 " afterwards.
 "}}}
 nno  <silent><unique>  <space>Q  :<c-u>sil! call window#quit_everything()<cr>
-nno  <silent><unique>  <space>u  :<c-u>exe my_lib#restore_closed_window(v:count1)<cr>
+nno  <silent><unique>  <space>u  :<c-u>call my_lib#restore_closed_window(v:count1)<cr>
 
 " z{  z}               open/close window preview {{{2
 
