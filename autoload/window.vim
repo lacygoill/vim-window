@@ -35,6 +35,7 @@ fu! window#navigate(dir) abort "{{{1
     try
         exe 'wincmd '.a:dir
     catch
+        call my_lib#catch_error()
     endtry
 endfu
 
@@ -68,9 +69,8 @@ fu! window#open_preview() abort "{{{1
         " key binding, and restores symmetry. Indeed, `z>` was not used.
         "}}}
     catch
-        return 'echoerr '.string(v:exception)
+        call my_lib#catch_error()
     endtry
-    return ''
 endfu
 
 fu! window#quit_everything() abort "{{{1

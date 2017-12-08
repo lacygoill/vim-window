@@ -256,7 +256,7 @@ nno  <silent><unique>  <space>u  :<c-u>call my_lib#restore_closed_window(v:count
 
 " z{  z}               open/close window preview {{{2
 
-nno  <silent><unique>  z{  :<c-u>exe window#open_preview()<cr>
+nno  <silent><unique>  z{  :<c-u>call window#open_preview()<cr>
 nno          <unique>  z}  <c-w>z
 
 " Z                    simpler window prefix {{{2
