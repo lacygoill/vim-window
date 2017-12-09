@@ -88,6 +88,16 @@ fu! window#navigate(dir) abort "{{{1
 endfu
 
 fu! window#preview_open() abort "{{{1
+    " Check whether a preview window is already opened in the current tab page.
+    let win_ids = gettabinfo(tabpagenr())[0].windows
+    call filter(win_ids, {i,v -> getwinvar(v, '&pvw', 0)})
+    " If there's one, give it the focus.
+    if !empty(win_ids)
+        call win_gotoid(win_ids[0])
+        return
+    endif
+    " Otherwise, let's try to  display a possible tag under the  cursor in a new
+    " preview window.
     try
         exe "norm! \<c-w>}\<c-w>PzMzvzz\<c-w>p"
         " OLD:{{{
