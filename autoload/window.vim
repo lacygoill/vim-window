@@ -1,3 +1,51 @@
+fu! window#qf_open_close(type, toward_qf) abort "{{{1
+    " Can we use `wincmd p` to focus the qf window, after populating a qfl?{{{
+    "
+    " No. It's not reliable.
+    "
+    " For example, suppose we've executed a command which has populated the qfl,
+    " and opened  the qf  window. The previous  window will,  indeed, be  the qf
+    " window. Because it  seems that after  Vim has opened  it, it gets  back to
+    " whatever window we were originally in.
+    "
+    " But  then,  from  the  qf  window,  suppose  we  execute  another  command
+    " populating the  qfl.  This time,  the qf window  will NOT be  the previous
+    " window but the current one.
+    "}}}
+
+    if a:toward_qf
+        "
+        "   ┌ dictionary: {'winid': 42}
+        "   │
+        let id = call(a:type ==# 'loc'
+        \                ?    'getloclist'
+        \                :    'getqflist',
+        \                a:type ==# 'loc'
+        \                ?    [0, {'winid':0}]
+        \                :    [   {'winid':0}])
+        if empty(id)
+            return (a:type ==# 'loc' ? 'l' : 'c').'window'
+        endif
+        let id = id.winid
+
+    elseif a:type ==# 'qf'
+        return 'wincmd p'
+
+    else
+        let win_ids = gettabinfo(tabpagenr())[0].windows
+        let loc_id  = win_getid()
+        let id      = get(filter(copy(win_ids), {i,v ->    get(getloclist(v, {'winid': 0}), 'winid', 0)
+        \                                               == loc_id
+        \                                               && v != loc_id })
+        \                 ,0,0)
+    endif
+
+    if id != 0
+        call win_gotoid(id)
+    endif
+    return ''
+endfu
+
 fu! window#disable_wrap_when_moving_to_vert_split(dir) abort "{{{1
     call setwinvar(winnr('#'), '&wrap', 0)
     exe 'wincmd '.a:dir
