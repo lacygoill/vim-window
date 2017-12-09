@@ -261,8 +261,8 @@ nno          <unique>  z}  <c-w>z
 
 " z<  z<               open/close terminal window {{{2
 
-nno          <unique>  z<  :<c-u>terminal<cr>
-nno  <silent><unique>  z>  :<c-u>call window#close_terminal()<cr>
+nno          <unique>  z<  :<c-u>call window#terminal_open()<cr>
+nno  <silent><unique>  z>  :<c-u>call window#terminal_close()<cr>
 
 " Z                    simpler window prefix {{{2
 
