@@ -106,7 +106,6 @@ fu! window#qf_open(type) abort "{{{1
 
     let we_are_in_qf = &l:bt ==# 'quickfix'
 
-    " !we_are_in_qf && (a:type ==# 'qf' || a:type ==# 'loc')
     if !we_are_in_qf
         "
         "   ┌ dictionary: {'winid': 42}
@@ -122,12 +121,10 @@ fu! window#qf_open(type) abort "{{{1
         endif
         let id = id.winid
 
-    " we_are_in_qf && a:type ==# 'qf'
-    elseif a:type ==# 'qf'
+    elseif we_are_in_qf && a:type ==# 'qf'
             return 'wincmd p'
 
-    " we_are_in_qf && a:type ==# 'loc'
-    else
+    else we_are_in_qf && a:type ==# 'loc'
         let win_ids = gettabinfo(tabpagenr())[0].windows
         let loc_id  = win_getid()
         let id      = get(filter(copy(win_ids), {i,v ->    get(getloclist(v, {'winid': 0}), 'winid', 0)
