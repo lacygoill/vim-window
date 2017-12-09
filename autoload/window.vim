@@ -89,7 +89,7 @@ fu! window#preview_open() abort "{{{1
     endtry
 endfu
 
-fu! window#qf_open(type, focus_qf) abort "{{{1
+fu! window#qf_open(type) abort "{{{1
     " Can we use `wincmd p` to focus the qf window, after populating a qfl?{{{
     "
     " No. It's not reliable.
@@ -104,14 +104,14 @@ fu! window#qf_open(type, focus_qf) abort "{{{1
     " window but the current one.
     "}}}
 
-    " a:focus_qf == 0 && a:type ==# 'qf'
-    if a:type ==# 'qf' && !a:focus_qf
+    let we_are_in_qf = &l:bt ==# 'quickfix'
+
+    if we_are_in_qf && a:type ==# 'qf'
         return 'wincmd p'
     endif
 
-    " a:focus_qf == 1 && a:type ==# 'qf'
-    " a:focus_qf == 1 && a:type ==# 'loc'
-    if a:focus_qf
+    " !we_are_in_qf && (a:type ==# 'qf' || a:type ==# 'loc')
+    if !we_are_in_qf
         "
         "   ┌ dictionary: {'winid': 42}
         "   │
@@ -126,7 +126,7 @@ fu! window#qf_open(type, focus_qf) abort "{{{1
         endif
         let id = id.winid
 
-    " a:focus_qf == 0 && a:type ==# 'loc'
+    " we_are_in_qf && a:type ==# 'loc'
     else
         let win_ids = gettabinfo(tabpagenr())[0].windows
         let loc_id  = win_getid()
