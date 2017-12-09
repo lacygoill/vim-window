@@ -117,7 +117,8 @@ fu! window#qf_open(type) abort "{{{1
         \                ?    [0, {'winid':0}]
         \                :    [   {'winid':0}])
         if empty(id)
-            return (a:type ==# 'loc' ? 'l' : 'c').'window'
+            exe 'doautocmd QuickFixCmdPost '.(a:type ==# 'loc' ? 'l' : 'c').'grep'
+            return ''
         endif
         let id = id.winid
 
