@@ -256,7 +256,7 @@ nno  <silent><unique>  <space>u  :<c-u>call my_lib#restore_closed_window(v:count
 
 " z<  z>               open/focus/close terminal window {{{2
 
-nno          <unique>  z<  :<c-u>call window#terminal_open()<cr>
+nno  <silent><unique>  z<  :<c-u>call window#terminal_open()<cr>
 nno  <silent><unique>  z>  :<c-u>call window#terminal_close()<cr>
 
 "z(  z)  z[  z]                        qf/ll    window {{{2
