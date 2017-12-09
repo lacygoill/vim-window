@@ -39,7 +39,7 @@ fu! window#navigate(dir) abort "{{{1
     endtry
 endfu
 
-fu! window#open_preview() abort "{{{1
+fu! window#preview_open() abort "{{{1
     try
         exe "norm! \<c-w>}\<c-w>PzMzvzz\<c-w>p"
         " OLD:{{{
