@@ -90,20 +90,6 @@ fu! window#preview_open() abort "{{{1
 endfu
 
 fu! window#qf_open(type) abort "{{{1
-    " Can we use `wincmd p` to focus the qf window, after populating a qfl?{{{
-    "
-    " No. It's not reliable.
-    "
-    " For example, suppose we've executed a command which has populated the qfl,
-    " and opened  the qf  window. The previous  window will,  indeed, be  the qf
-    " window. Because it  seems that after  Vim has opened  it, it gets  back to
-    " whatever window we were originally in.
-    "
-    " But  then,  from  the  qf  window,  suppose  we  execute  another  command
-    " populating the  qfl.  This time,  the qf window  will NOT be  the previous
-    " window but the current one.
-    "}}}
-
     let we_are_in_qf = &l:bt ==# 'quickfix'
 
     if !we_are_in_qf
@@ -126,9 +112,11 @@ fu! window#qf_open(type) abort "{{{1
         endif
         let id = id.winid
 
+    " if we are already in the qf window, get back to the previous one
     elseif we_are_in_qf && a:type ==# 'qf'
             return 'wincmd p'
 
+    " if we are already in the ll window, get to the associated window
     elseif we_are_in_qf && a:type ==# 'loc'
         let win_ids = gettabinfo(tabpagenr())[0].windows
         let loc_id  = win_getid()
