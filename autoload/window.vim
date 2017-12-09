@@ -31,6 +31,12 @@ fu! window#get_modifier_to_open_window() abort "{{{1
     return mod
 endfu
 
+fu! s:get_terminal_buffer() abort "{{{1
+    let buflist = tabpagebuflist(tabpagenr())
+    call filter(buflist, {i,v -> getbufvar(v, '&bt', '') ==# 'terminal'})
+    return get(buflist, 0 , 0)
+endfu
+
 fu! window#navigate(dir) abort "{{{1
     try
         exe 'wincmd '.a:dir
@@ -188,16 +194,22 @@ fu! window#scroll_preview(fwd) abort "{{{1
 endfu
 
 fu! window#terminal_close() abort "{{{1
-    let buflist = tabpagebuflist(tabpagenr())
-    call filter(buflist, {i,v -> getbufvar(v, '&bt', '') ==# 'terminal'})
-    if !empty(buflist)
-        noautocmd call win_gotoid(bufwinid(buflist[0]))
+    let term_buffer = s:get_terminal_buffer()
+    if term_buffer != 0
+        noautocmd call win_gotoid(bufwinid(term_buffer))
         noautocmd call my_lib#quit()
         noautocmd wincmd p
     endif
 endfu
 
 fu! window#terminal_open() abort "{{{1
+    let term_buffer = s:get_terminal_buffer()
+    if term_buffer != 0
+        let id = bufwinid(term_buffer)
+        call win_gotoid(id)
+        return
+    endif
+
     let mod = window#get_modifier_to_open_window()
 
     let how_to_open = has('nvim')
