@@ -124,7 +124,7 @@ fu! window#qf_open(type) abort "{{{1
     elseif we_are_in_qf && a:type ==# 'qf'
             return 'wincmd p'
 
-    else we_are_in_qf && a:type ==# 'loc'
+    elseif we_are_in_qf && a:type ==# 'loc'
         let win_ids = gettabinfo(tabpagenr())[0].windows
         let loc_id  = win_getid()
         let id      = get(filter(copy(win_ids), {i,v ->    get(getloclist(v, {'winid': 0}), 'winid', 0)
