@@ -1,4 +1,4 @@
-fu! window#qf_open_close(type, toward_qf) abort "{{{1
+fu! window#qf_open_focus(type, toward_qf) abort "{{{1
     " Can we use `wincmd p` to focus the qf window, after populating a qfl?{{{
     "
     " No. It's not reliable.

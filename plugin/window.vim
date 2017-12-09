@@ -254,17 +254,17 @@ nno  <silent><unique>  <space>q  :<c-u>call my_lib#quit()<cr>
 nno  <silent><unique>  <space>Q  :<c-u>sil! call window#quit_everything()<cr>
 nno  <silent><unique>  <space>u  :<c-u>call my_lib#restore_closed_window(v:count1)<cr>
 
-" z<  z<               open/focus/close terminal window {{{2
+" z<  z>               open/focus/close terminal window {{{2
 
 nno          <unique>  z<  :<c-u>call window#terminal_open()<cr>
 nno  <silent><unique>  z>  :<c-u>call window#terminal_close()<cr>
 
 "z(  z)  z[  z]                        qf/ll    window {{{2
 
-nno  <silent><unique>  z(  :exe window#qf_open_close('qf', 1)<cr>
+nno  <silent><unique>  z(  :exe window#qf_open_focus('qf', 1)<cr>
 nno  <silent><unique>  z)  :<c-u>cclose<cr>
 
-nno  <silent><unique>  z[  :exe window#qf_open_close('loc', 1)<cr>
+nno  <silent><unique>  z[  :exe window#qf_open_focus('loc', 1)<cr>
 nno  <silent><unique>  z]  :<c-u>lclose<cr>
 
 " z{  z}                                preview  window {{{2
