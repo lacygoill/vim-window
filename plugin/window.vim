@@ -254,10 +254,15 @@ nno  <silent><unique>  <space>q  :<c-u>call my_lib#quit()<cr>
 nno  <silent><unique>  <space>Q  :<c-u>sil! call window#quit_everything()<cr>
 nno  <silent><unique>  <space>u  :<c-u>call my_lib#restore_closed_window(v:count1)<cr>
 
-" z{  z}               open/close window preview {{{2
+" z{  z}               open/close preview window {{{2
 
 nno  <silent><unique>  z{  :<c-u>call window#open_preview()<cr>
 nno          <unique>  z}  <c-w>z
+
+" z<  z<               open/close terminal window {{{2
+
+nno          <unique>  z<  :<c-u>terminal<cr>
+nno  <silent><unique>  z>  :<c-u>call window#close_terminal()<cr>
 
 " Z                    simpler window prefix {{{2
 

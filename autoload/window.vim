@@ -1,3 +1,13 @@
+fu! window#close_terminal() abort "{{{1
+    let buflist = tabpagebuflist(tabpagenr())
+    call filter(buflist, {i,v -> getbufvar(v, '&bt', '') ==# 'terminal'})
+    if !empty(buflist)
+        noautocmd call win_gotoid(bufwinid(buflist[0]))
+        noautocmd call my_lib#quit()
+        noautocmd wincmd p
+    endif
+endfu
+
 fu! window#disable_wrap_when_moving_to_vert_split(dir) abort "{{{1
     call setwinvar(winnr('#'), '&wrap', 0)
     exe 'wincmd '.a:dir
