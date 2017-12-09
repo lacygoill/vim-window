@@ -117,6 +117,10 @@ fu! window#qf_open(type) abort "{{{1
         \                ?    [0, {'winid':0}]
         \                :    [   {'winid':0}])
         if empty(id)
+            " We could also write this:
+            "         return (a:type ==# 'loc' ? 'l' : 'c').'window'
+            "
+            " But, it wouldn't open the qf window like our autocmd in `vim-qf` does.
             exe 'doautocmd QuickFixCmdPost '.(a:type ==# 'loc' ? 'l' : 'c').'grep'
             return ''
         endif
