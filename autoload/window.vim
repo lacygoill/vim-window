@@ -100,9 +100,9 @@ fu! window#qf_open(type) abort "{{{1
         \                ?    'getloclist'
         \                :    'getqflist',
         \                a:type ==# 'loc'
-        \                ?    [0, {'winid':0}]
-        \                :    [   {'winid':0}])
-        if empty(id)
+        \                ?    [0, {'winid':1}]
+        \                :    [   {'winid':1}])
+        if get(id, 'winid', 0) == 0
             " Why :[cl]open? Are they valid commands here?{{{
             "
             " Probably not, because these commands  don't populate the qfl, they
