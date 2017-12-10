@@ -1,8 +1,3 @@
-if exists('g:autoloaded_window')
-    finish
-endif
-let g:autoloaded_window = 1
-
 fu! window#disable_wrap_when_moving_to_vert_split(dir) abort "{{{1
     call setwinvar(winnr('#'), '&wrap', 0)
     exe 'wincmd '.a:dir
