@@ -103,10 +103,33 @@ fu! window#qf_open(type) abort "{{{1
         \                ?    [0, {'winid':0}]
         \                :    [   {'winid':0}])
         if empty(id)
-            " We could also write this:
-            "         return (a:type ==# 'loc' ? 'l' : 'c').'window'
+            " Why :[cl]open? Are they valid commands here?{{{
             "
-            " But, it wouldn't open the qf window like our autocmd in `vim-qf` does.
+            " Probably not, because these commands  don't populate the qfl, they
+            " just  open the  qf  window.
+            "
+            " However,  we  use   these  names  in  the   autocmd  listening  to
+            " `QuickFixCmdPost` in `vim-qf`,  to decide whether we  want to open
+            " the  qf window  unconditionally (:[cl]open),  or on  the condition
+            " that the qfl contains at least 1 valid entry (`:[cl]window`).
+            "
+            " It allows us to do this in any plugin populating the qfl:
+            "
+            "         doautocmd <nomodeline> QuickFixCmdPost grep
+            "             → open  the qf window  on the condition  it contains
+            "               at  least 1 valid entry
+            "
+            "         doautocmd <nomodeline> QuickFixCmdPost copen
+            "             → open the qf window unconditionally
+            "}}}
+            " Could we write sth simpler?{{{
+            "
+            " Yes:
+            "         return (a:type ==# 'loc' ? 'l' : 'c').'open'
+            "
+            " But, it wouldn't  open the qf window like our  autocmd in `vim-qf`
+            " does.
+            "}}}
             exe 'doautocmd <nomodeline> QuickFixCmdPost '.(a:type ==# 'loc' ? 'l' : 'c').'open'
             return ''
         endif
