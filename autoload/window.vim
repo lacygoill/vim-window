@@ -96,12 +96,9 @@ fu! window#qf_open(type) abort "{{{1
         "
         "   ┌ dictionary: {'winid': 42}
         "   │
-        let id = call(a:type ==# 'loc'
-        \                ?    'getloclist'
-        \                :    'getqflist',
-        \                a:type ==# 'loc'
-        \                ?    [0, {'winid':1}]
-        \                :    [   {'winid':1}])
+        let id = a:type ==# 'loc'
+        \            ?    getloclist(0, {'winid':1})
+        \            :    getqflist(   {'winid':1})
         if get(id, 'winid', 0) == 0
             " Why :[cl]open? Are they valid commands here?{{{
             "
