@@ -291,6 +291,13 @@ nno          <unique>  z}  <c-w>z
 " FURTHER for custom mappings using `C-w` in their lhs.
 nmap  <unique>  Z  <c-w>
 
+" Z C-h C-j C-k C-l    resize window (repeatable with ; ,) {{{2
+
+nno  <silent><unique>  Z<c-h>  :<c-u>call myfuncs#be_repeatable('Z c-h')<cr>
+nno  <silent><unique>  Z<c-j>  :<c-u>call myfuncs#be_repeatable('Z c-j')<cr>
+nno  <silent><unique>  Z<c-k>  :<c-u>call myfuncs#be_repeatable('Z c-k')<cr>
+nno  <silent><unique>  Z<c-l>  :<c-u>call myfuncs#be_repeatable('Z c-l')<cr>
+
 " Zh  Zl  Zj  Zk       split in any direction {{{2
 
 nno  <silent><unique>  Zh  :<c-u>setl nowrap <bar> leftabove vsplit  <bar> setl nowrap<cr>
