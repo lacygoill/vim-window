@@ -305,6 +305,12 @@ nno  <silent><unique>  Zl  :<c-u>setl nowrap <bar> rightbelow vsplit <bar> setl 
 nno  <silent><unique>  Zj  :<c-u>belowright split<cr>
 nno  <silent><unique>  Zk  :<c-u>aboveleft split<cr>
 
+" We often press `zj` instead of `Zj`, when we want to split the window.
+nmap         <unique>  zh  Zh
+nmap         <unique>  zj  Zj
+nmap         <unique>  zk  Zk
+nmap         <unique>  zl  Zl
+
 nmap  <unique>  <c-w>h  Zh
 nmap  <unique>  <c-w>l  Zl
 nmap  <unique>  <c-w>j  Zj
