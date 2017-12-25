@@ -32,12 +32,12 @@ augroup window_height
     au!
     if has('nvim')
         " In  Neovim, when  we open  a  terminal and  BufWinEnter is  fired,
-        " `&l:buftype` is not yet set.
+        " `&bt` is not yet set.
         au TermOpen * if winnr('$') > 1 | resize 10 | endif
     else
         " In Vim,  the OptionSet event (to  set 'buftype') is not  fired …
         " weird
-        au BufWinEnter * if &l:buftype ==# 'terminal' && winnr('$') > 1 | resize 10 | endif
+        au BufWinEnter * if &bt ==# 'terminal' && winnr('$') > 1 | resize 10 | endif
     endif
     " The preview window is special, when you open one, 2 WinEnter are fired;{{{
     " one when you:
@@ -152,7 +152,7 @@ fu! s:set_window_height() abort "{{{2
 "}}}
 
     " if we enter a special window, set its height and stop
-    if &l:pvw || &l:buftype =~# '^\%(quickfix\|terminal\)$'
+    if &l:pvw || &bt =~# '^\%(quickfix\|terminal\)$'
         " but make sure it's horizontally maximized,
         " and not alone in the tab page
         if winwidth(0) == &columns && winnr('$') > 1
