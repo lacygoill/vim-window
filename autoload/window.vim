@@ -7,23 +7,29 @@ endfu
 
 fu! window#get_modifier() abort "{{{1
 "   └─────┤
-"         └ public so that it can be called in `vim-qf` (`qf#open()` in autoload/)
+"         └ public so that it can be called in `vim-qf`
+"          `qf#open()` in autoload/
     let origin = winnr()
 
-    " are we at the bottom of the tabpage?
-    noautocmd wincmd b
-    if winnr() == origin
-        let mod = 'botright'
+    " are we opening a TOC window
+    if get(getloclist(0, {'title': 0}), 'title', '') =~# '\<TOC$'
+        let mod = 'vert leftabove'
     else
-        noautocmd wincmd p
-        " or maybe at the top?
-        noautocmd wincmd t
+        " are we at the bottom of the tabpage?
+        noautocmd wincmd b
         if winnr() == origin
-            let mod = 'topleft'
+            let mod = 'botright'
         else
-            " ok we're in a middle window
             noautocmd wincmd p
-            let mod = 'vert belowright'
+            " or maybe at the top?
+            noautocmd wincmd t
+            if winnr() == origin
+                let mod = 'topleft'
+            else
+                " ok we're in a middle window
+                noautocmd wincmd p
+                let mod = 'vert belowright'
+            endif
         endif
     endif
 
