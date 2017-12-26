@@ -5,10 +5,9 @@ fu! window#disable_wrap_when_moving_to_vert_split(dir) abort "{{{1
     return ''
 endfu
 
-fu! window#get_modifier_to_open_window() abort "{{{1
+fu! window#get_modifier() abort "{{{1
 "   └─────┤
-"         └ public so that it can be called in `vim-qf` (`qf#open()` in autoload/),
-"           and in our vimrc
+"         └ public so that it can be called in `vim-qf` (`qf#open()` in autoload/)
     let origin = winnr()
 
     " are we at the bottom of the tabpage?
@@ -239,7 +238,7 @@ fu! window#terminal_open() abort "{{{1
         return
     endif
 
-    let mod = window#get_modifier_to_open_window()
+    let mod = window#get_modifier()
 
     let how_to_open = has('nvim')
     \?                    mod.' split | terminal'
