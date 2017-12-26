@@ -350,6 +350,31 @@ nmap  <unique>  ZQ  <space>q
 
 " Options {{{1
 
+" Why setting these options?{{{
+"
+" When opening a file with long lines, I prefer to do it:
+"
+"     • on the right if it's vertical
+"     • at the bottom if it's horizontal
+"
+" Rationale:
+" When you read a book, the next page is on the right, not on the left.
+" When you read a pdf, the next page is below, not above.
+"
+"
+" However, when displaying  a buffer with short lines (ex: TOC),  I prefer to do
+" it on the  left.
+"
+" Rationale:
+" When you write annotations in  a page, you do it  in the left margin.
+"
+"
+" Bottom Line:
+" `set splitbelow` and `set splitright`  seem to define good default directions.
+" Punctually  though, we  may  `need  `:topleft` or  :leftabove`  to change  the
+" direction.
+"}}}
+
 " when we create a new horizontal viewport, it should be displayed at the
 " bottom of the screen
 set splitbelow
