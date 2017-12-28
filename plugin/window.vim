@@ -33,11 +33,11 @@ augroup window_height
     if has('nvim')
         " In  Neovim, when  we open  a  terminal and  BufWinEnter is  fired,
         " `&bt` is not yet set.
-        au TermOpen * if winnr('$') > 1 | resize 10 | endif
+        au TermOpen * if !s:is_alone_in_tabpage() | resize 10 | endif
     else
         " In Vim,  the OptionSet event (to  set 'buftype') is not  fired …
         " weird
-        au BufWinEnter * if &bt ==# 'terminal' && winnr('$') > 1 | resize 10 | endif
+        au BufWinEnter * if &bt ==# 'terminal' && s:is_alone_in_tabpage() | resize 10 | endif
     endif
     " The preview window is special, when you open one, 2 WinEnter are fired;{{{
     " one when you:
@@ -90,12 +90,19 @@ fu! s:ignore_this_window(nr) abort "{{{2
     "                                     if there are several tabpages,
     "                                     or not (if there's a single tabpage)
 "}}}
-    "
-    "                               ┌ the window is NOT maximized horizontally
-    "      ┌────────────────────────┤
-    return winwidth(a:nr) != &columns || winnr('$') <= 1
-    "                                    └─────────────┤
-    "                                                  └ or it's alone in the tab page
+    return !s:is_horizontally_maximized(a:nr) || s:is_alone_in_tabpage()
+endfu
+
+fu! s:is_alone_in_tabpage() abort "{{{2
+    return winnr('$') <= 1
+endfu
+
+fu! s:is_horizontally_maximized(...) abort "{{{2
+    return winwidth(a:0 ? a:1 : 0) == &columns
+endfu
+
+fu! s:is_special() abort "{{{2
+    return &l:pvw || &bt =~# '^\%(quickfix\|terminal\)$'
 endfu
 
 fu! s:save_change_position() abort "{{{2
@@ -151,17 +158,14 @@ fu! s:set_window_height() abort "{{{2
     " trying and fix it.
 "}}}
 
-    " if we enter a special window, set its height and stop
-    if &l:pvw || &bt =~# '^\%(quickfix\|terminal\)$'
-        " but make sure it's horizontally maximized,
-        " and not alone in the tab page
-        if winwidth(0) == &columns && winnr('$') > 1
-            exe 'resize '.(&l:pvw
-            \?                 &l:pvh
-            \:             &l:bt ==# 'quickfix'
-            \?                 min([ 10, line('$') ])
-            \:             10)
-        endif
+    if   s:is_special()
+    \&&  s:is_horizontally_maximized()
+    \&& !s:is_alone_in_tabpage()
+        exe 'resize '.(&l:pvw
+        \?                 &l:pvh
+        \:             &l:bt ==# 'quickfix'
+        \?                 min([ 10, line('$') ])
+        \:             10)
         return
     else
         " if we enter a regular window, maximize it, but don't stop yet
