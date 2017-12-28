@@ -105,6 +105,14 @@ fu! s:is_special() abort "{{{2
     return &l:pvw || &bt =~# '^\%(quickfix\|terminal\)$'
 endfu
 
+fu! s:make_window_small() abort "{{{2
+    exe 'resize '.(&l:pvw
+    \?                 &l:pvh
+    \:             &l:bt ==# 'quickfix'
+    \?                 min([ 10, line('$') ])
+    \:             10)
+endfu
+
 fu! s:save_change_position() abort "{{{2
     let changelist = split(execute('changes'), '\n')
     let b:my_change_position = index(changelist, matchstr(changelist, '^>'))
@@ -161,11 +169,7 @@ fu! s:set_window_height() abort "{{{2
     if   s:is_special()
     \&&  s:is_horizontally_maximized()
     \&& !s:is_alone_in_tabpage()
-        exe 'resize '.(&l:pvw
-        \?                 &l:pvh
-        \:             &l:bt ==# 'quickfix'
-        \?                 min([ 10, line('$') ])
-        \:             10)
+        call s:make_window_small()
         return
     else
         " if we enter a regular window, maximize it, but don't stop yet
