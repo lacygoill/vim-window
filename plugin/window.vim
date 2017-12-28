@@ -336,10 +336,10 @@ nmap          <unique>  <c-w>v  Zv
 " Con:
 " WinLeave/WinEnter is not fired after moving a window.
 
-nno   <expr><silent><unique>  ZH      window#disable_wrap_when_moving_to_vert_split('H')
-nno   <expr><silent><unique>  ZL      window#disable_wrap_when_moving_to_vert_split('L')
-nmap                <unique>  <c-w>L  ZL
-nmap                <unique>  <c-w>H  ZH
+nno   <silent><unique>  ZH      :<c-u>call window#disable_wrap_when_moving_to_vert_split('H')<cr>
+nno   <silent><unique>  ZL      :<c-u>call window#disable_wrap_when_moving_to_vert_split('L')<cr>
+nmap          <unique>  <c-w>L  ZL
+nmap          <unique>  <c-w>H  ZH
 
 " ZQ {{{2
 
