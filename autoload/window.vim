@@ -14,7 +14,10 @@ fu! window#get_modifier(...) abort "{{{1
 
     let origin = winnr()
 
-    " are we opening a TOC window
+    "  ┌ are we opening a qf/loc window?
+    "  │
+    "  │      ┌ and does it display a TOC
+    "  │      │
     if a:0 && get(getloclist(0, {'title': 0}), 'title', '') =~# '\<TOC$'
         let mod = 'vert leftabove'
     else
