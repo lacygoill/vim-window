@@ -7,14 +7,14 @@ endfu
 
 fu! window#get_modifier(...) abort "{{{1
 "   │     │             │
-"   │     │             └ optional flag meaning we're going to open a qf/loc window
+"   │     │             └ optional flag meaning we're going to open a loc window
 "   └─────┤
 "         └ public so that it can be called in `vim-qf`
 "          `qf#open()` in autoload/
 
     let origin = winnr()
 
-    "  ┌ are we opening a qf/loc window?
+    "  ┌ are we opening a loc window?
     "  │
     "  │      ┌ and does it display a TOC?
     "  │      │
