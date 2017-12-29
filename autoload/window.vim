@@ -51,6 +51,12 @@ fu! window#navigate(dir) abort "{{{1
 endfu
 
 fu! window#preview_open() abort "{{{1
+    " if we're already in the preview window, get back to previous window
+    if &l:pvw
+        wincmd p
+        return
+    endif
+
     " Check whether a preview window is already opened in the current tab page.
     let win_ids = gettabinfo(tabpagenr())[0].windows
     call filter(win_ids, {i,v -> getwinvar(v, '&pvw', 0)})
