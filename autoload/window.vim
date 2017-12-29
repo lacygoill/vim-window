@@ -5,14 +5,17 @@ fu! window#disable_wrap_when_moving_to_vert_split(dir) abort "{{{1
     return ''
 endfu
 
-fu! window#get_modifier() abort "{{{1
+fu! window#get_modifier(...) abort "{{{1
+"   │     │             │
+"   │     │             └ optional flag meaning we're going to open a qf/loc window
 "   └─────┤
 "         └ public so that it can be called in `vim-qf`
 "          `qf#open()` in autoload/
+
     let origin = winnr()
 
     " are we opening a TOC window
-    if get(getloclist(0, {'title': 0}), 'title', '') =~# '\<TOC$'
+    if a:0 && get(getloclist(0, {'title': 0}), 'title', '') =~# '\<TOC$'
         let mod = 'vert leftabove'
     else
         " are we at the bottom of the tabpage?
