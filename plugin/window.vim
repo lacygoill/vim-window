@@ -301,10 +301,10 @@ nmap  <unique>  Z  <c-w>
 
 " Z C-h C-j C-k C-l    resize window (repeatable with ; ,) {{{2
 
-nno  <silent><unique>  Z<c-h>  :<c-u>call myfuncs#be_repeatable('Z c-h')<cr>
-nno  <silent><unique>  Z<c-j>  :<c-u>call myfuncs#be_repeatable('Z c-j')<cr>
-nno  <silent><unique>  Z<c-k>  :<c-u>call myfuncs#be_repeatable('Z c-k')<cr>
-nno  <silent><unique>  Z<c-l>  :<c-u>call myfuncs#be_repeatable('Z c-l')<cr>
+nno  <silent><unique>  Z<c-h>  :<c-u>call window#resize('h')<cr>
+nno  <silent><unique>  Z<c-j>  :<c-u>call window#resize('j')<cr>
+nno  <silent><unique>  Z<c-k>  :<c-u>call window#resize('k')<cr>
+nno  <silent><unique>  Z<c-l>  :<c-u>call window#resize('l')<cr>
 
 " Zh  Zl  Zj  Zk       split in any direction {{{2
 

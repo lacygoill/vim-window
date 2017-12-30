@@ -194,6 +194,66 @@ fu! window#quit_everything() abort "{{{1
     endtry
 endfu
 
+fu! window#resize(key) abort "{{{1
+    let g:motion_to_repeat = 'Z c-'.a:key
+
+    let orig_win = winnr()
+
+    if a:key =~# '[hl]'
+        noautocmd wincmd l
+        let new_win = winnr()
+        exe 'noautocmd '.orig_win.'wincmd w'
+
+        let on_far_right = new_win != orig_win
+
+        " Why returning different keys depending on the position of the window?{{{
+        "
+        " `C-w <` moves a border of a vertical window:
+        "
+        "     • to the right, for the left  border of the   window  on the far right
+        "     • to the left,  for the right border of other windows
+        "
+        " 2 reasons for these inconsistencies:
+        "
+        "     • Vim can't move the right border of the window on the far
+        "       right, it would resize the whole “frame“, so it needs to
+        "       manipulate the left border
+        "
+        "     • the left border of the  window on the far right is moved to
+        "       the left instead of the right, to increase the visible size of
+        "       the window, like it does in the other windows
+        "}}}
+        if on_far_right
+            let keys = a:key ==# 'h'
+            \?             "\<c-w>3<"
+            \:             "\<c-w>3>"
+        else
+            let keys = a:key ==# 'h'
+            \?             "\<c-w>3>"
+            \:             "\<c-w>3<"
+        endif
+
+    else
+        noautocmd wincmd j
+        let new_win = winnr()
+        exe 'noautocmd '.orig_win.'wincmd w'
+
+        let on_far_bottom = new_win != orig_win
+
+        if on_far_bottom
+            let keys = a:key ==# 'k'
+            \?             "\<c-w>3-"
+            \:             "\<c-w>3+"
+        else
+            let keys = a:key ==# 'k'
+            \?             "\<c-w>3+"
+            \:             "\<c-w>3-"
+        endif
+    endif
+
+    call feedkeys(keys, 'int')
+endfu
+
 fu! window#scroll_preview(fwd) abort "{{{1
     if empty(filter(map(range(1, winnr('$')),
     \                   { i,v -> getwinvar(v, '&l:pvw') }),
