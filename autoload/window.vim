@@ -5,43 +5,6 @@ fu! window#disable_wrap_when_moving_to_vert_split(dir) abort "{{{1
     return ''
 endfu
 
-fu! window#get_modifier(...) abort "{{{1
-"   │     │             │
-"   │     │             └ optional flag meaning we're going to open a loc window
-"   └─────┤
-"         └ public so that it can be called in `vim-qf`
-"          `qf#open()` in autoload/
-
-    let origin = winnr()
-
-    "  ┌ are we opening a loc window?
-    "  │
-    "  │      ┌ and does it display a TOC?
-    "  │      │
-    if a:0 && get(getloclist(0, {'title': 0}), 'title', '') =~# '\<TOC$'
-        let mod = 'vert leftabove'
-    else
-        " are we at the bottom of the tabpage?
-        noautocmd wincmd b
-        if winnr() == origin
-            let mod = 'botright'
-        else
-            noautocmd wincmd p
-            " or maybe at the top?
-            noautocmd wincmd t
-            if winnr() == origin
-                let mod = 'topleft'
-            else
-                " ok we're in a middle window
-                noautocmd wincmd p
-                let mod = 'vert belowright'
-            endif
-        endif
-    endif
-
-    return mod
-endfu
-
 fu! s:get_terminal_buffer() abort "{{{1
     let buflist = tabpagebuflist(tabpagenr())
     call filter(buflist, {i,v -> getbufvar(v, '&bt', '') ==# 'terminal'})
@@ -316,7 +279,7 @@ fu! window#terminal_open() abort "{{{1
         return
     endif
 
-    let mod = window#get_modifier()
+    let mod = lg#window_get_modifier()
 
     let how_to_open = has('nvim')
     \?                    mod.' split | terminal'
