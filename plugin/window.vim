@@ -229,7 +229,7 @@ nno  <silent><unique>  <c-l>  :<c-u>call window#navigate('l')<cr>
 
 " q  Q  u                                               {{{2
 
-nno  <silent><unique>  <space>q  :<c-u>call my_lib#quit()<cr>
+nno  <silent><unique>  <space>q  :<c-u>call lg#quit()<cr>
 " FIXME:{{{
 " When  an  instruction causes  several  errors,  and  it's  executed in  a  try
 " conditional, the  first error can be  catched and converted into  an exception
@@ -260,7 +260,7 @@ nno  <silent><unique>  <space>q  :<c-u>call my_lib#quit()<cr>
 " afterwards.
 "}}}
 nno  <silent><unique>  <space>Q  :<c-u>sil! call window#quit_everything()<cr>
-nno  <silent><unique>  <space>u  :<c-u>call my_lib#restore_closed_window(v:count1)<cr>
+nno  <silent><unique>  <space>u  :<c-u>call lg#restore_closed_window(v:count1)<cr>
 
 " z<  z>               open/focus/close terminal window {{{2
 

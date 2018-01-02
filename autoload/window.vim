@@ -52,7 +52,7 @@ fu! window#navigate(dir) abort "{{{1
     try
         exe 'wincmd '.a:dir
     catch
-        return my_lib#catch_error()
+        return lg#catch_error()
     endtry
 endfu
 
@@ -102,7 +102,7 @@ fu! window#preview_open() abort "{{{1
         " key binding, and restores symmetry. Indeed, `z>` was not used.
         "}}}
     catch
-        return my_lib#catch_error()
+        return lg#catch_error()
     endtry
 endfu
 
@@ -294,7 +294,7 @@ fu! window#terminal_close() abort "{{{1
         " BufLeave hasn't been fired yet since the meta keys were disabled.
         "
         " So, they are not re-enabled. We need to make sure the autocmd is fired
-        " before wiping the terminal buffer with `my_lib#quit()`.
+        " before wiping the terminal buffer with `lg#quit()`.
         "}}}
         " Why checking its existence?{{{
         "
@@ -303,7 +303,7 @@ fu! window#terminal_close() abort "{{{1
         if exists('#toggle_keysyms_in_terminal#bufleave')
             do toggle_keysyms_in_terminal BufLeave
         endif
-        noa call my_lib#quit()
+        noa call lg#quit()
         noa wincmd p
     endif
 endfu
