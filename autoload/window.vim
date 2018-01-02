@@ -263,7 +263,7 @@ fu! window#scroll_preview(fwd) abort "{{{1
         sil! exe 'norm! '.(a:fwd ? 'J' : 'K')
     else
         " go to preview window
-        exe "norm! \<c-w>P"
+        noa exe "norm! \<c-w>P"
         "                           ┌ scroll down
         "                      ┌────┤
         exe 'norm! '.(a:fwd ? "\<c-e>L" : "\<c-y>H")
@@ -275,7 +275,7 @@ fu! window#scroll_preview(fwd) abort "{{{1
         " that's why we don't use it when we move forward
         exe 'norm! zv'.(a:fwd ? '' : '``')
         " get back to previous window
-        exe "norm! \<c-w>p"
+        noa exe "norm! \<c-w>p"
     endif
     return ''
 endfu
