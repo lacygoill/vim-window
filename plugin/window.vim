@@ -349,12 +349,16 @@ nno   <silent><unique>  ZL      :<c-u>call window#disable_wrap_when_moving_to_ve
 nmap          <unique>  <c-w>L  ZL
 nmap          <unique>  <c-w>H  ZH
 
-" ZQ {{{2
+" ZQ  ZZ {{{2
 
 " Our `SPC q` mapping is special, it creates a session file so that we can undo
 " the closing of the window. `ZQ` should behave in the same way.
 
 nmap  <unique>  ZQ  <space>q
+
+" When we press `ZZ`, we don't want Vim to press `C-w Z` (closing preview window).
+" Restore original `ZZ`.
+nno  <silent>  ZZ  :<c-u>x<cr>
 
 " Options {{{1
 
