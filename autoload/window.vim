@@ -257,7 +257,7 @@ fu! window#terminal_close() abort "{{{1
         " BufLeave hasn't been fired yet since the meta keys were disabled.
         "
         " So, they are not re-enabled. We need to make sure the autocmd is fired
-        " before wiping the terminal buffer with `lg#quit()`.
+        " before wiping the terminal buffer with `lg#window#quit()`.
         "}}}
         " Why checking its existence?{{{
         "
@@ -266,7 +266,7 @@ fu! window#terminal_close() abort "{{{1
         if exists('#toggle_keysyms_in_terminal#bufleave')
             do toggle_keysyms_in_terminal BufLeave
         endif
-        noa call lg#quit()
+        noa call lg#window#quit()
         noa wincmd p
     endif
 endfu

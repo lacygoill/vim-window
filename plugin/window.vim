@@ -229,7 +229,7 @@ nno  <silent><unique>  <c-l>  :<c-u>call window#navigate('l')<cr>
 
 " q  Q  u                                               {{{2
 
-nno  <silent><unique>  <space>q  :<c-u>call lg#quit()<cr>
+nno  <silent><unique>  <space>q  :<c-u>call lg#window#quit()<cr>
 " FIXME:{{{
 " When  an  instruction causes  several  errors,  and  it's  executed in  a  try
 " conditional, the  first error can be  catched and converted into  an exception
