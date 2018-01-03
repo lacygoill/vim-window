@@ -279,7 +279,7 @@ fu! window#terminal_open() abort "{{{1
         return
     endif
 
-    let mod = lg#window_get_modifier()
+    let mod = lg#window#get_modifier()
 
     let how_to_open = has('nvim')
     \?                    mod.' split | terminal'
