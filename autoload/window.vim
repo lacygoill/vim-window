@@ -217,26 +217,26 @@ fu! window#resize(key) abort "{{{1
     call feedkeys(keys, 'int')
 endfu
 
-fu! window#scroll_preview(fwd) abort "{{{1
+fu! window#scroll_preview(is_fwd) abort "{{{1
     if empty(filter(map(range(1, winnr('$')),
     \                   { i,v -> getwinvar(v, '&l:pvw') }),
     \               { i,v -> v == 1 }))
         sil! unmap <buffer> J
         sil! unmap <buffer> K
-        sil! exe 'norm! '.(a:fwd ? 'J' : 'K')
+        sil! exe 'norm! '.(a:is_fwd ? 'J' : 'K')
     else
         " go to preview window
         noa exe "norm! \<c-w>P"
-        "                           ┌ scroll down
-        "                      ┌────┤
-        exe 'norm! '.(a:fwd ? "\<c-e>L" : "\<c-y>H")
-        "                            │
-        "                            └ go to last line of window
+        "                              ┌ scroll down
+        "                         ┌────┤
+        exe 'norm! '.(a:is_fwd ? "\<c-e>L" : "\<c-y>H")
+        "                               │
+        "                               └ go to last line of window
 
         " unfold and get back
         " note: for some reason the double backticks breaks `J`,
         " that's why we don't use it when we move forward
-        exe 'norm! zv'.(a:fwd ? '' : '``')
+        exe 'norm! zv'.(a:is_fwd ? '' : '``')
         " get back to previous window
         noa exe "norm! \<c-w>p"
     endif
