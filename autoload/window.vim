@@ -158,8 +158,6 @@ fu! window#quit_everything() abort "{{{1
 endfu
 
 fu! window#resize(key) abort "{{{1
-    let g:motion_to_repeat = 'Z c-'.a:key
-
     let orig_win = winnr()
 
     if a:key =~# '[hl]'
