@@ -212,7 +212,7 @@ fu! window#resize(key) abort "{{{1
         endif
     endif
 
-    call feedkeys(keys, 'int')
+    call feedkeys(keys, 'in')
 endfu
 
 fu! window#scroll_preview(is_fwd) abort "{{{1
