@@ -285,7 +285,7 @@ nno          <unique>  z}  <c-w>z
 " we need the recursiveness, so that, when we type, we can replace <c-w>
 " with Z in custom mappings (own+third party)
 "
-" Watch:
+" MWE:
 "
 "        nno  <c-w><cr>  :echo 'hello'<cr>
 "        nno  Z          <c-w>
