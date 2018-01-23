@@ -269,10 +269,10 @@ nno  <silent><unique>  z>  :<c-u>call window#terminal_close()<cr>
 
 "z(  z)  z[  z]                        qf/ll    window {{{2
 
-nno  <silent><unique>  z(  :<c-u>exe window#qf_open('qf')<cr>
+nno  <silent><unique>  z(  :<c-u>exe lg#window#qf_open('qf')<cr>
 nno  <silent><unique>  z)  :<c-u>cclose<cr>
 
-nno  <silent><unique>  z[  :<c-u>exe window#qf_open('loc')<cr>
+nno  <silent><unique>  z[  :<c-u>exe lg#window#qf_open('loc')<cr>
 nno  <silent><unique>  z]  :<c-u>lclose<cr>
 
 " z{  z}                                preview  window {{{2
