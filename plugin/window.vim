@@ -129,6 +129,15 @@ fu! s:save_view() abort "{{{2
     let w:saved_views[bufnr('%')] = winsaveview()
 endfu
 
+fu! s:scroll_preview(is_fwd) abort "{{{2
+    if getwinvar(winnr('#'), '&l:pvw', 0)
+        return ":\<c-u>exe window#scroll_preview(".a:is_fwd.")\<cr>"
+    else
+        call feedkeys(a:is_fwd ? 'j' : 'k', 'int')
+    endif
+    return ''
+endfu
+
 fu! s:scroll_preview_mappings(later) abort "{{{2
     if a:later
         augroup my_scroll_preview_window
@@ -136,8 +145,25 @@ fu! s:scroll_preview_mappings(later) abort "{{{2
             au WinEnter * call s:scroll_preview_mappings(0)
         augroup END
     else
-        nno  <buffer><nowait><silent>  J  :<c-u>exe window#scroll_preview(1)<cr>
-        nno  <buffer><nowait><silent>  K  :<c-u>exe window#scroll_preview(0)<cr>
+        try
+            " Create mappings  to be able to  scroll in preview window  with `j` and
+            " `k`, after an initial `J` or `K`.
+            call submode#enter_with('scroll-preview', 'n', 'b',  'J', ':<c-u>exe window#scroll_preview(1)<cr>')
+            call submode#enter_with('scroll-preview', 'n', 'b',  'K', ':<c-u>exe window#scroll_preview(0)<cr>')
+            call submode#map(       'scroll-preview', 'n', 'br', 'j', '<plug>(scroll_preview_down)')
+            call submode#map(       'scroll-preview', 'n', 'br', 'k', '<plug>(scroll_preview_up)')
+            "                                               │
+            "                                               └ local to the current buffer
+
+        catch
+            " Alternative (in case `vim-submode` isn't enabled):
+            nno  <buffer><nowait><silent>  J  :<c-u>exe window#scroll_preview(1)<cr>
+            nno  <buffer><nowait><silent>  K  :<c-u>exe window#scroll_preview(0)<cr>
+            " TODO:
+            " Remove  this   `try`  conditional  once  `vim-submode`   has  been
+            " implemented in `vim-lg`.
+        endtry
+
         au!  my_scroll_preview_window
         aug! my_scroll_preview_window
     endif
@@ -220,6 +246,11 @@ fu! s:restore_view() abort "{{{2
 endfu
 
 " Mappings {{{1
+" <plug> {{{2
+
+nno  <expr>  <plug>(scroll_preview_down)  <sid>scroll_preview(1)
+nno  <expr>  <plug>(scroll_preview_up)    <sid>scroll_preview(0)
+
 " C-hjkl               move across windows/tmux panes {{{2
 
 nno  <silent><unique>  <c-h>  :<c-u>call window#navigate('h')<cr>
