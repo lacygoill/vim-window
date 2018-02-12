@@ -209,7 +209,7 @@ fu! s:set_window_height() abort "{{{2
     \                                gettabinfo(tabpagenr())[0].windows,
     \                                function('s:if_special_get_id_and_height')
     \                               ),
-    \                            { i,v ->     v != []
+    \                            { i,v ->     v !=# []
     \                                     && !s:ignore_this_window(v[0])
     \                            })
 
@@ -365,8 +365,8 @@ nmap          <unique>  <c-w>v  Zv
 "
 "     augroup nowrap_in_vert_splits
 "         au!
-"         au WinLeave * if winwidth(0) != &columns | setl nowrap | endif
-"         au WinEnter * if winwidth(0) != &columns | setl nowrap | endif
+"         au WinLeave * if winwidth(0) !=# &columns | setl nowrap | endif
+"         au WinEnter * if winwidth(0) !=# &columns | setl nowrap | endif
 "     augroup END
 "
 " Pro:

@@ -102,7 +102,7 @@ fu! window#resize(key) abort "{{{1
         let new_win = winnr()
         exe 'noautocmd '.orig_win.'wincmd w'
 
-        let on_far_right = new_win != orig_win
+        let on_far_right = new_win !=# orig_win
 
         " Why returning different keys depending on the position of the window?{{{
         "
@@ -136,7 +136,7 @@ fu! window#resize(key) abort "{{{1
         let new_win = winnr()
         exe 'noautocmd '.orig_win.'wincmd w'
 
-        let on_far_bottom = new_win != orig_win
+        let on_far_bottom = new_win !=# orig_win
 
         if on_far_bottom
             let keys = a:key is# 'k'
@@ -180,7 +180,7 @@ endfu
 
 fu! window#terminal_close() abort "{{{1
     let term_buffer = s:get_terminal_buffer()
-    if term_buffer != 0
+    if term_buffer !=# 0
         noa call win_gotoid(bufwinid(term_buffer))
         " Why executing this autocmd?{{{
         "
@@ -208,7 +208,7 @@ endfu
 
 fu! window#terminal_open() abort "{{{1
     let term_buffer = s:get_terminal_buffer()
-    if term_buffer != 0
+    if term_buffer !=# 0
         let id = bufwinid(term_buffer)
         call win_gotoid(id)
         return
