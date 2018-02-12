@@ -37,7 +37,7 @@ augroup window_height
     else
         " In Vim,  the OptionSet event (to  set 'buftype') is not  fired …
         " weird
-        au BufWinEnter * if &bt ==# 'terminal' && !s:is_alone_in_tabpage() | resize 10 | endif
+        au BufWinEnter * if &bt is# 'terminal' && !s:is_alone_in_tabpage() | resize 10 | endif
     endif
     " The preview window is special, when you open one, 2 WinEnter are fired;{{{
     " one when you:
@@ -59,9 +59,9 @@ fu! s:if_special_get_id_and_height(i,v) abort "{{{2
 
     return getwinvar(a:v, '&pvw', 0)
     \?         [ a:v, &pvh ]
-    \:     getbufvar(winbufnr(a:v), '&bt', '') ==# 'terminal'
+    \:     getbufvar(winbufnr(a:v), '&bt', '') is# 'terminal'
     \?         [ a:v, 10 ]
-    \:     getbufvar(winbufnr(a:v), '&bt', '') ==# 'quickfix'
+    \:     getbufvar(winbufnr(a:v), '&bt', '') is# 'quickfix'
     \?         [ a:v, min([ 10, len(getbufline(winbufnr(a:v),
     \                                          1, 10))
     \                     ])
@@ -108,7 +108,7 @@ endfu
 fu! s:make_window_small() abort "{{{2
     exe 'resize '.(&l:pvw
     \?                 &l:pvh
-    \:             &l:bt ==# 'quickfix'
+    \:             &bt is# 'quickfix'
     \?                 min([ 10, line('$') ])
     \:             10)
 endfu

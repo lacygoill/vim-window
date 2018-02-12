@@ -7,7 +7,7 @@ endfu
 
 fu! s:get_terminal_buffer() abort "{{{1
     let buflist = tabpagebuflist(tabpagenr())
-    call filter(buflist, {i,v -> getbufvar(v, '&bt', '') ==# 'terminal'})
+    call filter(buflist, {i,v -> getbufvar(v, '&bt', '') is# 'terminal'})
     return get(buflist, 0 , 0)
 endfu
 
@@ -122,11 +122,11 @@ fu! window#resize(key) abort "{{{1
         "       the window, like it does in the other windows
         "}}}
         if on_far_right
-            let keys = a:key ==# 'h'
+            let keys = a:key is# 'h'
             \?             "\<c-w>3<"
             \:             "\<c-w>3>"
         else
-            let keys = a:key ==# 'h'
+            let keys = a:key is# 'h'
             \?             "\<c-w>3>"
             \:             "\<c-w>3<"
         endif
@@ -139,11 +139,11 @@ fu! window#resize(key) abort "{{{1
         let on_far_bottom = new_win != orig_win
 
         if on_far_bottom
-            let keys = a:key ==# 'k'
+            let keys = a:key is# 'k'
             \?             "\<c-w>3-"
             \:             "\<c-w>3+"
         else
-            let keys = a:key ==# 'k'
+            let keys = a:key is# 'k'
             \?             "\<c-w>3+"
             \:             "\<c-w>3-"
         endif
