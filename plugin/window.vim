@@ -98,7 +98,7 @@ fu! s:is_alone_in_tabpage() abort "{{{2
 endfu
 
 fu! s:is_horizontally_maximized(...) abort "{{{2
-    return winwidth(a:0 ? a:1 : 0) == &columns
+    return winwidth(a:0 ? a:1 : 0) ==# &columns
 endfu
 
 fu! s:is_special() abort "{{{2
@@ -116,7 +116,7 @@ endfu
 fu! s:save_change_position() abort "{{{2
     let changelist = split(execute('changes'), '\n')
     let b:my_change_position = index(changelist, matchstr(changelist, '^>'))
-    if b:my_change_position == -1
+    if b:my_change_position ==# -1
         let b:my_change_position = 100
     endif
 endfu
