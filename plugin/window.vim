@@ -148,10 +148,10 @@ fu! s:scroll_preview_mappings(later) abort "{{{2
         try
             " Create mappings  to be able to  scroll in preview window  with `j` and
             " `k`, after an initial `J` or `K`.
-            call submode#enter_with('scroll-preview', 'n', 'b',  'J', ':<c-u>exe window#scroll_preview(1)<cr>')
-            call submode#enter_with('scroll-preview', 'n', 'b',  'K', ':<c-u>exe window#scroll_preview(0)<cr>')
-            call submode#map(       'scroll-preview', 'n', 'br', 'j', '<plug>(scroll_preview_down)')
-            call submode#map(       'scroll-preview', 'n', 'br', 'k', '<plug>(scroll_preview_up)')
+            call submode#enter_with('scroll-preview', 'n', 'bs',  'J', ':<c-u>exe window#scroll_preview(1)<cr>')
+            call submode#enter_with('scroll-preview', 'n', 'bs',  'K', ':<c-u>exe window#scroll_preview(0)<cr>')
+            call submode#map(       'scroll-preview', 'n', 'brs', 'j', '<plug>(scroll_preview_down)')
+            call submode#map(       'scroll-preview', 'n', 'brs', 'k', '<plug>(scroll_preview_up)')
             "                                               │
             "                                               └ local to the current buffer
 
