@@ -258,7 +258,7 @@ nno  <silent><unique>  <c-j>  :<c-u>call window#navigate('j')<cr>
 nno  <silent><unique>  <c-k>  :<c-u>call window#navigate('k')<cr>
 nno  <silent><unique>  <c-l>  :<c-u>call window#navigate('l')<cr>
 
-" q  Q  u                                               {{{2
+" SPC q  Q  u                                               {{{2
 
 nno  <silent><unique>  <space>q  :<c-u>call lg#window#quit()<cr>
 " FIXME:{{{
