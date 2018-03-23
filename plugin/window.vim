@@ -102,7 +102,7 @@ fu! s:is_horizontally_maximized(...) abort "{{{2
 endfu
 
 fu! s:is_special() abort "{{{2
-    return &l:pvw || &bt =~# '^\%(quickfix\|terminal\)$'
+    return &l:pvw || &bt =~# '^\%(quickfix\|terminal\)$' || expand('%:p:t') is# 'COMMIT_EDITMSG'
 endfu
 
 fu! s:make_window_small() abort "{{{2
