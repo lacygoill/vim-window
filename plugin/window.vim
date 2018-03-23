@@ -31,12 +31,8 @@ augroup END
 augroup window_height
     au!
     if has('nvim')
-        " In  Neovim, when  we open  a  terminal and  BufWinEnter is  fired,
-        " `&bt` is not yet set.
-        au TermOpen * if !s:is_alone_in_tabpage() | resize 10 | endif
+        au TermOpen     * if !s:is_alone_in_tabpage() | resize 10 | endif
     else
-        " In Vim,  the OptionSet event (to  set 'buftype') is not  fired …
-        " weird
         au TerminalOpen * if !s:is_alone_in_tabpage() | resize 10 | endif
     endif
     " The preview window is special, when you open one, 2 WinEnter are fired;{{{
