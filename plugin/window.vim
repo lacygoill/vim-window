@@ -54,15 +54,15 @@ fu! s:if_special_get_id_and_height(i,v) abort "{{{2
 "     └─ if it's a special window, get me its ID and the desired height
 
     return getwinvar(a:v, '&pvw', 0)
-    \?         [ a:v, &pvh ]
-    \:     getbufvar(winbufnr(a:v), '&bt', '') is# 'terminal'
-    \?         [ a:v, 10 ]
-    \:     getbufvar(winbufnr(a:v), '&bt', '') is# 'quickfix'
-    \?         [ a:v, min([ 10, len(getbufline(winbufnr(a:v),
-    \                                          1, 10))
-    \                     ])
-    \          ]
-    \:         []
+       \ ?     [ a:v, &pvh ]
+       \ : getbufvar(winbufnr(a:v), '&bt', '') is# 'terminal'
+       \ ?     [ a:v, 10 ]
+       \ : getbufvar(winbufnr(a:v), '&bt', '') is# 'quickfix'
+       \ ?     [ a:v, min([ 10, len(getbufline(winbufnr(a:v),
+       \                                       1, 10))
+       \                  ])
+       \       ]
+       \ :     []
 endfu
 
 fu! s:ignore_this_window(nr) abort "{{{2
@@ -103,10 +103,10 @@ endfu
 
 fu! s:make_window_small() abort "{{{2
     exe 'resize '.(&l:pvw
-    \?                 &l:pvh
-    \:             &bt is# 'quickfix'
-    \?                 min([ 10, line('$') ])
-    \:             10)
+    \ ?                &l:pvh
+    \ :            &bt is# 'quickfix'
+    \ ?                min([ 10, line('$') ])
+    \ :            10)
 endfu
 
 fu! s:save_change_position() abort "{{{2
