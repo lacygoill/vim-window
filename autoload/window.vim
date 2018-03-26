@@ -123,12 +123,12 @@ fu! window#resize(key) abort "{{{1
         "}}}
         if on_far_right
             let keys = a:key is# 'h'
-            \?             "\<c-w>3<"
-            \:             "\<c-w>3>"
+                   \ ?     "\<c-w>3<"
+                   \ :     "\<c-w>3>"
         else
             let keys = a:key is# 'h'
-            \?             "\<c-w>3>"
-            \:             "\<c-w>3<"
+                   \ ?     "\<c-w>3>"
+                   \ :     "\<c-w>3<"
         endif
 
     else
@@ -140,12 +140,12 @@ fu! window#resize(key) abort "{{{1
 
         if on_far_bottom
             let keys = a:key is# 'k'
-            \?             "\<c-w>3-"
-            \:             "\<c-w>3+"
+                   \ ?     "\<c-w>3-"
+                   \ :     "\<c-w>3+"
         else
             let keys = a:key is# 'k'
-            \?             "\<c-w>3+"
-            \:             "\<c-w>3-"
+                   \ ?     "\<c-w>3+"
+                   \ :     "\<c-w>3-"
         endif
     endif
 
@@ -217,12 +217,12 @@ fu! window#terminal_open() abort "{{{1
     let mod = lg#window#get_modifier()
 
     let how_to_open = has('nvim')
-    \?                    mod.' split | terminal'
-    \:                    mod.' terminal'
+                  \ ?     mod.' split | terminal'
+                  \ :     mod.' terminal'
 
     let resize = mod =~# '^vert'
-    \?               ' | vert resize 30 | resize 30'
-    \:               ''
+             \ ?     ' | vert resize 30 | resize 30'
+             \ :     ''
 
     exe printf('exe %s %s', string(how_to_open), resize)
 endfu
