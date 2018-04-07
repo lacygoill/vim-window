@@ -333,6 +333,10 @@ nno  <silent><unique>  Z<c-j>  :<c-u>call window#resize('j')<cr>
 nno  <silent><unique>  Z<c-k>  :<c-u>call window#resize('k')<cr>
 nno  <silent><unique>  Z<c-l>  :<c-u>call window#resize('l')<cr>
 
+" Zf                   open visually selected file {{{2
+
+xno  <silent>  Zf  <c-w>f
+
 " Zh  Zl  Zj  Zk       split in any direction {{{2
 
 nno  <silent><unique>  Zh  :<c-u>setl nowrap <bar> leftabove vsplit  <bar> setl nowrap<cr>
