@@ -66,6 +66,14 @@ fu! s:if_special_get_id_and_height(i,v) abort "{{{2
 endfu
 
 fu! s:ignore_this_window(nr) abort "{{{2
+    " Rationale:{{{
+    "
+    " If a window is alone in the tabpage, we don't want to minimize its height.
+    " If a window is not very wide, we don't want to minimize its height either.
+    " It could be a TOC, and so needs a lot of space on the vertical axis to make up for
+    " its small width.
+    "}}}
+    return winwidth(a:nr) < &columns/2 || s:is_alone_in_tabpage()
     " You want a condition to test whether a window is maximized vertically?{{{
     " Try this:
     "
@@ -86,7 +94,6 @@ fu! s:ignore_this_window(nr) abort "{{{2
     "                                     if there are several tabpages,
     "                                     or not (if there's a single tabpage)
 "}}}
-    return !s:is_horizontally_maximized(a:nr) || s:is_alone_in_tabpage()
 endfu
 
 fu! s:is_alone_in_tabpage() abort "{{{2
@@ -210,7 +217,12 @@ fu! s:set_window_height() abort "{{{2
     \                            })
 
     for [ id, height ] in special_windows
-        exe win_id2win(id).'wincmd w | resize '.height.' | wincmd p'
+        let winnr_orig = winnr()
+        let winnr_to_resize = win_id2win(id)
+        exe winnr_to_resize.'wincmd w | resize '.height
+        if winnr_to_resize !=# winnr_orig
+            exe winnr_orig.'wincmd w'
+        endif
     endfor
 endfu
 
