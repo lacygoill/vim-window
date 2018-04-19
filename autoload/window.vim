@@ -98,9 +98,9 @@ fu! window#resize(key) abort "{{{1
     let orig_win = winnr()
 
     if a:key =~# '[hl]'
-        noautocmd wincmd l
+        noa wincmd l
         let new_win = winnr()
-        exe 'noautocmd '.orig_win.'wincmd w'
+        exe 'noa '.orig_win.'wincmd w'
 
         let on_far_right = new_win !=# orig_win
 
@@ -132,9 +132,9 @@ fu! window#resize(key) abort "{{{1
         endif
 
     else
-        noautocmd wincmd j
+        noa wincmd j
         let new_win = winnr()
-        exe 'noautocmd '.orig_win.'wincmd w'
+        exe 'noa '.orig_win.'wincmd w'
 
         let on_far_bottom = new_win !=# orig_win
 
