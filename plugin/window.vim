@@ -195,9 +195,9 @@ fu! s:set_window_height() abort "{{{2
     " trying and fix it.
 "}}}
 
-    if   s:is_special()
-    \&&  s:is_horizontally_maximized()
-    \&& !s:is_alone_in_tabpage()
+    if    s:is_special()
+    \ &&  s:is_horizontally_maximized()
+    \ && !s:is_alone_in_tabpage()
         call s:make_window_small()
         return
     else
