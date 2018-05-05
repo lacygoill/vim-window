@@ -35,12 +35,6 @@ augroup window_height
     else
         au TerminalOpen * if !s:is_alone_in_tabpage() | resize 10 | endif
     endif
-    " The preview window is special, when you open one, 2 WinEnter are fired;{{{
-    " one when you:
-    "
-    "         1. enter preview window (&l:pvw is NOT yet set)
-    "         2. go back to original window (now, &l:pvw IS set in the preview window)
-"}}}
     au WinEnter * call s:set_window_height()
 augroup END
 
@@ -183,7 +177,7 @@ fu! s:set_window_height() abort "{{{2
     "
     "         • &pvh for the preview window
     "         • 10 for a qf/terminal window
-"}}}
+    "}}}
     " Issue:{{{
     " Create a tab page with a qf window + a terminal.
     " The terminal is  big when we switch  to the qf window, then  small when we
@@ -193,7 +187,14 @@ fu! s:set_window_height() abort "{{{2
     " in a tab page where there are several windows, but ALL are special.
     " This is  a unique  and probably  rare case. So, I  don't think  it's worth
     " trying and fix it.
-"}}}
+    "}}}
+    " The preview window is special. {{{
+    "
+    " When you open one, 2 WinEnter are fired; one when you:
+    "
+    "         1. enter preview window (&l:pvw is NOT yet set)
+    "         2. go back to original window (now, &l:pvw IS set in the preview window)
+    "}}}
 
     if    s:is_special()
     \ &&  s:is_horizontally_maximized()
