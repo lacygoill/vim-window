@@ -88,6 +88,11 @@ fu! s:ignore_this_window(nr) abort "{{{2
     " Therefore, we don't want to ignore a preview window, even if its width is small.
     " We WANT to reset its height:    1 → &pvh
     "}}}
+    " TODO:
+    " Try to change the name of this function into something positive.
+    " It could make the logic more understandable.
+    " Sth like `s:height_should_be_reset()`.
+
     return (winwidth(a:nr) < &columns/2
     \ &&    !(   getwinvar(a:nr, '&pvw', 0)
     \         && filter(map(gettabinfo(tabpagenr())[0].windows,
