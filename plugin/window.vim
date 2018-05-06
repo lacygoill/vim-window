@@ -93,6 +93,13 @@ fu! s:ignore_this_window(nr) abort "{{{2
     " It could make the logic more understandable.
     " Sth like `s:height_should_be_reset()`.
 
+    " FIXME:
+    " :pedit $MYVIMRC
+    " C-w P
+    " C-w L
+    " C-h
+    " The command line height becomes too big.
+
     return (winwidth(a:nr) < &columns/2
     \ &&    !(   getwinvar(a:nr, '&pvw', 0)
     \         && filter(map(gettabinfo(tabpagenr())[0].windows,
@@ -246,8 +253,8 @@ fu! s:set_window_height() abort "{{{2
     for [ id, height ] in special_windows
         let winnr_orig = winnr()
         let winnr_to_resize = win_id2win(id)
-        exe winnr_to_resize.'wincmd w | resize '.height
         if winnr_to_resize !=# winnr_orig
+            exe winnr_to_resize.'wincmd w | resize '.height
             exe winnr_orig.'wincmd w'
         endif
     endfor
