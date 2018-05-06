@@ -68,7 +68,7 @@ fu! s:ignore_this_window(nr) abort "{{{2
     " It could be a TOC, and so needs a lot of space on the vertical axis to make up for
     " its small width.
     "}}}
-    " However, if it's a preview window, we DO want to reset its height.{{{
+    " Exception: if it's a preview window, we DO want to reset its height.{{{
     "
     " Why?
     " The preview window is special.
