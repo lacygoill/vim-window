@@ -60,14 +60,34 @@ fu! s:if_special_get_id_and_height(i,v) abort "{{{2
 endfu
 
 fu! s:ignore_this_window(nr) abort "{{{2
-    " Rationale:{{{
-    "
-    " If a window is alone in the tabpage, we don't want to minimize its height.
-    " If a window is not very wide, we don't want to minimize its height either.
+    " Rationale:
+    " If a window is alone in the tabpage, we don't want to reset its height,{{{
+    " to a small size.
+    "}}}
+    " If a window is not very wide, we don't want to reset its height either.{{{
     " It could be a TOC, and so needs a lot of space on the vertical axis to make up for
     " its small width.
     "}}}
-    return winwidth(a:nr) < &columns/2 || s:is_alone_in_tabpage()
+    " However, if it's a preview window, we DO want to reset its height.{{{
+    "
+    " Why?
+    " The preview window is special.
+    "
+    " When you open one, 2 WinEnter are fired; when you:
+    "
+    "         1. enter preview window (&l:pvw is NOT yet set)
+    "         2. go back to original window (now, &l:pvw IS set in the preview window)
+    "
+    " When the second WinEnter is fired,  we'll get back to the original window,
+    " from which we've opened the preview one.
+    " It'll probably be a regular window, so it will be maximized.
+    " But if  it IS  maximized, then  our preview window  will become  too small
+    " (only 1 line high).
+    " It happens when we open a preview window from a “tree” or “vim-plug” buffer.
+    " Therefore, we don't want to ignore a preview window, even if its width is small.
+    " We WANT to reset its height:    1 → &pvh
+    "}}}
+    return (winwidth(a:nr) < &columns/2 && !getwinvar(a:nr, '&pvw', 0)) || s:is_alone_in_tabpage()
     " You want a condition to test whether a window is maximized vertically?{{{
     " Try this:
     "
@@ -187,13 +207,6 @@ fu! s:set_window_height() abort "{{{2
     " in a tab page where there are several windows, but ALL are special.
     " This is  a unique  and probably  rare case. So, I  don't think  it's worth
     " trying and fix it.
-    "}}}
-    " The preview window is special. {{{
-    "
-    " When you open one, 2 WinEnter are fired; one when you:
-    "
-    "         1. enter preview window (&l:pvw is NOT yet set)
-    "         2. go back to original window (now, &l:pvw IS set in the preview window)
     "}}}
 
     if    s:is_special()
