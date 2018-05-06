@@ -69,6 +69,7 @@ fu! s:ignore_this_window(nr) abort "{{{2
     " make up for its small width.
     "}}}
     " Exception: if it's a preview window, we DO want to reset its height.{{{
+    " But only if there's a “tree” or “vim-plug” buffer somewhere in the tabpage.
     "
     " Why?
     " The preview window is special.
@@ -87,7 +88,14 @@ fu! s:ignore_this_window(nr) abort "{{{2
     " Therefore, we don't want to ignore a preview window, even if its width is small.
     " We WANT to reset its height:    1 → &pvh
     "}}}
-    return (winwidth(a:nr) < &columns/2 && !getwinvar(a:nr, '&pvw', 0)) || s:is_alone_in_tabpage()
+    return (winwidth(a:nr) < &columns/2
+    \ &&    !(   getwinvar(a:nr, '&pvw', 0)
+    \         && filter(map(gettabinfo(tabpagenr())[0].windows,
+    \                       {i,v -> getwinvar(v, '&ft', '')}),
+    \                   {i,v -> index(['tree', 'vim-plug'], v) != -1})
+    \            != []
+    \      ) )
+    \ || s:is_alone_in_tabpage()
     " You want a condition to test whether a window is maximized vertically?{{{
     " Try this:
     "
