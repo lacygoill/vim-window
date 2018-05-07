@@ -134,8 +134,8 @@ fu! s:is_alone_in_tabpage() abort "{{{2
     return winnr('$') <= 1
 endfu
 
-fu! s:is_horizontally_maximized(...) abort "{{{2
-    return winwidth(a:0 ? a:1 : 0) ==# &columns
+fu! s:is_horizontally_maximized() abort "{{{2
+    return winwidth(0) ==# &columns
 endfu
 
 fu! s:is_special() abort "{{{2
@@ -249,14 +249,14 @@ fu! s:set_window_height() abort "{{{2
     \                                     && !s:ignore_this_window(v[0])
     \                            })
 
+    let winnr_orig = winnr()
     for [ id, height ] in special_windows
-        let winnr_orig = winnr()
         let winnr_to_resize = win_id2win(id)
         if winnr_to_resize !=# winnr_orig
-            exe winnr_to_resize.'wincmd w | resize '.height
-            exe winnr_orig.'wincmd w'
+            noa exe winnr_to_resize.'wincmd w | resize '.height
         endif
     endfor
+    noa exe winnr_orig.'wincmd w'
 endfu
 
 fu! s:restore_change_position() abort "{{{2
