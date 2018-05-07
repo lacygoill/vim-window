@@ -243,7 +243,7 @@ fu! s:set_window_height() abort "{{{2
     " In this case, we need to reset their height.
     let special_windows = filter(map(
     \                                range(1, winnr('$')),
-    \                                function('s:if_special_get_nr_and_height')
+    \                                {i,v -> s:if_special_get_nr_and_height(i,v)}
     \                               ),
     \                            { i,v ->     v !=# []
     \                                     && !s:ignore_this_window(v[0])
