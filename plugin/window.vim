@@ -238,6 +238,29 @@ fu! s:set_window_height() abort "{{{2
     " If we've maximized a  regular window, we may have altered  the height of a
     " special window somewhere else in the current tab page.
     " In this case, we need to reset their height.
+    " What's the output of `map()`?{{{
+    "
+    " `map()` gets us all numbers (and the corresponding desired heights) of all
+    " special windows in the current tabpage.
+    "}}}
+    " Why invoking `filter()`?{{{
+    "
+    " Each regular window will have produced an empty list in the output of `map()`.
+    " An empty list will cause an error in the next `for` loop.
+    " So we need to remove them.
+    "
+    " Also, we shouldn't  reset the height of the current  window; we've already
+    " just set its height (`wincmd _`).
+    " Only the heights of the other windows:
+    "
+    "         && v[0] !=# winnr_orig
+    "
+    " Finally, there're  some special cases,  where we  don't want to  reset the
+    " height of a special window.
+    " We delegate the logic to handle these in `s:ignore_this_window()`:
+    "
+    "         && !s:ignore_this_window(v[0])
+    "}}}
     let special_windows = filter(map(
                                \     range(1, winnr('$')),
                                \     {i,v -> s:if_special_get_nr_and_height(i,v)}
