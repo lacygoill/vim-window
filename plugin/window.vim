@@ -39,13 +39,13 @@ augroup window_height
 augroup END
 
 " Functions {{{1
-fu! s:if_special_get_id_and_height(i,v) abort "{{{2
+fu! s:if_special_get_nr_and_height(i,v) abort "{{{2
 "     │                            │ │
-"     │                            │ └─ a window id
+"     │                            │ └─ a window number
 "     │                            │
-"     │                            └─ an index in a list of window ids
+"     │                            └─ an index in a list of window numbers
 "     │
-"     └─ if it's a special window, get me its ID and the desired height
+"     └─ if it's a special window, get me its number and the desired height
 
     return getwinvar(a:v, '&pvw', 0)
        \ ?     [ a:v, &pvh ]
@@ -102,7 +102,7 @@ fu! s:ignore_this_window(nr) abort "{{{2
 
     return (winwidth(a:nr) < &columns/2
     \ &&    !(   getwinvar(a:nr, '&pvw', 0)
-    \         && filter(map(gettabinfo(tabpagenr())[0].windows,
+    \         && filter(map(range(1, winnr('$')),
     \                       {i,v -> getwinvar(v, '&ft', '')}),
     \                   {i,v -> index(['tree', 'vim-plug'], v) != -1})
     \            != []
@@ -242,18 +242,17 @@ fu! s:set_window_height() abort "{{{2
     " special window somewhere else in the current tab page.
     " In this case, we need to reset their height.
     let special_windows = filter(map(
-    \                                gettabinfo(tabpagenr())[0].windows,
-    \                                function('s:if_special_get_id_and_height')
+    \                                range(1, winnr('$')),
+    \                                function('s:if_special_get_nr_and_height')
     \                               ),
     \                            { i,v ->     v !=# []
     \                                     && !s:ignore_this_window(v[0])
     \                            })
 
     let winnr_orig = winnr()
-    for [ id, height ] in special_windows
-        let winnr_to_resize = win_id2win(id)
-        if winnr_to_resize !=# winnr_orig
-            noa exe winnr_to_resize.'wincmd w | resize '.height
+    for [ winnr, height ] in special_windows
+        if winnr !=# winnr_orig
+            noa exe winnr.'wincmd w | resize '.height
         endif
     endfor
     noa exe winnr_orig.'wincmd w'
