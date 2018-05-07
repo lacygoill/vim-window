@@ -91,13 +91,12 @@ fu! s:ignore_this_window(nr) abort "{{{2
     " Sth like `s:height_should_be_reset()`.
 
     " FIXME:
-    " :pedit $MYVIMRC
-    " C-w P
-    " C-w L
-    " C-h
-    " The command line height becomes too big.
+    "     :vert pedit $MYVIMRC
+    "
+    " The command line height becomes too big when the preview window width goes
+    " beyond a certain point.
 
-    return (winwidth(a:nr) < &columns/2
+    return (winwidth(a:nr) < &columns/2 && (&lines - winheight(a:nr) <= &ch+2)
     \ &&    !(   getwinvar(a:nr, '&pvw', 0)
     \         && filter(map(range(1, winnr('$')),
     \                       {i,v -> getwinvar(v, '&ft', '')}),
