@@ -61,10 +61,7 @@ endfu
 
 fu! s:ignore_this_window(nr) abort "{{{2
     " Rationale:
-    " If a window is alone in the tabpage, we don't want to reset its height,{{{
-    " to a small size.
-    "}}}
-    " If a window is not very wide, we don't want to reset its height either.{{{
+    " If a window is not very wide, we don't want to reset its height.{{{
     " It could  be a TOC, and  so needs a lot  of space on the  vertical axis to
     " make up for its small width.
     "}}}
@@ -107,7 +104,6 @@ fu! s:ignore_this_window(nr) abort "{{{2
     \                   {i,v -> index(['tree', 'vim-plug'], v) != -1})
     \            != []
     \      ) )
-    \ || s:is_alone_in_tabpage()
     " You want a condition to test whether a window is maximized vertically?{{{
     " Try this:
     "
@@ -238,22 +234,21 @@ fu! s:set_window_height() abort "{{{2
         wincmd _
     endif
 
+    let winnr_orig = winnr()
     " If we've maximized a  regular window, we may have altered  the height of a
     " special window somewhere else in the current tab page.
     " In this case, we need to reset their height.
     let special_windows = filter(map(
-    \                                range(1, winnr('$')),
-    \                                {i,v -> s:if_special_get_nr_and_height(i,v)}
-    \                               ),
-    \                            { i,v ->     v !=# []
-    \                                     && !s:ignore_this_window(v[0])
-    \                            })
+                               \     range(1, winnr('$')),
+                               \     {i,v -> s:if_special_get_nr_and_height(i,v)}
+                               \    ),
+                               \ { i,v ->    v    !=# []
+                               \          && v[0] !=# winnr_orig
+                               \          && !s:ignore_this_window(v[0])
+                               \ })
 
-    let winnr_orig = winnr()
     for [ winnr, height ] in special_windows
-        if winnr !=# winnr_orig
-            noa exe winnr.'wincmd w | resize '.height
-        endif
+        noa exe winnr.'wincmd w | resize '.height
     endfor
     noa exe winnr_orig.'wincmd w'
 endfu
