@@ -59,12 +59,7 @@ fu! s:if_special_get_nr_and_height(i,v) abort "{{{2
        \ :     []
 endfu
 
-fu! s:ignore_this_window(nr) abort "{{{2
-    " TODO:
-    " Try to change the name of this function into something positive.
-    " It could make the logic more understandable.
-    " Sth like `s:height_should_be_reset()`.
-
+fu! s:height_should_be_reset(nr) abort "{{{2
     " Test:{{{
     " Whatever change you perform on this  function, make sure the height of the
     " windows is correct after executing:
@@ -73,11 +68,12 @@ fu! s:ignore_this_window(nr) abort "{{{2
     "}}}
 
     " Rationale:
-    " If a window is not very wide, we don't want to reset its height.{{{
-    " It could  be a TOC, and  so needs a lot  of space on the  vertical axis to
-    " make up for its small width.
+    " We want to reset the height of a special window only if it's wide enough.{{{
+    "
+    " A window with a small width could be a  TOC, and so need a lot of space on
+    " the vertical axis to make up for it.
     "}}}
-    " Exception: if it's a preview window, we DO want to reset its height.{{{
+    " We want to reset the height of a preview window no matter its width. {{{
     "
     " Why?
     " The preview window is special.
@@ -96,7 +92,7 @@ fu! s:ignore_this_window(nr) abort "{{{2
     " Therefore, we don't want to ignore a preview window, even if its width is small.
     " We WANT to reset its height:    1 → &pvh
     "}}}
-    return winwidth(a:nr) < &columns/2 && !getwinvar(a:nr, '&pvw', 0)
+    return winwidth(a:nr) >= &columns/2 || getwinvar(a:nr, '&pvw', 0)
 
     " You want a condition to test whether a window is maximized vertically?{{{
     " Try this:
@@ -228,10 +224,10 @@ fu! s:set_window_height() abort "{{{2
         wincmd _
     endif
 
-    let winnr_orig = winnr()
     " If we've maximized a  regular window, we may have altered  the height of a
     " special window somewhere else in the current tab page.
     " In this case, we need to reset their height.
+    let winnr_orig = winnr()
     " What's the output of `map()`?{{{
     "
     " `map()` gets us all numbers (and the corresponding desired heights) of all
@@ -251,9 +247,9 @@ fu! s:set_window_height() abort "{{{2
     "
     " Finally, there're  some special cases,  where we  don't want to  reset the
     " height of a special window.
-    " We delegate the logic to handle these in `s:ignore_this_window()`:
+    " We delegate the logic to handle these in `s:height_should_be_reset()`:
     "
-    "         && !s:ignore_this_window(v[0])
+    "         && !s:height_should_be_reset(v[0])
     "}}}
     let special_windows = filter(map(
                                \     range(1, winnr('$')),
@@ -261,7 +257,7 @@ fu! s:set_window_height() abort "{{{2
                                \    ),
                                \ { i,v ->    v    !=# []
                                \          && v[0] !=# winnr_orig
-                               \          && !s:ignore_this_window(v[0])
+                               \          && s:height_should_be_reset(v[0])
                                \ })
 
     for [ winnr, height ] in special_windows
