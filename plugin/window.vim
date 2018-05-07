@@ -232,8 +232,7 @@ fu! s:set_window_height() abort "{{{2
     if    s:is_special()
     \ &&  s:is_horizontally_maximized()
     \ && !s:is_alone_in_tabpage()
-        call s:make_window_small()
-        return
+        return s:make_window_small()
     else
         " if we enter a regular window, maximize it, but don't stop yet
         wincmd _
