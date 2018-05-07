@@ -266,6 +266,15 @@ fu! s:set_window_height() abort "{{{2
 
     for [ winnr, height ] in special_windows
         noa exe winnr.'wincmd w'
+        " Why this check?{{{
+        "
+        " If there's  no window above nor  below the current window,  and we set
+        " its height to a few lines only, then the layout becomes wrong.
+        "
+        " Try this to understand:
+        "
+        "         10wincmd _
+        "}}}
         if s:there_is_a_window_above_or_below(winnr)
             noa exe winnr.'wincmd w | resize '.height
         endif
