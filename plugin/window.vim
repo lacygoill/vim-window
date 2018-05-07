@@ -60,13 +60,24 @@ fu! s:if_special_get_nr_and_height(i,v) abort "{{{2
 endfu
 
 fu! s:ignore_this_window(nr) abort "{{{2
+    " TODO:
+    " Try to change the name of this function into something positive.
+    " It could make the logic more understandable.
+    " Sth like `s:height_should_be_reset()`.
+
+    " Test:{{{
+    " Whatever change you perform on this  function, make sure the height of the
+    " windows is correct after executing:
+    "
+    "     :vert pedit $MYVIMRC
+    "}}}
+
     " Rationale:
     " If a window is not very wide, we don't want to reset its height.{{{
     " It could  be a TOC, and  so needs a lot  of space on the  vertical axis to
     " make up for its small width.
     "}}}
     " Exception: if it's a preview window, we DO want to reset its height.{{{
-    " But only if there's a “tree” or “vim-plug” buffer somewhere in the tabpage.
     "
     " Why?
     " The preview window is special.
@@ -85,24 +96,8 @@ fu! s:ignore_this_window(nr) abort "{{{2
     " Therefore, we don't want to ignore a preview window, even if its width is small.
     " We WANT to reset its height:    1 → &pvh
     "}}}
-    " TODO:
-    " Try to change the name of this function into something positive.
-    " It could make the logic more understandable.
-    " Sth like `s:height_should_be_reset()`.
+    return winwidth(a:nr) < &columns/2 && !getwinvar(a:nr, '&pvw', 0)
 
-    " FIXME:
-    "     :vert pedit $MYVIMRC
-    "
-    " The command line height becomes too big when the preview window width goes
-    " beyond a certain point.
-
-    return (winwidth(a:nr) < &columns/2 && (&lines - winheight(a:nr) <= &ch+2)
-    \ &&    !(   getwinvar(a:nr, '&pvw', 0)
-    \         && filter(map(range(1, winnr('$')),
-    \                       {i,v -> getwinvar(v, '&ft', '')}),
-    \                   {i,v -> index(['tree', 'vim-plug'], v) != -1})
-    \            != []
-    \      ) )
     " You want a condition to test whether a window is maximized vertically?{{{
     " Try this:
     "
@@ -270,9 +265,29 @@ fu! s:set_window_height() abort "{{{2
                                \ })
 
     for [ winnr, height ] in special_windows
-        noa exe winnr.'wincmd w | resize '.height
+        noa exe winnr.'wincmd w'
+        if s:there_is_a_window_above_or_below(winnr)
+            noa exe winnr.'wincmd w | resize '.height
+        endif
     endfor
+
     noa exe winnr_orig.'wincmd w'
+endfu
+
+fu! s:there_is_a_window_above_or_below(winnr) abort "{{{2
+    noa wincmd j
+    if a:winnr != winnr()
+        noa exe a:winnr.'wincmd w'
+        return 1
+    endif
+
+    noa wincmd k
+    if a:winnr != winnr()
+        noa exe a:winnr.'wincmd w'
+        return 1
+    endif
+
+    return 0
 endfu
 
 fu! s:restore_change_position() abort "{{{2
