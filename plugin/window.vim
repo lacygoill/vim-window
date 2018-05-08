@@ -49,6 +49,8 @@ fu! s:if_special_get_nr_and_height(i,v) abort "{{{2
 
     return getwinvar(a:v, '&pvw', 0)
        \ ?     [ a:v, &pvh ]
+       \ : getbufvar(winbufnr(a:v), '&ft', '') is# 'diff'
+       \ ?     [ a:v, 10 ]
        \ : getbufvar(winbufnr(a:v), '&bt', '') is# 'terminal'
        \ ?     [ a:v, 10 ]
        \ : getbufvar(winbufnr(a:v), '&bt', '') is# 'quickfix'
@@ -92,7 +94,9 @@ fu! s:height_should_be_reset(nr) abort "{{{2
     " Therefore, we don't want to ignore a preview window, even if its width is small.
     " We WANT to reset its height:    1 → &pvh
     "}}}
-    return winwidth(a:nr) >= &columns/2 || getwinvar(a:nr, '&pvw', 0)
+    return winwidth(a:nr) >= &columns/2
+      \ || getwinvar(a:nr, '&pvw', 0)
+      \ || getbufvar(winbufnr(a:nr), '&ft', 0) is# 'diff'
 
     " You want a condition to test whether a window is maximized vertically?{{{
     " Try this:
