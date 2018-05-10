@@ -314,6 +314,9 @@ fu! s:restore_change_position() abort "{{{2
         "              │
         "              └ Why?{{{
         "
+        " To be sure `v:count` is reset to  `0` as soon as this command has been
+        " executed by the autocmd.
+        "
         " MWE1:
         "
         "     :sil! exe 'norm! 123l' | let g:cnt = copy(v:count)
