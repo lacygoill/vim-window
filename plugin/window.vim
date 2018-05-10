@@ -387,7 +387,8 @@ fu! s:restore_change_position() abort "{{{2
     "  │  raise an error.
     "  │  Without `sil!`, `norm!` would stop typing the key sequence.
     "  │
-    sil! exe 'norm! 99g;'.(b:my_change_position - 2).'g,g,'
+    sil! exe 'norm! 99g;'
+    \ .(b:my_change_position ==# 1 ? 'g,' : (b:my_change_position - 2).'g,g,')
 endfu
 
 fu! s:restore_view() abort "{{{2
