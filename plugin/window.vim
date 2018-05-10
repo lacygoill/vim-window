@@ -173,6 +173,16 @@ fu! s:scroll_preview_mappings(later) abort "{{{2
         augroup END
     else
         try
+            " TODO:
+            " Once  you've  re-implemented  `vim-submode`, add  the  ability  to
+            " invoke a callback when we leave a submode.
+            " And use this feature to restore  the possible buffer-local J and K
+            " mappings.
+            " Right now, the K mapping we install here conflicts with dirvish's K.
+            " Besides, K could be used in a custom buffer-local mapping (to look
+            " up some  info in documentation, in  a special way); we  need to be
+            " able to NOT definitively overwrite such a custom mapping.
+
             " Create mappings  to be able to  scroll in preview window  with `j` and
             " `k`, after an initial `J` or `K`.
             call submode#enter_with('scroll-preview', 'n', 'bs',  'J', ':<c-u>exe window#scroll_preview(1)<cr>')
@@ -181,7 +191,6 @@ fu! s:scroll_preview_mappings(later) abort "{{{2
             call submode#map(       'scroll-preview', 'n', 'brs', 'k', '<plug>(scroll_preview_up)')
             "                                               │
             "                                               └ local to the current buffer
-
         catch
             " Alternative (in case `vim-submode` isn't enabled):
             nno  <buffer><nowait><silent>  J  :<c-u>exe window#scroll_preview(1)<cr>
@@ -189,10 +198,10 @@ fu! s:scroll_preview_mappings(later) abort "{{{2
             " TODO:
             " Remove  this   `try`  conditional  once  `vim-submode`   has  been
             " implemented in `vim-lg`.
+        finally
+            au!  my_scroll_preview_window
+            aug! my_scroll_preview_window
         endtry
-
-        au!  my_scroll_preview_window
-        aug! my_scroll_preview_window
     endif
 endfu
 
@@ -301,7 +310,70 @@ endfu
 
 fu! s:restore_change_position() abort "{{{2
     if !exists('b:my_change_position')
-        sil! norm! 99g,
+        sil! norm! 99g,g,
+        "              │
+        "              └ Why?{{{
+        "
+        " MWE1:
+        "
+        "     :sil! exe 'norm! 123l' | let g:cnt = copy(v:count)
+        "     :echo cnt
+        "         → 123
+        "
+        " MWE2:
+        "     $ vim -Nu NONE
+        "     :call timer_start(0, {-> execute('sil! norm! 123l') + execute('let g:cnt = copy(v:count)')})
+        "     :echo g:cnt
+        "         → 123
+        "         After `:norm` has executed `123l`, `v:count` should be 0.
+        "         But only after you've left normal mode, or `&ttimeout` ms has elapsed.
+        "
+        " Because of this, you may experience weird motions.
+        " For example, if you have this mapping:
+        "
+        "         nno  <expr><silent>  j  v:count ? (v:count >= 5 ? "m'".v:count : '').'j' : 'gj'
+        "
+        " And these autocmds:
+        "
+        "         augroup fix_source_selection
+        "             au!
+        "             au CmdlineLeave : if getcmdline() is# '@*'
+        "                           \ |     call s:fix_selection()
+        "                           \ | endif
+        "         augroup END
+        "
+        "         augroup jump_to_end_of_changelist
+        "             au!
+        "             au BufWinEnter * sil! norm! 99g,
+        "         augroup END
+        "
+        " And this function:
+        "
+        "         fu! s:fix_selection() abort
+        "             let tempfile = tempname()
+        "             call writefile(split(@*, '\n'), tempfile)
+        "             let star_save = [getreg('*'), getregtype('*')]
+        "             let @* = ''
+        "             call timer_start(0, {-> execute('so '.tempfile)
+        "                                 \ + setreg('*', star_save[0], star_save[1])})
+        "         endfu
+        "
+        " And you select this code:
+        "
+        "         let qfl = getqflist({ 'lines': systemlist('find /etc/ -name "*.conf" -type f'),
+        "                             \ 'efm':   '%f'})
+        "         call setqflist(get(qfl, 'items', []))
+        "         cw
+        "
+        " And you execute:
+        "
+        "         :@*
+        "
+        " The qf window will be opened.
+        " If you  press `j`  before the  timeout (3s), the  cursor jumps  on the
+        " 100th line, instead of the 2nd one.
+        " This is because `v:count` keeps the value `99` until the timeout.
+        "}}}
         return
     endif
     "  ┌─ from `:h :sil`:
@@ -312,7 +384,7 @@ fu! s:restore_change_position() abort "{{{2
     "  │  raise an error.
     "  │  Without `sil!`, `norm!` would stop typing the key sequence.
     "  │
-    sil! exe 'norm! 99g;'.(b:my_change_position - 1).'g,'
+    sil! exe 'norm! 99g;'.(b:my_change_position - 2).'g,g,'
 endfu
 
 fu! s:restore_view() abort "{{{2
