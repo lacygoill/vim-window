@@ -7,7 +7,7 @@ let g:loaded_window = 1
 
 augroup my_preview_window
     au!
-    au WinLeave * if &l:pvw | call s:scroll_preview_mappings(1) | endif
+    au WinLeave * if &l:pvw | call s:scroll_preview_mappings('on_winenter') | endif
 augroup END
 
 " When we switch buffers in the same window, sometimes the view is altered.
@@ -165,11 +165,11 @@ fu! s:scroll_preview(is_fwd) abort "{{{2
     return ''
 endfu
 
-fu! s:scroll_preview_mappings(later) abort "{{{2
-    if a:later
+fu! s:scroll_preview_mappings(when) abort "{{{2
+    if a:when is# 'on_winenter'
         augroup my_scroll_preview_window
             au!
-            au WinEnter * call s:scroll_preview_mappings(0)
+            au WinEnter * call s:scroll_preview_mappings('now')
         augroup END
     else
         try
