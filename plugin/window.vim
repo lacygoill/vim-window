@@ -22,8 +22,8 @@ augroup END
 
 augroup preserve_view_and_pos_in_changelist
     au!
-    au BufWinLeave * call s:save_view() | call s:save_change_position()
-    au BufWinEnter * call s:restore_change_position() | call s:restore_view()
+    au BufWinLeave * if !s:is_special() | call s:save_view() | call s:save_change_position() | endif
+    au BufWinEnter * if !s:is_special() | call s:restore_change_position() | call s:restore_view() | endif
     " You must restore the view AFTER the position in the change list.
     " Otherwise it wouldn't be restored correctly.
 augroup END
