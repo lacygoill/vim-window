@@ -220,9 +220,6 @@ endfu
 
 fu! window#zoom_toggle() abort "{{{1
     if winnr('$') ==# 1
-        " Restore the default  `ZZ` command when we have only  one window in the
-        " tabpage.
-        exit
         return
     endif
 
