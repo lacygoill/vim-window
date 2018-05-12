@@ -365,7 +365,7 @@ nno  <silent><unique>  <c-j>  :<c-u>call window#navigate('j')<cr>
 nno  <silent><unique>  <c-k>  :<c-u>call window#navigate('k')<cr>
 nno  <silent><unique>  <c-l>  :<c-u>call window#navigate('l')<cr>
 
-" SPC q  Q  u                                               {{{2
+" SPC q  Q  u  z                                               {{{2
 
 nno  <silent><unique>  <space>q  :<c-u>call lg#window#quit()<cr>
 " FIXME:{{{
@@ -399,6 +399,8 @@ nno  <silent><unique>  <space>q  :<c-u>call lg#window#quit()<cr>
 "}}}
 nno  <silent><unique>  <space>Q  :<c-u>sil! call window#quit_everything()<cr>
 nno  <silent><unique>  <space>u  :<c-u>call lg#window#restore_closed(v:count1)<cr>
+
+nno  <silent><unique>  <space>z  :<c-u>call window#zoom_toggle()<cr>
 
 " z<  z>               open/focus/close terminal window {{{2
 
@@ -498,7 +500,8 @@ nmap          <unique>  <c-w>H  ZH
 
 nmap  <unique>  ZQ  <space>q
 
-nno  <silent><unique>  ZZ  :<c-u>call window#zoom_toggle()<cr>
+" Restore original `ZZ` (C-w Z doesn't do anything).
+nno  <silent>  ZZ  :<c-u>x<cr>
 
 " ZGF                  easier C-w gF {{{2
 
