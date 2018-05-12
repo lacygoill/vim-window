@@ -217,3 +217,26 @@ fu! window#terminal_open() abort "{{{1
 
     exe printf('exe %s %s', string(how_to_open), resize)
 endfu
+
+fu! window#zoom_toggle() abort "{{{1
+    if winnr('$') ==# 1
+        " Restore the default  `ZZ` command when we have only  one window in the
+        " tabpage.
+        exit
+        return
+    endif
+
+    let restore_cmd = winrestcmd()
+    wincmd |
+    wincmd _
+    " If the layout did not change, it means:
+    "
+    "     1. the window was already maximized
+    "     2. we want to restore the original layout
+    if winrestcmd() is# restore_cmd
+        exe get(t:, 'zoom_restore', '')
+    else
+        let t:zoom_restore = restore_cmd
+    endif
+endfu
+

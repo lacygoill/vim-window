@@ -498,9 +498,17 @@ nmap          <unique>  <c-w>H  ZH
 
 nmap  <unique>  ZQ  <space>q
 
-" When we press `ZZ`, we don't want Vim to press `C-w Z` (closing preview window).
-" Restore original `ZZ`.
-nno  <silent>  ZZ  :<c-u>x<cr>
+nno  <silent><unique>  ZZ  :<c-u>call window#zoom_toggle()<cr>
+
+" ZGF                  easier C-w gF {{{2
+
+" Especially useful when we use `Z` instead of `C-w`.
+" Compare:
+"     ZgF
+" vs
+"     ZGF
+
+nno  <c-w>GF  <c-w>gF
 
 " Options {{{1
 
