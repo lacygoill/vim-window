@@ -314,68 +314,13 @@ fu! s:restore_change_position() abort "{{{2
         "              │
         "              └ Why?{{{
         "
-        " To be  sure `v:count`  is reset  to `0`  as soon  as `:norm`  has been
-        " executed by the autocmd.
+        " To be sure `v:count`  is properly reset to `0` as  soon as `:norm` has
+        " been executed by the autocmd, even if it happens via a timer.
+        " It should not be necessary anymore:
         "
-        " MWE1:
+        "     https://github.com/vim/vim/commit/b0f42ba60d9e6d101d103421ba0c351811615c15
         "
-        "     :sil! exe 'norm! 123l' | let g:cnt = copy(v:count)
-        "     :echo cnt
-        "         → 123
-        "
-        " MWE2:
-        "     $ vim -Nu NONE
-        "     :call timer_start(0, {-> execute('sil! norm! 123l') + execute('let g:cnt = copy(v:count)')})
-        "     :echo g:cnt
-        "         → 123
-        "         After `:norm` has executed `123l`, `v:count` should be 0.
-        "         But only after you've left normal mode, or `&ttimeout` ms has elapsed.
-        "
-        " Because of this, you may experience weird motions.
-        " For example, if you have this mapping:
-        "
-        "         nno  <expr><silent>  j  v:count ? (v:count >= 5 ? "m'".v:count : '').'j' : 'gj'
-        "
-        " And these autocmds:
-        "
-        "         augroup fix_source_selection
-        "             au!
-        "             au CmdlineLeave : if getcmdline() is# '@*'
-        "                           \ |     call s:fix_selection()
-        "                           \ | endif
-        "         augroup END
-        "
-        "         augroup jump_to_end_of_changelist
-        "             au!
-        "             au BufWinEnter * sil! norm! 99g,
-        "         augroup END
-        "
-        " And this function:
-        "
-        "         fu! s:fix_selection() abort
-        "             let tempfile = tempname()
-        "             call writefile(split(@*, '\n'), tempfile)
-        "             let star_save = [getreg('*'), getregtype('*')]
-        "             let @* = ''
-        "             call timer_start(0, {-> execute('so '.tempfile)
-        "                                 \ + setreg('*', star_save[0], star_save[1])})
-        "         endfu
-        "
-        " And you select this code:
-        "
-        "         let qfl = getqflist({ 'lines': systemlist('find /etc/ -name "*.conf" -type f'),
-        "                             \ 'efm':   '%f'})
-        "         call setqflist(get(qfl, 'items', []))
-        "         cw
-        "
-        " And you execute:
-        "
-        "         :@*
-        "
-        " The qf window will be opened.
-        " If you  press `j`  before the  timeout (3s), the  cursor jumps  on the
-        " 100th line, instead of the 2nd one.
-        " This is because `v:count` keeps the value `99` until the timeout.
+        " But could still be useful for Neovim.
         "}}}
         return
     endif
@@ -389,6 +334,11 @@ fu! s:restore_change_position() abort "{{{2
     "  │
     sil! exe 'norm! 99g;'
     \ .(b:my_change_position ==# 1 ? 'g,' : (b:my_change_position - 2).'g,g,')
+    " TODO: Simplify the code once Neovim has integrated the patch `8.0.1817`:{{{
+    "
+    "     sil! exe 'norm! 99g;'
+    "     \ .(b:my_change_position ==# 1 ? 'g,' : (b:my_change_position - 1).'g,')
+    "}}}
 endfu
 
 fu! s:restore_view() abort "{{{2
