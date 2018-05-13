@@ -64,7 +64,7 @@ endfu
 fu! s:height_should_be_reset(nr) abort "{{{2
     " Test:{{{
     " Whatever change you perform on this  function, make sure the height of the
-    " windows is correct after executing:
+    " windows are correct after executing:
     "
     "     :vert pedit $MYVIMRC
     "}}}
@@ -88,15 +88,15 @@ fu! s:height_should_be_reset(nr) abort "{{{2
     " When the second WinEnter is fired,  we'll get back to the original window,
     " from which we've opened the preview one.
     " It'll probably be a regular window, so it will be maximized.
-    " But if  it IS  maximized, then  our preview window  will become  too small
-    " (only 1 line high).
+    " But if it IS maximized, then our preview window may become too small (only
+    " 1 line high) if the two windows are split horizontally.
     " It happens when we open a preview window from a “tree” or “vim-plug” buffer.
     " Therefore, we don't want to ignore a preview window, even if its width is small.
     " We WANT to reset its height:    1 → &pvh
     "}}}
     return winwidth(a:nr) >= &columns/2
-      \ || getwinvar(a:nr, '&pvw', 0)
-      \ || getbufvar(winbufnr(a:nr), '&ft', 0) is# 'diff'
+       \ ||  getwinvar(a:nr, '&pvw', 0)
+       \ ||  getbufvar(winbufnr(a:nr), '&ft', 0) is# 'diff'
 
     " You want a condition to test whether a window is maximized vertically?{{{
     " Try this:
