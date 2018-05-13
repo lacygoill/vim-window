@@ -68,6 +68,41 @@ fu! s:height_should_be_reset(nr) abort "{{{2
     "
     "     :vert pedit $MYVIMRC
     "}}}
+    " FIXME:{{{
+    "
+    "       ┌─────────┬───────────┐
+    "       │ preview │ regular A │
+    "       ├─────────┴───────────┤
+    "       │      regular B      │
+    "       └─────────────────────┘
+    "
+    " Atm, when you go from `preview` to  `regular A`, the height of `regular A`
+    " is minimized (set to &pvh), which seems unexpected.
+    "
+    " To solve this, you could add a condition checking whether the current window
+    " is maximized horizontally:
+    "
+    "         winwidth(0) ==# &columns
+    "
+    " But then, it would create another issue:
+    "
+    "       ┌───────────┬───────────┐
+    "       │ regular A │           │
+    "       ├───────────┤ regular B │
+    "       │  preview  │           │
+    "       └───────────┴───────────┘
+    "
+    " Now,  when you  go from  `preview`  to `regular  A`, `regular  A` will  be
+    " maximized vertically,  which will prevent  us from seeing the  contents of
+    " the preview window.
+    " The only  solution I can think  of, would be  to test the geometry  of the
+    " neighbouring windows, to determine whether  we're working with two windows
+    " piled in a column or in a line.
+    " But that would require additional VimL functions which don't exist yet.
+    " They could in the future if this PR is merged:
+    "
+    "         https://github.com/vim/vim/pull/2521
+    "}}}
 
     " Rationale:
     " We want to reset the height of a special window only if it's wide enough.{{{
