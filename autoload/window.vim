@@ -223,17 +223,13 @@ fu! window#zoom_toggle() abort "{{{1
         return
     endif
 
-    let restore_cmd = winrestcmd()
-    wincmd |
-    wincmd _
-    " If the layout did not change, it means:
-    "
-    "     1. the window was already maximized
-    "     2. we want to restore the original layout
-    if winrestcmd() is# restore_cmd
-        exe get(t:, 'zoom_restore', '')
+    if exists('t:zoom_restore') && win_getid() ==# t:zoom_restore.winid
+        exe get(t:zoom_restore, 'cmd', '')
+        unlet t:zoom_restore
     else
-        let t:zoom_restore = restore_cmd
+        let t:zoom_restore = {'cmd': winrestcmd(), 'winid': win_getid()}
+        wincmd |
+        wincmd _
     endif
 endfu
 
