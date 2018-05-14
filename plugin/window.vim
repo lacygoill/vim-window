@@ -49,8 +49,8 @@ fu! s:if_special_get_nr_and_height(i,v) abort "{{{2
 
     return getwinvar(a:v, '&pvw', 0)
        \ ?     [ a:v, &pvh ]
-       \ : getbufvar(winbufnr(a:v), '&ft', '') is# 'diff'
-       \ ?     [ a:v, 10 ]
+       \ : &l:diff
+       \ ?     [ a:v, s:get_diff_height(a:v) ]
        \ : getbufvar(winbufnr(a:v), '&bt', '') is# 'terminal'
        \ ?     [ a:v, 10 ]
        \ : getbufvar(winbufnr(a:v), '&bt', '') is# 'quickfix'
@@ -61,14 +61,39 @@ fu! s:if_special_get_nr_and_height(i,v) abort "{{{2
        \ :     []
 endfu
 
+fu! s:get_diff_height(...) abort "{{{2
+    " Purpose:{{{
+    " Return the height of a horizontal window whose 'diff' option is enabled.
+    "
+    " Should  return half  the  height of  the  screen,  so that  we  can see  2
+    " viewports on the same file.
+    "
+    " If the available  number of lines is odd, example  29, should consistently
+    " return the bigger half to the upper viewport.
+    " Otherwise, when we would change the focus between the two viewports, their
+    " heights would constantly change ([15,14] → [14,15]), which is jarring.
+    "}}}
+
+    "                          ┌ the two statuslines of the two diff'ed windows{{{
+    "                          │
+    "                          │    ┌ if there're several tabpages, there's a tabline;
+    "                          │    │ we must take its height into account
+    "                          │    │}}}
+    let lines = &lines - &ch - 2 - (tabpagenr('$') > 1 ? 1 : 0)
+    return fmod(lines,2) ==# 0 || (a:0 ? a:1 : winnr()) !=# 1
+       \ ?     lines/2
+       \ :     lines/2 + 1
+endfu
+
 fu! s:height_should_be_reset(nr) abort "{{{2
-    " Test:{{{
+    " Tests:{{{
     " Whatever change you perform on this  function, make sure the height of the
     " windows are correct after executing:
     "
     "     :vert pedit $MYVIMRC
-    "}}}
-    " FIXME:{{{
+    "
+    " Also, when  moving from  the preview  window to the  regular window  A, in
+    " these layouts:
     "
     "       ┌─────────┬───────────┐
     "       │ preview │ regular A │
@@ -76,62 +101,47 @@ fu! s:height_should_be_reset(nr) abort "{{{2
     "       │      regular B      │
     "       └─────────────────────┘
     "
-    " Atm, when you go from `preview` to  `regular A`, the height of `regular A`
-    " is minimized (set to &pvh), which seems unexpected.
-    "
-    " To solve this, you could add a condition checking whether the current window
-    " is maximized horizontally:
-    "
-    "         winwidth(0) ==# &columns
-    "
-    " But then, it would create another issue:
-    "
     "       ┌───────────┬───────────┐
     "       │ regular A │           │
     "       ├───────────┤ regular B │
     "       │  preview  │           │
     "       └───────────┴───────────┘
+    "}}}
+    " Interesting_PR:{{{
+    " The current code of the function should work most of the time.
+    " But not always. It's based on a heuristic.
     "
-    " Now,  when you  go from  `preview`  to `regular  A`, `regular  A` will  be
-    " maximized vertically,  which will prevent  us from seeing the  contents of
-    " the preview window.
-    " The only  solution I can think  of, would be  to test the geometry  of the
-    " neighbouring windows, to determine whether  we're working with two windows
-    " piled in a column or in a line.
-    " But that would require additional VimL functions which don't exist yet.
-    " They could in the future if this PR is merged:
+    " We may be able to make it work all the time if one day this PR is merged:
     "
     "         https://github.com/vim/vim/pull/2521
+    "
+    " It adds a few VimL functions which  would allow us to test the geometry of
+    " the neighbouring windows.
+    " We could  use them  to determine  whether we're  working with  two windows
+    " piled in a column or in a line.
     "}}}
 
     " Rationale:
-    " We want to reset the height of a special window only if it's wide enough.{{{
+    " We want to reset the height of a special window when it's wide enough.{{{
     "
     " A window with a small width could be a  TOC, and so need a lot of space on
     " the vertical axis to make up for it.
     "}}}
-    " We want to reset the height of a preview window no matter its width. {{{
+    " We want to reset the height of a preview window when the width of the current window is small enough. {{{
     "
-    " Why?
-    " The preview window is special.
-    "
-    " When you open one, 2 WinEnter are fired; when you:
-    "
-    "         1. enter preview window (&l:pvw is NOT yet set)
-    "         2. go back to original window (now, &l:pvw IS set in the preview window)
-    "
-    " When the second WinEnter is fired,  we'll get back to the original window,
-    " from which we've opened the preview one.
-    " It'll probably be a regular window, so it will be maximized.
-    " But if it IS maximized, then our preview window may become too small (only
-    " 1 line high) if the two windows are split horizontally.
-    " It happens when we open a preview window from a “tree” or “vim-plug” buffer.
-    " Therefore, we don't want to ignore a preview window, even if its width is small.
-    " We WANT to reset its height:    1 → &pvh
+    " If we open a nerdtree-like file  explorer, its window will probably have a
+    " small width.
+    " Thus, when we will preview a file from the latter, the preview window will
+    " have a small width too.
+    " Thus, the `winwidth(a:nr) >= &columns/2` test will fail.
+    " Thus, this window's height won't be reset.
+    " Besides, when Vim  goes back from the preview window  to the original one,
+    " it will maximize  the latter (if it's a regular  one), which will minimize
+    " the preview window.
+    " The same issue happens with a vim-plug window.
     "}}}
     return winwidth(a:nr) >= &columns/2
-       \ ||  getwinvar(a:nr, '&pvw', 0)
-       \ ||  getbufvar(winbufnr(a:nr), '&ft', 0) is# 'diff'
+    \ ||  (getwinvar(a:nr, '&pvw', 0) && winwidth(0) <= &columns/2)
 
     " You want a condition to test whether a window is maximized vertically?{{{
     " Try this:
@@ -164,7 +174,10 @@ fu! s:is_horizontally_maximized() abort "{{{2
 endfu
 
 fu! s:is_special() abort "{{{2
-    return &l:pvw || &bt =~# '^\%(quickfix\|terminal\)$' || expand('%:p:t') is# 'COMMIT_EDITMSG'
+    return &l:pvw
+      \ || &l:diff
+      \ || &bt =~# '^\%(quickfix\|terminal\)$'
+      \ || expand('%:p:t') is# 'COMMIT_EDITMSG'
 endfu
 
 fu! s:make_window_small() abort "{{{2
@@ -172,6 +185,8 @@ fu! s:make_window_small() abort "{{{2
     \ ?                &l:pvh
     \ :            &bt is# 'quickfix'
     \ ?                min([ 10, line('$') ])
+    \ :            &l:diff
+    \ ?                s:get_diff_height()
     \ :            10)
 endfu
 
@@ -263,6 +278,41 @@ fu! s:set_window_height() abort "{{{2
     " trying and fix it.
     "}}}
 
+    " Why this check?{{{
+    "
+    " Suppose we preview a file from a file explorer.
+    " Chances are  the file explorer, and  thus the preview window,  are not
+    " horizontally maximized.
+    "
+    " If  we focus  the  preview window,  its  height won't  be  set by  the
+    " previous `if` statement, because it's not horizontally maximized.
+    " As a result, it will be treated like a regular window and maximized.
+    " We don't want that.
+    "}}}
+    " Ok, but how will the height of a preview window will be set then?{{{
+    "
+    " The preview window is a special case.
+    " When you open one, 2 WinEnter are fired; when Vim:
+    "
+    "         1. enters the preview window (&l:pvw is NOT yet set)
+    "         2. goes back to the original window (now, &l:pvw IS set in the preview window)
+    "
+    " When the first WinEnter is fired, `&l:pvw` is not set.
+    " Thus, the function should maximize it.
+    "
+    " When the second WinEnter is fired, we'll get back to the original window.
+    " It'll probably be a regular window, and thus be maximized.
+    " As a result, the preview window will be minimized (1 line high).
+    " But, the code at the end of this function should restore the height of
+    " the preview window.
+    "
+    " So, in the end, the height of the preview window is correctly set.
+    "}}}
+
+    if &l:pvw
+        return
+    endif
+
     if    s:is_special()
     \ &&  s:is_horizontally_maximized()
     \ && !s:is_alone_in_tabpage()
@@ -278,8 +328,8 @@ fu! s:set_window_height() abort "{{{2
     let winnr_orig = winnr()
     " What's the output of `map()`?{{{
     "
-    " `map()` gets us all numbers (and the corresponding desired heights) of all
-    " special windows in the current tabpage.
+    " All numbers (and the corresponding desired heights) of all special windows
+    " in the current tabpage.
     "}}}
     " Why invoking `filter()`?{{{
     "
