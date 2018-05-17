@@ -169,15 +169,15 @@ fu! s:is_alone_in_tabpage() abort "{{{2
     return winnr('$') <= 1
 endfu
 
-fu! s:is_wide() abort "{{{2
-    return winwidth(0) >= &columns/2
-endfu
-
 fu! s:is_special() abort "{{{2
     return &l:pvw
       \ || &l:diff
       \ || &bt =~# '^\%(quickfix\|terminal\)$'
       \ || expand('%:p:t') is# 'COMMIT_EDITMSG'
+endfu
+
+fu! s:is_wide() abort "{{{2
+    return winwidth(0) >= &columns/2
 endfu
 
 fu! s:make_window_small() abort "{{{2
