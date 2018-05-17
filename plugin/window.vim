@@ -169,8 +169,8 @@ fu! s:is_alone_in_tabpage() abort "{{{2
     return winnr('$') <= 1
 endfu
 
-fu! s:is_horizontally_maximized() abort "{{{2
-    return winwidth(0) ==# &columns
+fu! s:is_horizontally_wide() abort "{{{2
+    return winwidth(0) >= &columns/2
 endfu
 
 fu! s:is_special() abort "{{{2
@@ -314,7 +314,7 @@ fu! s:set_window_height() abort "{{{2
     endif
 
     if    s:is_special()
-    \ &&  s:is_horizontally_maximized()
+    \ &&  s:is_horizontally_wide()
     \ && !s:is_alone_in_tabpage()
         return s:make_window_small()
     else
