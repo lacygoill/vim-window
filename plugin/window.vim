@@ -376,6 +376,10 @@ fu! s:set_window_height() abort "{{{2
         "         10wincmd _
         "}}}
         if lg#window#has_neighbor('up', winnr) || lg#window#has_neighbor('down', winnr)
+            " FIXME:
+            " Focusing the window to resize it may have unexpected effects.
+            " It would be better to find a way to resize it without altering the
+            " current focus.
             noa exe winnr.'wincmd w | resize '.height
         endif
     endfor
