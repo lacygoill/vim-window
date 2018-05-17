@@ -169,7 +169,7 @@ fu! s:is_alone_in_tabpage() abort "{{{2
     return winnr('$') <= 1
 endfu
 
-fu! s:is_horizontally_wide() abort "{{{2
+fu! s:is_wide() abort "{{{2
     return winwidth(0) >= &columns/2
 endfu
 
@@ -314,7 +314,7 @@ fu! s:set_window_height() abort "{{{2
     endif
 
     if    s:is_special()
-    \ &&  s:is_horizontally_wide()
+    \ &&  s:is_wide()
     \ && !s:is_alone_in_tabpage()
         if lg#window#has_neighbor('up') || lg#window#has_neighbor('down')
             return s:make_window_small()
