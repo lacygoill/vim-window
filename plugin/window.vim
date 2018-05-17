@@ -318,6 +318,8 @@ fu! s:set_window_height() abort "{{{2
     \ && !s:is_alone_in_tabpage()
         if lg#window#has_neighbor('up') || lg#window#has_neighbor('down')
             return s:make_window_small()
+        " If there's no window above or below, resetting the height of a special
+        " window would lead to a big cmdline.
         else
             return
         endif
