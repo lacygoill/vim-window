@@ -326,13 +326,6 @@ fu! s:set_window_height() abort "{{{2
     " special window somewhere else in the current tab page.
     " In this case, we need to reset their height.
     let winnr_orig = winnr()
-    " Why?{{{
-    "
-    " To resize the size of a window, we'll need to temporarily focus it.
-    " This will alter  the value of `winnr('#')`, on which  we sometimes rely to
-    " get the number of the previously focused window.
-    "}}}
-    let winnr_prev = winnr('#')
     " What's the output of `map()`?{{{
     "
     " All numbers (and the corresponding desired heights) of all special windows
@@ -376,15 +369,10 @@ fu! s:set_window_height() abort "{{{2
         "         10wincmd _
         "}}}
         if lg#window#has_neighbor('up', winnr) || lg#window#has_neighbor('down', winnr)
-            " FIXME:
-            " Focusing the window to resize it may have unexpected effects.
-            " It would be better to find a way to resize it without altering the
-            " current focus.
-            noa exe winnr.'wincmd w | resize '.height
+            exe winnr.'windo resize '.height
         endif
     endfor
 
-    noa exe winnr_prev.'wincmd w'
     noa exe winnr_orig.'wincmd w'
 endfu
 
