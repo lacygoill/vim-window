@@ -86,15 +86,7 @@ fu! window#quit_everything() abort "{{{1
 endfu
 
 fu! window#resize(key) abort "{{{1
-    let orig_win = winnr()
-
     if a:key =~# '[hl]'
-        noa wincmd l
-        let new_win = winnr()
-        exe 'noa '.orig_win.'wincmd w'
-
-        let on_far_right = new_win !=# orig_win
-
         " Why returning different keys depending on the position of the window?{{{
         "
         " `C-w <` moves a border of a vertical window:
@@ -112,7 +104,7 @@ fu! window#resize(key) abort "{{{1
         "       the left instead of the right, to increase the visible size of
         "       the window, like it does in the other windows
         "}}}
-        if on_far_right
+        if lg#window#has_neighbor('right')
             let keys = a:key is# 'h'
                    \ ?     "\<c-w>3<"
                    \ :     "\<c-w>3>"
@@ -123,13 +115,7 @@ fu! window#resize(key) abort "{{{1
         endif
 
     else
-        noa wincmd j
-        let new_win = winnr()
-        exe 'noa '.orig_win.'wincmd w'
-
-        let on_far_bottom = new_win !=# orig_win
-
-        if on_far_bottom
+        if lg#window#has_neighbor('down')
             let keys = a:key is# 'k'
                    \ ?     "\<c-w>3-"
                    \ :     "\<c-w>3+"
