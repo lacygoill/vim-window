@@ -359,7 +359,6 @@ fu! s:set_window_height() abort "{{{2
                                \ })
 
     for [ winnr, height ] in special_windows
-        noa exe winnr.'wincmd w'
         " Why this check?{{{
         "
         " If there's  no window above nor  below the current window,  and we set
@@ -369,28 +368,12 @@ fu! s:set_window_height() abort "{{{2
         "
         "         10wincmd _
         "}}}
-        if s:there_is_a_window_above_or_below(winnr)
+        if lg#window#has_neighbor('up', winnr) || lg#window#has_neighbor('down', winnr)
             noa exe winnr.'wincmd w | resize '.height
         endif
     endfor
 
     noa exe winnr_orig.'wincmd w'
-endfu
-
-fu! s:there_is_a_window_above_or_below(winnr) abort "{{{2
-    noa wincmd j
-    if a:winnr != winnr()
-        noa exe a:winnr.'wincmd w'
-        return 1
-    endif
-
-    noa wincmd k
-    if a:winnr != winnr()
-        noa exe a:winnr.'wincmd w'
-        return 1
-    endif
-
-    return 0
 endfu
 
 fu! s:restore_change_position() abort "{{{2
