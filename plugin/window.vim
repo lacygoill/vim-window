@@ -587,7 +587,7 @@ nmap          <unique>  <c-w>H  ZH
 nmap  <unique>  ZQ  <space>q
 
 " Restore original `ZZ` (C-w Z doesn't do anything).
-nno  <silent>  ZZ  :<c-u>exe (v:count) ? 'x!' : 'x'<cr>
+nno  <silent>  ZZ  :<c-u>update <bar> norm 1<space>q<cr>
 
 " ZGF                  easier C-w gF {{{2
 
