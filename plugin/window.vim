@@ -506,6 +506,42 @@ nno  <silent><unique>  z]  :<c-u>lclose<cr>
 nno  <silent><unique>  z{  :<c-u>call window#preview_open()<cr>
 nno          <unique>  z}  <c-w>z
 
+" z C-[hjkl]           resize window (repeatable with ; ,) {{{2
+
+" Why using the `z` prefix instead of the `Z` one?{{{
+"
+" Easier to type.
+"
+" Z C-h would mean pressing the right shift with our right pinky,
+" then the left control with our left pinky.
+" That's 2 pinkys, on different hands; too awkward.
+"}}}
+nno  <silent><unique>  z<c-h>  :<c-u>call window#resize('h')<cr>
+nno  <silent><unique>  z<c-j>  :<c-u>call window#resize('j')<cr>
+nno  <silent><unique>  z<c-k>  :<c-u>call window#resize('k')<cr>
+nno  <silent><unique>  z<c-l>  :<c-u>call window#resize('l')<cr>
+
+" z[hjkl]              split in any direction {{{2
+
+nno  <silent><unique>  zh  :<c-u>setl nowrap <bar> leftabove vsplit  <bar> setl nowrap<cr>
+nno  <silent><unique>  zl  :<c-u>setl nowrap <bar> rightbelow vsplit <bar> setl nowrap<cr>
+nno  <silent><unique>  zj  :<c-u>belowright split<cr>
+nno  <silent><unique>  zk  :<c-u>aboveleft split<cr>
+
+nmap  <unique>  Zh  zh
+nmap  <unique>  Zl  zl
+nmap  <unique>  Zj  zj
+nmap  <unique>  Zk  zk
+
+nmap  <unique>  <c-w>h  zh
+nmap  <unique>  <c-w>l  zl
+nmap  <unique>  <c-w>j  zj
+nmap  <unique>  <c-w>k  zk
+
+" zo                   :only {{{2
+
+nno  <unique>  zo  :<c-u>on<cr>
+
 " Z                    simpler window prefix {{{2
 
 " we need the recursiveness, so that, when we type, we can replace <c-w>
@@ -525,34 +561,14 @@ nno          <unique>  z}  <c-w>z
 " FURTHER for custom mappings using `C-w` in their lhs.
 nmap  <unique>  Z  <c-w>
 
-" Z C-h C-j C-k C-l    resize window (repeatable with ; ,) {{{2
-
-nno  <silent><unique>  Z<c-h>  :<c-u>call window#resize('h')<cr>
-nno  <silent><unique>  Z<c-j>  :<c-u>call window#resize('j')<cr>
-nno  <silent><unique>  Z<c-k>  :<c-u>call window#resize('k')<cr>
-nno  <silent><unique>  Z<c-l>  :<c-u>call window#resize('l')<cr>
-
-" Zf                   open visually selected file {{{2
+" x_Zf                 open visually selected file in new split {{{2
 
 xno  <silent>  Zf  <c-w>f
-
-" Zh  Zl  Zj  Zk       split in any direction {{{2
-
-nno  <silent><unique>  Zh  :<c-u>setl nowrap <bar> leftabove vsplit  <bar> setl nowrap<cr>
-nno  <silent><unique>  Zl  :<c-u>setl nowrap <bar> rightbelow vsplit <bar> setl nowrap<cr>
-nno  <silent><unique>  Zj  :<c-u>belowright split<cr>
-nno  <silent><unique>  Zk  :<c-u>aboveleft split<cr>
-
-" We often press `zj` instead of `Zj`, when we want to split the window.
-nmap         <unique>  zh  Zh
-nmap         <unique>  zj  Zj
-nmap         <unique>  zk  Zk
-nmap         <unique>  zl  Zl
-
-nmap  <unique>  <c-w>h  Zh
-nmap  <unique>  <c-w>l  Zl
-nmap  <unique>  <c-w>j  Zj
-nmap  <unique>  <c-w>k  Zk
+" TODO:
+" Implement a `ZF` mapping which would take into account a line address.
+" Like the default `^wF` does.
+"
+" Also, move all mappings which open a path into a dedicated plugin (`vim-gf`).
 
 " ZH  ZL  Zv           disable 'wrap' in vert splits when splitting or moving a window {{{2
 
