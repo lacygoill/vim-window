@@ -528,11 +528,6 @@ nno  <silent><unique>  zl  :<c-u>setl nowrap <bar> rightbelow vsplit <bar> setl 
 nno  <silent><unique>  zj  :<c-u>belowright split<cr>
 nno  <silent><unique>  zk  :<c-u>aboveleft split<cr>
 
-nmap  <unique>  Zh  zh
-nmap  <unique>  Zl  zl
-nmap  <unique>  Zj  zj
-nmap  <unique>  Zk  zk
-
 nmap  <unique>  <c-w>h  zh
 nmap  <unique>  <c-w>l  zl
 nmap  <unique>  <c-w>j  zj
