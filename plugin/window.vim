@@ -48,13 +48,13 @@ fu! s:if_special_get_nr_and_height(i,v) abort "{{{2
 "     └─ if it's a special window, get me its number and the desired height
 
     return getwinvar(a:v, '&pvw', 0)
-       \ ?     [ a:v, &pvh ]
+       \ ?     [a:v, &pvh]
        \ : &l:diff
-       \ ?     [ a:v, s:get_diff_height(a:v) ]
+       \ ?     [a:v, s:get_diff_height(a:v)]
        \ : getbufvar(winbufnr(a:v), '&bt', '') is# 'terminal'
-       \ ?     [ a:v, 10 ]
+       \ ?     [a:v, 10]
        \ : getbufvar(winbufnr(a:v), '&bt', '') is# 'quickfix'
-       \ ?     [ a:v, min([ 10, len(getbufline(winbufnr(a:v),
+       \ ?     [a:v, min([10, len(getbufline(winbufnr(a:v),
        \                                       1, 10))
        \                  ])
        \       ]
@@ -184,7 +184,7 @@ fu! s:make_window_small() abort "{{{2
     exe 'resize '.(&l:pvw
     \ ?                &l:pvh
     \ :            &bt is# 'quickfix'
-    \ ?                min([ 10, line('$') ])
+    \ ?                min([10, line('$')])
     \ :            &l:diff
     \ ?                s:get_diff_height()
     \ :            10)
@@ -371,7 +371,7 @@ fu! s:set_window_height() abort "{{{2
                                \          && s:height_should_be_reset(v[0])
                                \ })
 
-    for [ winnr, height ] in special_windows
+    for [winnr, height] in special_windows
         " Why this check?{{{
         "
         " If there's  no window above nor  below the current window,  and we set
