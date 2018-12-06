@@ -169,8 +169,8 @@ endfu
 fu! s:is_special() abort "{{{2
     return &l:pvw
       \ || &l:diff
-      \ || &bt =~# '^\%(quickfix\|terminal\)$'
       \ || &ft is# 'gitcommit'
+      \ || &bt =~# '^\%(quickfix\|terminal\)$'
 endfu
 
 fu! s:is_wide() abort "{{{2
