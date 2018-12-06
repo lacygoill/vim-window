@@ -170,7 +170,7 @@ fu! s:is_special() abort "{{{2
     return &l:pvw
       \ || &l:diff
       \ || &bt =~# '^\%(quickfix\|terminal\)$'
-      \ || expand('%:p:t') is# 'COMMIT_EDITMSG'
+      \ || &ft is# 'gitcommit'
 endfu
 
 fu! s:is_wide() abort "{{{2
