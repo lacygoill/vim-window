@@ -204,7 +204,7 @@ fu! s:save_view() abort "{{{2
 endfu
 
 fu! s:scroll_preview(is_fwd) abort "{{{2
-    if getwinvar(winnr('#'), '&l:pvw', 0)
+    if getwinvar(winnr('#'), '&pvw', 0)
         return ":\<c-u>exe window#scroll_preview(".a:is_fwd.")\<cr>"
     else
         call feedkeys(a:is_fwd ? 'j' : 'k', 'int')

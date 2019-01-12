@@ -131,7 +131,7 @@ endfu
 
 fu! window#scroll_preview(is_fwd) abort "{{{1
     if empty(filter(map(range(1, winnr('$')),
-    \                   { i,v -> getwinvar(v, '&l:pvw') }),
+    \                   { i,v -> getwinvar(v, '&pvw') }),
     \               { i,v -> v ==# 1 }))
         sil! unmap <buffer> J
         sil! unmap <buffer> K
