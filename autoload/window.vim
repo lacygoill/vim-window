@@ -47,7 +47,7 @@ fu! window#preview_open() abort "{{{1
         "             "              │
         "             au CursorMoved * pclose
         "                           \| wincmd _
-        "                           \| exe 'au! close_preview_after_motion'
+        "             au CursorMoved * exe 'au! close_preview_after_motion'
         "                           \| aug! close_preview_after_motion
         "         augroup END
         "     endif
