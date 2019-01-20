@@ -45,10 +45,10 @@ fu! window#preview_open() abort "{{{1
         "             "              │  we want the preview window to be closed no matter
         "             "              │  where the cursor moves
         "             "              │
-        "             au CursorMoved * pclose
-        "                           \| wincmd _
-        "             au CursorMoved * exe 'au! close_preview_after_motion'
-        "                           \| aug! close_preview_after_motion
+        "             au CursorMoved * sil! pclose
+        "                           \ | sil! wincmd _
+        "                           \ | exe 'au! close_preview_after_motion'
+        "                           \ | aug! close_preview_after_motion
         "         augroup END
         "     endif
         "
