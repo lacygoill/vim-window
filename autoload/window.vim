@@ -91,16 +91,16 @@ fu! window#resize(key) abort "{{{1
         "
         " `C-w <` moves a border of a vertical window:
         "
-        "     • to the right, for the left  border of the   window  on the far right
-        "     • to the left,  for the right border of other windows
+        "     - to the right, for the left  border of the   window  on the far right
+        "     - to the left,  for the right border of other windows
         "
         " 2 reasons for these inconsistencies:
         "
-        "     • Vim can't move the right border of the window on the far
+        "     - Vim can't move the right border of the window on the far
         "       right, it would resize the whole “frame“, so it needs to
         "       manipulate the left border
         "
-        "     • the left border of the  window on the far right is moved to
+        "     - the left border of the  window on the far right is moved to
         "       the left instead of the right, to increase the visible size of
         "       the window, like it does in the other windows
         "}}}

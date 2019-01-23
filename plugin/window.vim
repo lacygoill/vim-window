@@ -261,8 +261,8 @@ fu! s:set_window_height() abort "{{{2
     " Preview/qf/terminal windows  which are horizontally maximized  should have
     " their height fixed to:
     "
-    "         • &pvh for the preview window
-    "         • 10 for a qf/terminal window
+    "         - &pvh for the preview window
+    "         - 10 for a qf/terminal window
     "}}}
     " Issue:{{{
     " Create a tab page with a qf window + a terminal.
@@ -613,8 +613,8 @@ nno  <c-w>GF  <c-w>gF
 "
 " When opening a file with long lines, I prefer to do it:
 "
-"     • on the right if it's vertical
-"     • at the bottom if it's horizontal
+"     - on the right if it's vertical
+"     - at the bottom if it's horizontal
 "
 " Rationale:
 " When you read a book, the next page is on the right, not on the left.
