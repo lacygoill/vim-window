@@ -3,6 +3,17 @@ if exists('g:loaded_window')
 endif
 let g:loaded_window = 1
 
+" Init {{{1
+
+" Default height
+let s:D_HEIGHT = 10
+" Terminal window
+let s:T_HEIGHT = 10
+" Quickfix window
+let s:Q_HEIGHT = 10
+" Websearch file
+let s:W_HEIGHT = 5
+
 " Autocmds {{{1
 
 augroup my_preview_window
@@ -31,30 +42,40 @@ augroup END
 augroup window_height
     au!
     if has('nvim')
-        au TermOpen     * if !s:is_alone_in_tabpage() | resize 10 | endif
+        au TermOpen     * if !s:is_alone_in_tabpage() | exe 'resize ' . s:T_HEIGHT | endif
     else
-        au TerminalOpen * if !s:is_alone_in_tabpage() | resize 10 | endif
+        au TerminalOpen * if !s:is_alone_in_tabpage() | exe 'resize ' . s:T_HEIGHT | endif
     endif
-    au WinEnter * call s:set_window_height()
+    " Why `BufWinEnter`?{{{
+    "
+    " This is useful when splitting a window to open a ‘websearch’ file.
+    " When that happens, and `WinEnter` is fired, the filetype has not yet been set.
+    " So `s:set_window_height()` will not properly set the height of the window.
+    "
+    " OTOH, when `BufWinEnter` is fired, the filetype *has* been set.
+    "}}}
+    au BufWinEnter,WinEnter * call s:set_window_height()
 augroup END
 
 " Functions {{{1
 fu! s:if_special_get_nr_and_height(i,v) abort "{{{2
 "     │                            │ │
-"     │                            │ └─ a window number
+"     │                            │ └ a window number
 "     │                            │
-"     │                            └─ an index in a list of window numbers
+"     │                            └ an index in a list of window numbers
 "     │
-"     └─ if it's a special window, get me its number and the desired height
+"     └ if it's a special window, get me its number and the desired height
 
     return getwinvar(a:v, '&pvw', 0)
         \ ?     [a:v, &pvh]
+        \ : getbufvar(winbufnr(a:v), '&ft', '') is# 'websearch'
+        \ ?     [a:v, s:W_HEIGHT]
         \ : &l:diff
         \ ?     [a:v, s:get_diff_height(a:v)]
         \ : getbufvar(winbufnr(a:v), '&bt', '') is# 'terminal'
-        \ ?     [a:v, 10]
+        \ ?     [a:v, s:T_HEIGHT]
         \ : getbufvar(winbufnr(a:v), '&bt', '') is# 'quickfix'
-        \ ?     [a:v, min([10, len(getbufline(winbufnr(a:v), 1, 10))])]
+        \ ?     [a:v, min([s:Q_HEIGHT, len(getbufline(winbufnr(a:v), 1, s:Q_HEIGHT))])]
         \ :     []
 endfu
 
@@ -169,7 +190,7 @@ endfu
 fu! s:is_special() abort "{{{2
     return &l:pvw
       \ || &l:diff
-      \ || &ft is# 'gitcommit'
+      \ || &ft is# 'gitcommit' || &ft is# 'websearch'
       \ || &bt =~# '^\%(quickfix\|terminal\)$'
 endfu
 
@@ -181,10 +202,12 @@ fu! s:make_window_small() abort "{{{2
     exe 'resize '.(&l:pvw
     \ ?                &l:pvh
     \ :            &bt is# 'quickfix'
-    \ ?                min([10, line('$')])
+    \ ?                min([s:Q_HEIGHT, line('$')])
     \ :            &l:diff
     \ ?                s:get_diff_height()
-    \ :            10)
+    \ :            &ft is# 'websearch'
+    \ ?                s:W_HEIGHT
+    \ :            s:D_HEIGHT)
 endfu
 
 fu! s:save_change_position() abort "{{{2
@@ -360,13 +383,13 @@ fu! s:set_window_height() abort "{{{2
     "         && !s:height_should_be_reset(v[0])
     "}}}
     let special_windows = filter(map(
-                               \     range(1, winnr('$')),
-                               \     {i,v -> s:if_special_get_nr_and_height(i,v)}
-                               \    ),
-                               \ { i,v ->    v    !=# []
-                               \          && v[0] !=# winnr_orig
-                               \          && s:height_should_be_reset(v[0])
-                               \ })
+        \     range(1, winnr('$')),
+        \     {i,v -> s:if_special_get_nr_and_height(i,v)}
+        \    ),
+        \ { i,v ->    v    !=# []
+        \          && v[0] !=# winnr_orig
+        \          && s:height_should_be_reset(v[0])
+        \ })
 
     for [winnr, height] in special_windows
         " Why this check?{{{
@@ -434,7 +457,7 @@ fu! s:restore_view() abort "{{{2
         unlet w:saved_views[n]
     endif
 endfu
-
+" }}}1
 " Mappings {{{1
 " <plug> {{{2
 
@@ -606,7 +629,7 @@ nno  <silent>  ZZ  :<c-u>update <bar> norm 1<space>q<cr>
 "     ZGF
 
 nno  <c-w>GF  <c-w>gF
-
+" }}}1
 " Options {{{1
 
 " Why setting these options?{{{
@@ -640,3 +663,4 @@ set splitbelow
 
 " and a new vertical one should be displayed on the right
 set splitright
+
