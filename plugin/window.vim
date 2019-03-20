@@ -410,8 +410,15 @@ fu! s:set_window_height() abort "{{{2
         endif
     endfor
 
-    noa exe winnr_prev.'wincmd w'
-    noa exe winnr_orig.'wincmd w'
+    " Why `silent!` ?{{{
+    "
+    " Sometimes, E788 is raised.
+    " MWE:
+    "     $ vim +'sp | Man man | wincmd p' ~/.vim/vimrc
+    "     " press `gt`
+    "}}}
+    sil! noa exe winnr_prev.'wincmd w'
+    sil! noa exe winnr_orig.'wincmd w'
 endfu
 
 fu! s:restore_change_position() abort "{{{2
