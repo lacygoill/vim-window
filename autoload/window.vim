@@ -37,19 +37,13 @@ fu! window#preview_open() abort "{{{1
         " automatically close the preview window when we moved the cursor.
         "
         "     if a:auto_close
-        "         augroup close_preview_after_motion
-        "             au!
-        "             "              ┌─ don't use `<buffer>` because I suspect `CursorMoved`
-        "             "              │  could happen in another buffer; example, after `gf`
-        "             "              │  or sth similar
-        "             "              │  we want the preview window to be closed no matter
-        "             "              │  where the cursor moves
-        "             "              │
-        "             au CursorMoved * sil! pclose
-        "                           \ | sil! wincmd _
-        "                           \ | exe 'au! close_preview_after_motion'
-        "                           \ | aug! close_preview_after_motion
-        "         augroup END
+        "         "              ┌─ don't use `<buffer>` because I suspect `CursorMoved`
+        "         "              │  could happen in another buffer; example, after `gf`
+        "         "              │  or sth similar
+        "         "              │  we want the preview window to be closed no matter
+        "         "              │  where the cursor moves
+        "         "              │
+        "         au CursorMoved * ++once sil! pclose | sil! wincmd _
         "     endif
         "
         " I think  that was too much. One  mapping should be enough. It  frees a
