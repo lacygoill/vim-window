@@ -671,3 +671,32 @@ set splitbelow
 " and a new vertical one should be displayed on the right
 set splitright
 
+" When you split a window, by default, all the windows are automatically resized{{{
+" to have the same sizes; same thing when you close a window.
+" Although, this doesn't seem to be the case when you close a help window.
+"
+" We disable this feature.
+" When we split/close a window, the sizes of the other windows are not affected.
+"
+" ---
+"
+" See also this comment:
+"
+" > If you are talking  about how Gpush forces a resize of  every window, does
+" > `:set noequalalways` solve it for you? I  was always frustrated how closing a
+" > window causes vim to  resize every split equally, blew my  mind when I found
+" > out it was  a design choice that  could be disabled. Used to think  it was a
+" > limitation of its window handling or something.
+"
+" Source: https://www.reddit.com/r/vim/comments/bha7yk/how_to_precisely_control_restore_layouts/elrict0/
+"
+" ---
+"
+" I doubt we'll such much of a difference, because of our autocmds.
+" But in the future, it may be useful.
+" Besides, I  don't like Vim  doing things automatically, unless  I specifically
+" ask it to do them.
+" So, let's try to reset `'equalalways'` for now, and see what happens...
+"}}}
+set noequalalways
+
