@@ -671,7 +671,34 @@ set splitbelow
 " and a new vertical one should be displayed on the right
 set splitright
 
-" When you split a window, by default, all the windows are automatically resized{{{
+" Do *not* reset `'equalalways'`!{{{
+"
+" It would raise `E36` whenever you run `:helpgrep` and the qfl has less than 3 entries.
+" Indeed, `:helpgrep` would try to split the qf window to display the first entry.
+" But if the window has only 2 lines, and Vim can't resize the windows, it can't
+" make more room for the new window.
+"
+" As a result, you  would never be able to visit any of the 1  or 2 entries of a
+" short qfl.
+"
+" MWE:
+"
+"     $ vim -Nu NONE +'set noequalalways' +'au QuickFixCmdPost * botright cwindow2' +'helpgrep readnews'
+"     E36: Not enough room~
+"
+"     $ vim -Nu NONE +'set noequalalways' +2sp +sp
+"     E36: Not enough room~
+"
+" ---
+"
+" If  you  wanted  to fix  this  issue,  you  would  probably have  to  refactor
+" `qf#open()`, `s:make_window_small()` and  `s:set_window_height()`, so that the
+" minimal height of a window is 3 or more, but never 1 or 2.
+
+"}}}
+"   If I find a workaround, how would `'equalalways'` be useful?{{{
+"
+" When you split a window, by default, all the windows are automatically resized
 " to have the same sizes; same thing when you close a window.
 " Although, this doesn't seem to be the case when you close a help window.
 "
@@ -689,14 +716,6 @@ set splitright
 " > limitation of its window handling or something.
 "
 " Source: https://www.reddit.com/r/vim/comments/bha7yk/how_to_precisely_control_restore_layouts/elrict0/
-"
-" ---
-"
-" I doubt we'll such much of a difference, because of our autocmds.
-" But in the future, it may be useful.
-" Besides, I  don't like Vim  doing things automatically, unless  I specifically
-" ask it to do them.
-" So, let's try to reset `'equalalways'` for now, and see what happens...
 "}}}
-set noequalalways
+"     set equalalways
 
