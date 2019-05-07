@@ -284,8 +284,8 @@ fu! s:set_window_height() abort "{{{2
     " Preview/qf/terminal windows  which are horizontally maximized  should have
     " their height fixed to:
     "
-    "         - &pvh for the preview window
-    "         - 10 for a qf/terminal window
+    "    - &pvh for the preview window
+    "    - 10 for a qf/terminal window
     "}}}
     " Issue:{{{
     " Create a tab page with a qf window + a terminal.
