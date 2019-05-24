@@ -211,8 +211,8 @@ fu! s:make_window_small() abort "{{{2
 endfu
 
 fu! s:save_change_position() abort "{{{2
-    let changelist = split(execute('changes'), '\n')
-    let b:my_change_position = index(changelist, matchstr(changelist, '^>'))
+    let changelist = get(getchangelist('%'), 0, [])
+    let b:my_change_position = get(getchangelist('%'), 1, -1)
     if b:my_change_position ==# -1
         let b:my_change_position = 100
     endif
