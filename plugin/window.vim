@@ -11,8 +11,8 @@ let s:D_HEIGHT = 10
 let s:T_HEIGHT = 10
 " Quickfix window
 let s:Q_HEIGHT = 10
-" Websearch file
-let s:W_HEIGHT = 5
+" file “Running” current line (websearch, tmuxprompt)
+let s:R_HEIGHT = 5
 
 " Autocmds {{{1
 
@@ -68,8 +68,8 @@ fu! s:if_special_get_nr_and_height(i,v) abort "{{{2
 
     return getwinvar(a:v, '&pvw', 0)
         \ ?     [a:v, &pvh]
-        \ : getbufvar(winbufnr(a:v), '&ft', '') is# 'websearch'
-        \ ?     [a:v, s:W_HEIGHT]
+        \ : index(['tmuxprompt', 'websearch'], getbufvar(winbufnr(a:v), '&ft', '')) >= 0
+        \ ?     [a:v, s:R_HEIGHT]
         \ : &l:diff
         \ ?     [a:v, s:get_diff_height(a:v)]
         \ : getbufvar(winbufnr(a:v), '&bt', '') is# 'terminal'
@@ -190,7 +190,7 @@ endfu
 fu! s:is_special() abort "{{{2
     return &l:pvw
       \ || &l:diff
-      \ || &ft is# 'gitcommit' || &ft is# 'websearch'
+      \ || &ft is# 'gitcommit' || index(['tmuxprompt', 'websearch'], &ft) >= 0
       \ || &bt =~# '^\%(quickfix\|terminal\)$'
 endfu
 
@@ -205,8 +205,8 @@ fu! s:make_window_small() abort "{{{2
     \ ?                min([s:Q_HEIGHT, line('$')])
     \ :            &l:diff
     \ ?                s:get_diff_height()
-    \ :            &ft is# 'websearch'
-    \ ?                s:W_HEIGHT
+    \ :            index(['tmuxprompt', 'websearch'], &ft) >= 0
+    \ ?                s:R_HEIGHT
     \ :            s:D_HEIGHT)
 endfu
 
