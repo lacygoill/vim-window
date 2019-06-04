@@ -423,18 +423,25 @@ endfu
 
 fu! s:restore_change_position() abort "{{{2
     if !exists('b:my_change_position')
-        sil! norm! 99g,g,
-        "              │
-        "              └ Why?{{{
+        " Why this guard `!empty(...)`?{{{
         "
-        " To be sure `v:count`  is properly reset to `0` as  soon as `:norm` has
-        " been executed by the autocmd, even if it happens via a timer.
-        " It should not be necessary anymore:
+        " Without, it creates a little noise when we debug Vim with `:set vbs=2 vfile=/tmp/log`:
         "
-        "     https://github.com/vim/vim/commit/b0f42ba60d9e6d101d103421ba0c351811615c15
-        "
-        " But could still be useful for Neovim.
+        "     E664: changelist is empty
+        "     Error detected while processing function <SNR>103_restore_change_position:
         "}}}
+        if !empty(get(getchangelist(0), 0, []))
+            " Why `g,` after `99g,`?{{{
+            "
+            " To be sure `v:count`  is properly reset to `0` as  soon as `:norm` has
+            " been executed by the autocmd, even if it happens via a timer.
+            " It should not be necessary anymore:
+            " https://github.com/vim/vim/commit/b0f42ba60d9e6d101d103421ba0c351811615c15
+            "
+            " But could still be useful for Neovim.
+            "}}}
+            sil! norm! 99g,g,
+        endif
         return
     endif
     "  ┌─ from `:h :sil`:
