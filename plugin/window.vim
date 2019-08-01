@@ -520,7 +520,15 @@ xno  <silent><unique>  <space>q  :<c-u>call lg#window#quit()<cr>
 "}}}
 nno  <silent><unique>  <space>Q  :<c-u>sil! call window#quit_everything()<cr>
 xno  <silent><unique>  <space>Q  :<c-u>sil! call window#quit_everything()<cr>
-nno  <silent><unique>  <space>u  :<c-u>call lg#window#restore_closed(v:count1)<cr>
+" Why not `SPC u`?{{{
+"
+" We often type it by accident.
+" When  that happens,  it's  very distracting,  because it  takes  some time  to
+" recover the original layout.
+"
+" Let's try `SPC U`; it should be harder to press by accident.
+"}}}
+nno  <silent><unique>  <space>U  :<c-u>call lg#window#restore_closed(v:count1)<cr>
 
 nno  <silent><unique>  <space>z  :<c-u>call window#zoom_toggle()<cr>
 
