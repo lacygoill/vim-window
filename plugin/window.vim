@@ -485,7 +485,7 @@ nno  <silent><unique>  <c-j>  :<c-u>call window#navigate('j')<cr>
 nno  <silent><unique>  <c-k>  :<c-u>call window#navigate('k')<cr>
 nno  <silent><unique>  <c-l>  :<c-u>call window#navigate('l')<cr>
 
-" SPC q  Q  u  z                                               {{{2
+" SPC q  Q  U  z                                               {{{2
 
 nno  <silent><unique>  <space>q  :<c-u>call lg#window#quit()<cr>
 xno  <silent><unique>  <space>q  :<c-u>call lg#window#quit()<cr>
@@ -529,6 +529,7 @@ xno  <silent><unique>  <space>Q  :<c-u>sil! call window#quit_everything()<cr>
 " Let's try `SPC U`; it should be harder to press by accident.
 "}}}
 nno  <silent><unique>  <space>U  :<c-u>call lg#window#restore_closed(v:count1)<cr>
+nno  <silent><unique>  <space>u  <nop>
 
 nno  <silent><unique>  <space>z  :<c-u>call window#zoom_toggle()<cr>
 
