@@ -113,17 +113,17 @@ fu! s:height_should_be_reset(nr) abort "{{{2
     " Also, when  moving from  the preview  window to the  regular window  A, in
     " these layouts:
     "
-    "       ┌─────────┬───────────┐
-    "       │ preview │ regular A │
-    "       ├─────────┴───────────┤
-    "       │      regular B      │
-    "       └─────────────────────┘
+    "    ┌─────────┬───────────┐
+    "    │ preview │ regular A │
+    "    ├─────────┴───────────┤
+    "    │      regular B      │
+    "    └─────────────────────┘
     "
-    "       ┌───────────┬───────────┐
-    "       │ regular A │           │
-    "       ├───────────┤ regular B │
-    "       │  preview  │           │
-    "       └───────────┴───────────┘
+    "    ┌───────────┬───────────┐
+    "    │ regular A │           │
+    "    ├───────────┤ regular B │
+    "    │  preview  │           │
+    "    └───────────┴───────────┘
     "}}}
     " Interesting_PR:{{{
     " The current code of the function should work most of the time.
@@ -500,16 +500,16 @@ xno  <silent><unique>  <space>q  :<c-u>call lg#window#quit()<cr>
 " MWE:
 " Create a modified buffer, and source this mapping:
 "
-"         nno cd :exe Func()<cr>
+"     nno cd :exe Func()<cr>
 "
-"         fu! Func() abort
-"             try
-"                 qall
-"             catch
-"                 return 'echoerr '.string(v:exception)
-"             endtry
-"             return ''
-"         endfu
+"     fu! Func() abort
+"         try
+"             qall
+"         catch
+"             return 'echoerr '.string(v:exception)
+"         endtry
+"         return ''
+"     endfu
 "
 " Press `cd`.
 "}}}
@@ -533,12 +533,13 @@ nno  <silent><unique>  <space>u  <nop>
 
 nno  <silent><unique>  <space>z  :<c-u>call window#zoom_toggle()<cr>
 
-" z<  z>               open/focus/close terminal window {{{2
+" z (prefix) {{{2
+" z<  z>               open/focus/close terminal window {{{3
 
 nno  <silent><unique>  z<  :<c-u>call window#terminal_open()<cr>
 nno  <silent><unique>  z>  :<c-u>call window#terminal_close()<cr>
 
-"z(  z)  z[  z]                        qf/ll    window {{{2
+"z(  z)  z[  z]                        qf/ll    window {{{3
 
 nno  <silent><unique>  z(  :<c-u>exe lg#window#qf_open('qf')<cr>
 nno  <silent><unique>  z)  :<c-u>cclose<cr>
@@ -546,12 +547,12 @@ nno  <silent><unique>  z)  :<c-u>cclose<cr>
 nno  <silent><unique>  z[  :<c-u>exe lg#window#qf_open('loc')<cr>
 nno  <silent><unique>  z]  :<c-u>lclose<cr>
 
-" z{  z}                                preview  window {{{2
+" z{  z}                                preview  window {{{3
 
 nno  <silent><unique>  z{  :<c-u>call window#preview_open()<cr>
 nno          <unique>  z}  <c-w>z
 
-" z C-[hjkl]           resize window (repeatable with ; ,) {{{2
+" z C-[hjkl]           resize window (repeatable with ; ,) {{{3
 
 " Why using the `z` prefix instead of the `Z` one?{{{
 "
@@ -566,7 +567,7 @@ nno  <silent><unique>  z<c-j>  :<c-u>call window#resize('j')<cr>
 nno  <silent><unique>  z<c-k>  :<c-u>call window#resize('k')<cr>
 nno  <silent><unique>  z<c-l>  :<c-u>call window#resize('l')<cr>
 
-" z[hjkl]              split in any direction {{{2
+" z[hjkl]              split in any direction {{{3
 
 nno  <silent><unique>  zh  :<c-u>setl nowrap <bar> leftabove vsplit  <bar> setl nowrap<cr>
 nno  <silent><unique>  zl  :<c-u>setl nowrap <bar> rightbelow vsplit <bar> setl nowrap<cr>
@@ -578,39 +579,83 @@ nmap  <unique>  <c-w>l  zl
 nmap  <unique>  <c-w>j  zj
 nmap  <unique>  <c-w>k  zk
 
-" zo                   :only {{{2
+" zo                   :only {{{3
 
 nno  <unique>  zo  :<c-u>on<cr>
+"}}}2
+" Z (prefix) {{{2
+" Z                    simpler window prefix {{{3
 
-" Z                    simpler window prefix {{{2
-
-" we need the recursiveness, so that, when we type, we can replace <c-w>
-" with Z in custom mappings (own+third party)
+" Why a *recursive* mapping?{{{
+"
+" We need the recursiveness, so that, when we type, we can replace <c-w>
+" with Z in custom mappings (own+third party).
 "
 " MWE:
 "
-"        nno  <c-w><cr>  :echo 'hello'<cr>
-"        nno  Z          <c-w>
-"                Z cr    ✘
+"     nno  <c-w><cr>  :echo 'hello'<cr>
+"     nno  Z          <c-w>
+"     " press 'Z cr': doesn't work ✘
 "
-"        nno  <c-w><cr>  :echo 'hello'<cr>
-"        nmap Z          <c-w>
-"                Z cr    ✔
+"     nno  <c-w><cr>  :echo 'hello'<cr>
+"     nmap Z          <c-w>
+"     " press 'Z cr': works ✔
 "
 " Indeed,  once `Z`  has been  expanded into  `C-w`, we  may need  to expand  it
-" FURTHER for custom mappings using `C-w` in their lhs.
-nmap  <unique>  Z  <c-w>
+" *further* for custom mappings using `C-w` in their lhs.
+"}}}
+nmap <unique> Z <c-w>
+" Why no `<unique>`?{{{
+"
+" `vim-sneak` installs a `Z` mapping:
+"
+"     xmap Z <Plug>Sneak_S
+"
+" See: `~/.vim/plugged/vim-sneak/plugin/sneak.vim`
+"}}}
+xmap          Z <c-w>
 
-" x_Zf                 open visually selected file in new split {{{2
+" ZF, ZGF, ...         open path in split window/tabpage and unfold {{{3
 
-xno  <silent>  Zf  <c-w>f
+" `C-w f`, `C-w F`, `C-w gf`, ... I'm confused!{{{
+"
+" Some default normal commands can open a path in another split window or tabpage.
+" They all start with the prefix `C-w`.
+"
+" To understand which suffix must be pressed, see:
+"
+"    ┌────┬──────────────────────────────────────────────────────────────┐
+"    │ f  │ split window                                                 │
+"    ├────┼──────────────────────────────────────────────────────────────┤
+"    │ F  │ split window, taking into account line indicator like `:123` │
+"    ├────┼──────────────────────────────────────────────────────────────┤
+"    │ gf │ tabpage                                                      │
+"    ├────┼──────────────────────────────────────────────────────────────┤
+"    │ gF │ tabpage, taking into account line indicator like `:123`      │
+"    └────┴──────────────────────────────────────────────────────────────┘
+"}}}
+nno <c-w>f <c-w>fzv
+nno <c-w>F <c-w>Fzv
+
+nno <c-w>gf <c-w>gfzv
+nno <c-w>gF <c-w>gFzv
+nno <c-w>GF <c-w>GFzv
+" easier to press `ZGF` than `ZgF`
+
+xno <c-w>f <c-w>fzv
+xno <c-w>F <c-w>Fzv
+
+xno <c-w>gf <c-w>gfzv
+xno <c-w>gF <c-w>gFzv
+xno <c-w>GF <c-w>GFzv
+
 " TODO:
-" Implement a `ZF` mapping which would take into account a line address.
-" Like the default `^wF` does.
+" Implement a `<C-w>F` visual mapping which would take into account a line address.
+" Like `<C-w>F` does in normal mode.
 "
 " Also, move all mappings which open a path into a dedicated plugin (`vim-gf`).
 
-" ZH  ZL  Zv           disable 'wrap' in vert splits when splitting or moving a window {{{2
+" ZH  ZL  Zv           disable 'wrap' in vert splits when splitting or moving a window {{{3
 
 " disable wrapping of long lines when we create a vertical split
 nno   <silent><unique>  Zv      :<c-u>setl nowrap <bar> vsplit <bar> setl nowrap<cr>
@@ -635,7 +680,7 @@ nno   <silent><unique>  ZL      :<c-u>call window#disable_wrap_when_moving_to_ve
 nmap          <unique>  <c-w>L  ZL
 nmap          <unique>  <c-w>H  ZH
 
-" ZQ  ZZ {{{2
+" ZQ  ZZ {{{3
 
 " Our `SPC q` mapping is special, it creates a session file so that we can undo
 " the closing of the window. `ZQ` should behave in the same way.
@@ -645,15 +690,6 @@ nmap  <unique>  ZQ  <space>q
 " Restore original `ZZ` (C-w Z doesn't do anything).
 nno  <silent>  ZZ  :<c-u>update <bar> norm 1<space>q<cr>
 
-" ZGF                  easier C-w gF {{{2
-
-" Especially useful when we use `Z` instead of `C-w`.
-" Compare:
-"     ZgF
-" vs
-"     ZGF
-
-nno  <c-w>GF  <c-w>gF
 " }}}1
 " Options {{{1
 
