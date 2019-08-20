@@ -487,7 +487,27 @@ nno  <silent><unique>  <c-l>  :<c-u>call window#navigate('l')<cr>
 
 " SPC q  Q  U  z                                               {{{2
 
-nno  <silent><unique>  <space>q  :<c-u>call lg#window#quit()<cr>
+" Provide a `<plug>` mapping to access our `lg#window#quit()` function, so that
+" we can call it more easily from other plugins.
+" Why don't you use `:norm 1 q` to quit in your plugins?{{{
+"
+" Yes, we did this in the past:
+"
+"     :nno <buffer> q :norm 1 q<cr>
+"
+" But it seems to cause too many issues.
+" We  had  one  in  the  past  involving  an  interaction  between  `:norm`  and
+" `feedkeys()` with the 't' flag.
+"
+" I also had a `E169: Command too recursive` error, but I can't reproduce anymore.
+" I suspect the issue was somewhere else (maybe the `<space>q` was not installed
+" while we  were debugging  sth); nevertheless, the  error message  is confusing.
+"
+" And the mapping in itself can  be confusing to understand/debug; I much prefer
+" a mapping where the lhs is not repeated in the rhs.
+"}}}
+nmap <silent><unique>  <space>q  <plug>(my_quit)
+nno  <silent><unique>  <plug>(my_quit)  :<c-u>call lg#window#quit()<cr>
 xno  <silent><unique>  <space>q  :<c-u>call lg#window#quit()<cr>
 " FIXME:{{{
 " When  an  instruction causes  several  errors,  and  it's  executed in  a  try
@@ -688,8 +708,8 @@ nmap          <unique>  <c-w>H  ZH
 nmap  <unique>  ZQ  <space>q
 
 " Restore original `ZZ` (C-w Z doesn't do anything).
-nno  <silent>  ZZ  :<c-u>update <bar> norm 1<space>q<cr>
-
+nno <plug>(my_ZZ_update) :<c-u>update<cr>
+nmap <silent> ZZ <plug>(my_ZZ_update)<plug>(my_quit)
 " }}}1
 " Options {{{1
 
