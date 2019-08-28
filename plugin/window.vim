@@ -582,6 +582,14 @@ nno          <unique>  z}  <c-w>z
 " then the left control with our left pinky.
 " That's 2 pinkys, on different hands; too awkward.
 "}}}
+" Pressing the lhs repeatedly is too difficult!{{{
+"
+" You don't have to.
+" You only need to press the prefix key  once; after that, for a short period of
+" time (1s atm), you can just press `C-[hjkl]` to resize in any direction.
+"
+" Btw, this is consistent with how we resize panes in tmux.
+"}}}
 nno  <silent><unique>  z<c-h>  :<c-u>call window#resize('h')<cr>
 nno  <silent><unique>  z<c-j>  :<c-u>call window#resize('j')<cr>
 nno  <silent><unique>  z<c-k>  :<c-u>call window#resize('k')<cr>

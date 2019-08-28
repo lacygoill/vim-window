@@ -12,6 +12,7 @@ fu! s:get_terminal_buffer() abort "{{{1
 endfu
 
 fu! window#navigate(dir) abort "{{{1
+    if get(s:, 'in_submode_window_resize', 0) | return window#resize(a:dir) | endif
     try
         exe 'wincmd '.a:dir
     catch
@@ -80,23 +81,29 @@ fu! window#quit_everything() abort "{{{1
 endfu
 
 fu! window#resize(key) abort "{{{1
+    let s:in_submode_window_resize = 1
+    if exists('s:timer_id')
+        call timer_stop(s:timer_id)
+        unlet! s:timer_id
+    endif
+    let s:timer_id = timer_start(1000, {-> execute('let s:in_submode_window_resize = 0')})
     if a:key =~# '[hl]'
         " Why returning different keys depending on the position of the window?{{{
         "
         " `C-w <` moves a border of a vertical window:
         "
-        "     - to the right, for the left  border of the   window  on the far right
-        "     - to the left,  for the right border of other windows
+        "    - to the right, for the left border of the window on the far right
+        "    - to the left, for the right border of other windows
         "
         " 2 reasons for these inconsistencies:
         "
-        "     - Vim can't move the right border of the window on the far
-        "       right, it would resize the whole “frame“, so it needs to
-        "       manipulate the left border
+        "    - Vim can't move the right border of the window on the far
+        "      right, it would resize the whole “frame“, so it needs to
+        "      manipulate the left border
         "
-        "     - the left border of the  window on the far right is moved to
-        "       the left instead of the right, to increase the visible size of
-        "       the window, like it does in the other windows
+        "    - the left border of the  window on the far right is moved to
+        "      the left instead of the right, to increase the visible size of
+        "      the window, like it does in the other windows
         "}}}
         if lg#window#has_neighbor('right')
             let keys = a:key is# 'h'
