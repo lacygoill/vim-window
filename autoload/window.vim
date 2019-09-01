@@ -7,7 +7,7 @@ endfu
 
 fu! s:get_terminal_buffer() abort "{{{1
     let buflist = tabpagebuflist(tabpagenr())
-    call filter(buflist, {i,v -> getbufvar(v, '&bt', '') is# 'terminal'})
+    call filter(buflist, {_,v -> getbufvar(v, '&bt', '') is# 'terminal'})
     return get(buflist, 0 , 0)
 endfu
 
@@ -132,8 +132,8 @@ endfu
 
 fu! window#scroll_preview(is_fwd) abort "{{{1
     if empty(filter(map(range(1, winnr('$')),
-    \                   { i,v -> getwinvar(v, '&pvw') }),
-    \               { i,v -> v ==# 1 }))
+    \                   {_,v -> getwinvar(v, '&pvw')}),
+    \               {_,v -> v ==# 1}))
         sil! unmap <buffer> J
         sil! unmap <buffer> K
         sil! exe 'norm! '.(a:is_fwd ? 'J' : 'K')
