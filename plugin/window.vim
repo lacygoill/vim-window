@@ -16,16 +16,10 @@ let s:R_HEIGHT = 5
 
 " Autocmds {{{1
 
-augroup my_preview_window
-    au!
-    au WinLeave * if &l:pvw | call s:scroll_preview_mappings('on_winenter') | endif
-augroup END
-
 " When we switch buffers in the same window, sometimes the view is altered.
 " We want it to be preserved.
 "
-" Inspiration:
-"         https://stackoverflow.com/a/31581929/8243465
+" Inspiration: https://stackoverflow.com/a/31581929/8243465
 "
 " Similar_issue:
 " The position in the changelist is local to the window. It should be local
@@ -128,8 +122,7 @@ fu! s:height_should_be_reset(nr) abort "{{{2
     " But not always. It's based on a heuristic.
     "
     " We may be able to make it work all the time if one day this PR is merged:
-    "
-    "         https://github.com/vim/vim/pull/2521
+    " https://github.com/vim/vim/pull/2521
     "
     " It adds a few VimL functions which  would allow us to test the geometry of
     " the neighbouring windows.
@@ -170,14 +163,14 @@ fu! s:height_should_be_reset(nr) abort "{{{2
     "         │
     "         ├───────────────────────────────┐
     "         &lines - winheight(a:nr) <= &ch+2
-    "                                  └┤ └─┤ │
-    "                                   │   │ └ status line + tabline
-    "                                   │   │
-    "                                   │   └ command-line
-    "                                   │
-    "                                   └ there could be a tabline,
-    "                                     if there are several tabpages,
-    "                                     or not (if there's a single tabpage)
+    "                                  ├┘ ├─┘ │
+    "                                  │  │   └ status line + tabline
+    "                                  │  │
+    "                                  │  └ command-line
+    "                                  │
+    "                                  └ there could be a tabline,
+    "                                    if there are several tabpages,
+    "                                    or not (if there's a single tabpage)
 "}}}
 endfu
 
@@ -224,55 +217,6 @@ fu! s:save_view() abort "{{{2
     let w:saved_views[bufnr('%')] = winsaveview()
 endfu
 
-fu! s:scroll_preview(is_fwd) abort "{{{2
-    if getwinvar(winnr('#'), '&pvw', 0)
-        return ":\<c-u>exe window#scroll_preview(".a:is_fwd.")\<cr>"
-    else
-        call feedkeys(a:is_fwd ? 'j' : 'k', 'in')
-    endif
-    return ''
-endfu
-
-fu! s:scroll_preview_mappings(when) abort "{{{2
-    if a:when is# 'on_winenter'
-        augroup my_scroll_preview_window
-            au!
-            au WinEnter * call s:scroll_preview_mappings('now')
-        augroup END
-    else
-        try
-            " TODO:
-            " Once  you've  re-implemented  `vim-submode`, add  the  ability  to
-            " invoke a callback when we leave a submode.
-            " And use this feature to restore  the possible buffer-local J and K
-            " mappings.
-            " Right now, the K mapping we install here conflicts with dirvish's K.
-            " Besides, K could be used in a custom buffer-local mapping (to look
-            " up some  info in documentation, in  a special way); we  need to be
-            " able to NOT definitively overwrite such a custom mapping.
-
-            " Create mappings  to be able to  scroll in preview window  with `j` and
-            " `k`, after an initial `J` or `K`.
-            call submode#enter_with('scroll-preview', 'n', 'bs',  'J', ':<c-u>exe window#scroll_preview(1)<cr>')
-            call submode#enter_with('scroll-preview', 'n', 'bs',  'K', ':<c-u>exe window#scroll_preview(0)<cr>')
-            call submode#map(       'scroll-preview', 'n', 'brs', 'j', '<plug>(scroll_preview_down)')
-            call submode#map(       'scroll-preview', 'n', 'brs', 'k', '<plug>(scroll_preview_up)')
-            "                                               │
-            "                                               └ local to the current buffer
-        catch
-            " Alternative (in case `vim-submode` isn't enabled):
-            nno  <buffer><nowait><silent>  J  :<c-u>exe window#scroll_preview(1)<cr>
-            nno  <buffer><nowait><silent>  K  :<c-u>exe window#scroll_preview(0)<cr>
-            " TODO:
-            " Remove  this   `try`  conditional  once  `vim-submode`   has  been
-            " implemented in `vim-lg`.
-        finally
-            au!  my_scroll_preview_window
-            aug! my_scroll_preview_window
-        endtry
-    endif
-endfu
-
 fu! s:set_window_height() abort "{{{2
     " Goal:{{{
     "
@@ -312,8 +256,8 @@ fu! s:set_window_height() abort "{{{2
     " The preview window is a special case.
     " When you open one, 2 WinEnter are fired; when Vim:
     "
-    "         1. enters the preview window (&l:pvw is NOT yet set)
-    "         2. goes back to the original window (now, &l:pvw IS set in the preview window)
+    "    1. enters the preview window (&l:pvw is NOT yet set)
+    "    2. goes back to the original window (now, &l:pvw IS set in the preview window)
     "
     " When the first WinEnter is fired, `&l:pvw` is not set.
     " Thus, the function should maximize it.
@@ -372,13 +316,13 @@ fu! s:set_window_height() abort "{{{2
     " just set its height (`wincmd _`).
     " Only the heights of the other windows:
     "
-    "         && v[0] !=# winnr_orig
+    "     && v[0] !=# winnr_orig
     "
     " Finally, there're  some special cases,  where we  don't want to  reset the
     " height of a special window.
     " We delegate the logic to handle these in `s:height_should_be_reset()`:
     "
-    "         && !s:height_should_be_reset(v[0])
+    "     && !s:height_should_be_reset(v[0])
     "}}}
     let special_windows = filter(map(
         \     range(1, winnr('$')),
@@ -397,7 +341,7 @@ fu! s:set_window_height() abort "{{{2
         "
         " Try this to understand:
         "
-        "         10wincmd _
+        "     10wincmd _
         "}}}
         if lg#window#has_neighbor('up', winnr) || lg#window#has_neighbor('down', winnr)
             " FIXME:
@@ -471,17 +415,19 @@ fu! s:restore_view() abort "{{{2
 endfu
 " }}}1
 " Mappings {{{1
-" <plug> {{{2
+" C-hjkl               move across windows {{{2
 
-nno  <expr>  <plug>(scroll_preview_down)  <sid>scroll_preview(1)
-nno  <expr>  <plug>(scroll_preview_up)    <sid>scroll_preview(0)
+nno  <silent><unique>  <c-h>  :<c-u>call window#navigate_or_resize('h')<cr>
+nno  <silent><unique>  <c-j>  :<c-u>call window#navigate_or_resize('j')<cr>
+nno  <silent><unique>  <c-k>  :<c-u>call window#navigate_or_resize('k')<cr>
+nno  <silent><unique>  <c-l>  :<c-u>call window#navigate_or_resize('l')<cr>
 
-" C-hjkl               move across windows/tmux panes {{{2
+" M-hjkl               scroll preview window {{{2
 
-nno  <silent><unique>  <c-h>  :<c-u>call window#navigate('h')<cr>
-nno  <silent><unique>  <c-j>  :<c-u>call window#navigate('j')<cr>
-nno  <silent><unique>  <c-k>  :<c-u>call window#navigate('k')<cr>
-nno  <silent><unique>  <c-l>  :<c-u>call window#navigate('l')<cr>
+nno <silent><unique> <m-h> :<c-u>call window#scroll_preview('h')<cr>
+nno <silent><unique> <m-j> :<c-u>call window#scroll_preview('j')<cr>
+nno <silent><unique> <m-k> :<c-u>call window#scroll_preview('k')<cr>
+nno <silent><unique> <m-l> :<c-u>call window#scroll_preview('l')<cr>
 
 " SPC q  Q  U  z                                               {{{2
 
@@ -695,11 +641,9 @@ nmap          <unique>  <c-w>v  Zv
 "         au WinEnter * if winwidth(0) !=# &columns | setl nowrap | endif
 "     augroup END
 "
-" Pro:
-" Will probably cover more cases.
+" Pro: Will probably cover more cases.
 "
-" Con:
-" WinLeave/WinEnter is not fired after moving a window.
+" Con: WinLeave/WinEnter is not fired after moving a window.
 
 nno   <silent><unique>  ZH      :<c-u>call window#disable_wrap_when_moving_to_vert_split('H')<cr>
 nno   <silent><unique>  ZL      :<c-u>call window#disable_wrap_when_moving_to_vert_split('L')<cr>
@@ -723,13 +667,14 @@ nmap <silent> ZZ <plug>(my_ZZ_update)<plug>(my_quit)
 "
 " When opening a file with long lines, I prefer to do it:
 "
-"     - on the right if it's vertical
-"     - at the bottom if it's horizontal
+"    - on the right if it's vertical
+"    - at the bottom if it's horizontal
 "
 " Rationale:
 " When you read a book, the next page is on the right, not on the left.
 " When you read a pdf, the next page is below, not above.
 "
+" ---
 "
 " However, when displaying  a buffer with short lines (ex: TOC),  I prefer to do
 " it on the  left.
@@ -737,10 +682,11 @@ nmap <silent> ZZ <plug>(my_ZZ_update)<plug>(my_quit)
 " Rationale:
 " When you write annotations in  a page, you do it  in the left margin.
 "
+" ---
 "
 " Bottom Line:
 " `set splitbelow` and `set splitright`  seem to define good default directions.
-" Punctually  though, we  may  `need  `:topleft` or  :leftabove`  to change  the
+" Punctually  though, we  may  need  `:topleft` or  `:leftabove`  to change  the
 " direction.
 "}}}
 

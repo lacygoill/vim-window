@@ -11,7 +11,7 @@ fu! s:get_terminal_buffer() abort "{{{1
     return get(buflist, 0 , 0)
 endfu
 
-fu! window#navigate(dir) abort "{{{1
+fu! window#navigate_or_resize(dir) abort "{{{1
     if get(s:, 'in_submode_window_resize', 0) | return window#resize(a:dir) | endif
     try
         exe 'wincmd '.a:dir
@@ -29,27 +29,10 @@ fu! window#preview_open() abort "{{{1
 
     " Try to display a possible tag under the cursor in a new preview window.
     try
-        exe "norm! \<c-w>}\<c-w>PzMzvzz\<c-w>p"
-        " OLD:{{{
-        "
-        " Previously, we mapped  this function to 2 mappings: z< and z{
-        " Each one passed a different argument (`auto_close`) to the function.
-        " When the  argument, `auto_close`,  was 1, we  installed an  autocmd to
-        " automatically close the preview window when we moved the cursor.
-        "
-        "     if a:auto_close
-        "         "              ┌─ don't use `<buffer>` because I suspect `CursorMoved`
-        "         "              │  could happen in another buffer; example, after `gf`
-        "         "              │  or sth similar
-        "         "              │  we want the preview window to be closed no matter
-        "         "              │  where the cursor moves
-        "         "              │
-        "         au CursorMoved * ++once sil! pclose | sil! wincmd _
-        "     endif
-        "
-        " I think  that was too much. One  mapping should be enough. It  frees a
-        " key binding, and restores symmetry. Indeed, `z>` was not used.
-        "}}}
+        wincmd }
+        wincmd P
+        norm! zMzvzz
+        wincmd p
     catch
         return lg#catch_error()
     endtry
@@ -130,30 +113,39 @@ fu! window#resize(key) abort "{{{1
     call feedkeys(keys, 'in')
 endfu
 
-fu! window#scroll_preview(is_fwd) abort "{{{1
-    if empty(filter(map(range(1, winnr('$')),
-    \                   {_,v -> getwinvar(v, '&pvw')}),
-    \               {_,v -> v ==# 1}))
-        sil! unmap <buffer> J
-        sil! unmap <buffer> K
-        sil! exe 'norm! '.(a:is_fwd ? 'J' : 'K')
-    else
-        " go to preview window
-        noa exe "norm! \<c-w>P"
-        "                              ┌ scroll down
-        "                         ┌────┤
-        exe 'norm! '.(a:is_fwd ? "\<c-e>L" : "\<c-y>H")
-        "                               │
-        "                               └ go to last line of window
+fu! window#scroll_preview(motion) abort "{{{1
+    " TODO: support C-d and C-u motions (using `M-d` and `M-u` as the lhs of new keybindings?)
+    " Maybe support `gg` and `G` too (`M-g M-g` and `M-g G`?).
 
-        " unfold and get back
-        " note: for some reason the double backticks breaks `J`,
-        " that's why we don't use it when we move forward
-        exe 'norm! zv'.(a:is_fwd ? '' : '``')
-        " get back to previous window
-        noa exe "norm! \<c-w>p"
+    " don't do anything if there's no preview window
+    if index(map(range(1, winnr('$')), {_,v -> getwinvar(v, '&pvw')}), 1) == -1
+        return
     endif
-    return ''
+
+    " go to preview window
+    noa wincmd P
+
+    " scroll
+    let seq = {'j': 'j', 'k': 'k', 'h': '5zh', 'l': '5zl'}
+    " Why do you open folds?{{{
+    "
+    " This is necessary when you sroll backward.
+    "
+    " Suppose you are  on the first line of  a fold and you move  one line back;
+    " your cursor will *not* land on the previous line, but on the first line of
+    " the previous fold.
+    "}}}
+    exe 'norm! zR'..seq[a:motion]
+    " Do *not* merge the two `:norm!`.{{{
+    "
+    " If you're on the  last line and you try to scroll  forward, it would fail,
+    " and the rest of the sequence (`zMzv`) would not be processed.
+    " Same issue if you try to scroll backward while on the first line.
+    "}}}
+    norm! zMzv
+
+    " get back to previous window
+    noa wincmd p
 endfu
 
 fu! window#terminal_close() abort "{{{1
