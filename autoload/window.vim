@@ -1,3 +1,21 @@
+if exists('g:autoloaded_window')
+    finish
+endif
+let g:autoloaded_window = 1
+
+" Init {{{1
+
+let s:AUTO_OPEND_FOLDS_MOTIONS = {
+    \ 'j': 'j',
+    \ 'k': 'k',
+    \ 'h': '5zh',
+    \ 'l': '5zl',
+    \ 'c-d': "\<c-d>",
+    \ 'c-u': "\<c-u>",
+    \ 'gg': 'gg',
+    \ 'G': 'G',
+    \ }
+
 fu! window#disable_wrap_when_moving_to_vert_split(dir) abort "{{{1
     call setwinvar(winnr('#'), '&wrap', 0)
     exe 'wincmd '.a:dir
@@ -114,9 +132,6 @@ fu! window#resize(key) abort "{{{1
 endfu
 
 fu! window#scroll_preview(motion) abort "{{{1
-    " TODO: support C-d and C-u motions (using `M-d` and `M-u` as the lhs of new keybindings?)
-    " Maybe support `gg` and `G` too (`M-g M-g` and `M-g G`?).
-
     " don't do anything if there's no preview window
     if index(map(range(1, winnr('$')), {_,v -> getwinvar(v, '&pvw')}), 1) == -1
         return
@@ -125,24 +140,17 @@ fu! window#scroll_preview(motion) abort "{{{1
     " go to preview window
     noa wincmd P
 
-    " scroll
-    let seq = {'j': 'j', 'k': 'k', 'h': '5zh', 'l': '5zl'}
-    " Why do you open folds?{{{
+    " Useful to see where we are.{{{
     "
-    " This is necessary when you sroll backward.
+    " Would not be necessary if we *scrolled* with `C-e`/`C-y`.
+    " But it is necessary because we *move* with `j`/`k`.
     "
-    " Suppose you are  on the first line of  a fold and you move  one line back;
-    " your cursor will *not* land on the previous line, but on the first line of
-    " the previous fold.
+    " We can't use `C-e`/`C-y`; it wouldn't work as expected because of `zMzv`.
     "}}}
-    exe 'norm! zR'..seq[a:motion]
-    " Do *not* merge the two `:norm!`.{{{
-    "
-    " If you're on the  last line and you try to scroll  forward, it would fail,
-    " and the rest of the sequence (`zMzv`) would not be processed.
-    " Same issue if you try to scroll backward while on the first line.
-    "}}}
-    norm! zMzv
+    if ! &l:cul | setl cul | endif
+
+    " move/scroll
+    exe 'sil! norm! zR'..s:AUTO_OPEND_FOLDS_MOTIONS[a:motion]..'zMzv'
 
     " get back to previous window
     noa wincmd p

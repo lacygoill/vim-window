@@ -256,8 +256,8 @@ fu! s:set_window_height() abort "{{{2
     " The preview window is a special case.
     " When you open one, 2 WinEnter are fired; when Vim:
     "
-    "    1. enters the preview window (&l:pvw is NOT yet set)
-    "    2. goes back to the original window (now, &l:pvw IS set in the preview window)
+    "    1. enters the preview window (&l:pvw is *not* yet set)
+    "    2. goes back to the original window (now, &l:pvw *is* set in the preview window)
     "
     " When the first WinEnter is fired, `&l:pvw` is not set.
     " Thus, the function should maximize it.
@@ -270,10 +270,9 @@ fu! s:set_window_height() abort "{{{2
     "
     " So, in the end, the height of the preview window is correctly set.
     "}}}
+    if &l:pvw | return | endif
 
-    if &l:pvw
-        return
-    endif
+    if getcmdwintype() isnot# '' | exe 'resize '..&cwh | return | endif
 
     if    s:is_special()
     \ &&  s:is_wide()
@@ -422,12 +421,26 @@ nno  <silent><unique>  <c-j>  :<c-u>call window#navigate_or_resize('j')<cr>
 nno  <silent><unique>  <c-k>  :<c-u>call window#navigate_or_resize('k')<cr>
 nno  <silent><unique>  <c-l>  :<c-u>call window#navigate_or_resize('l')<cr>
 
-" M-hjkl               scroll preview window {{{2
+" M-hjkl du gg G       scroll preview window {{{2
 
 nno <silent><unique> <m-h> :<c-u>call window#scroll_preview('h')<cr>
 nno <silent><unique> <m-j> :<c-u>call window#scroll_preview('j')<cr>
 nno <silent><unique> <m-k> :<c-u>call window#scroll_preview('k')<cr>
 nno <silent><unique> <m-l> :<c-u>call window#scroll_preview('l')<cr>
+
+nno <silent><unique> <m-d> :<c-u>call window#scroll_preview('c-d')<cr>
+" Why don't you install a mapping for `M-u`?{{{
+"
+" It would conflict with the `M-u` mapping from `vim-readline`.
+" As a workaround, we've overloaded the latter.
+" We make it check whether a preview window is opened in the current tab page:
+"
+"    - if there is one, it scrolls half a page up in the preview window
+"    - otherwise, it upcases the text up to the end of the next/current word
+"}}}
+
+nno <silent><unique> <m-g><m-g> :<c-u>call window#scroll_preview('gg')<cr>
+nno <silent><unique> <m-g>G     :<c-u>call window#scroll_preview('G')<cr>
 
 " SPC q  Q  U  z                                               {{{2
 
