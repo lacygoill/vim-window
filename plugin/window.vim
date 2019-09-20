@@ -564,9 +564,6 @@ nmap  <unique>  <c-w>l  zl
 nmap  <unique>  <c-w>j  zj
 nmap  <unique>  <c-w>k  zk
 
-" zo                   :only {{{3
-
-nno  <unique>  zo  :<c-u>on<cr>
 "}}}2
 " Z (prefix) {{{2
 " Z                    simpler window prefix {{{3
