@@ -5,7 +5,7 @@ let g:autoloaded_window = 1
 
 " Init {{{1
 
-let s:AUTO_OPEND_FOLDS_MOTIONS = {
+let s:AOF_NOTATION2MOTION = {
     \ 'j': 'j',
     \ 'k': 'k',
     \ 'h': '5zh',
@@ -131,7 +131,7 @@ fu! window#resize(key) abort "{{{1
     call feedkeys(keys, 'in')
 endfu
 
-fu! window#scroll_preview(motion) abort "{{{1
+fu! window#scroll_preview(notation) abort "{{{1
     " don't do anything if there's no preview window
     if index(map(range(1, winnr('$')), {_,v -> getwinvar(v, '&pvw')}), 1) == -1
         return
@@ -150,7 +150,17 @@ fu! window#scroll_preview(motion) abort "{{{1
     if ! &l:cul | setl cul | endif
 
     " move/scroll
-    exe 'sil! norm! zR'..s:AUTO_OPEND_FOLDS_MOTIONS[a:motion]..'zMzv'
+    exe 'sil! norm! zR'
+        \ ..(index(['j', 'k'], a:notation) >= 0 ? 'g' : '')
+        \ ..s:AOF_NOTATION2MOTION[a:notation]
+        \ ..'zMzv'
+    " `zMzv` may cause the distance between the current line and the first line of the window to change unexpectedly.{{{
+    "
+    " If that bothers you, you could improve the function.
+    " See how we handled the issue in `s:move_and_open_fold()` from:
+    "
+    "     ~/.vim/plugged/vim-toggle-settings/autoload/toggle_settings.vim
+    "}}}
 
     " get back to previous window
     noa wincmd p
