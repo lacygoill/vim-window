@@ -385,9 +385,9 @@ fu! s:restore_change_position() abort "{{{2
         endif
         return
     endif
-    "  ┌─ from `:h :sil`:
-    "  │                  When [!] is added, […], commands and mappings will
-    "  │                  not be aborted when an error is detected.
+    "  ┌ from `:h :sil`:
+    "  │                 When [!] is added, […], commands and mappings will
+    "  │                 not be aborted when an error is detected.
     "  │
     "  │  If our position in the list is somewhere in the middle, `99g;` will
     "  │  raise an error.

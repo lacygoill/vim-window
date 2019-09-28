@@ -5,7 +5,7 @@ let g:autoloaded_window = 1
 
 " Init {{{1
 
-let s:AOF_NOTATION2MOTION = {
+let s:AOF_KEY2NORM = {
     \ 'j': 'j',
     \ 'k': 'k',
     \ 'h': '5zh',
@@ -131,7 +131,7 @@ fu! window#resize(key) abort "{{{1
     call feedkeys(keys, 'in')
 endfu
 
-fu! window#scroll_preview(notation) abort "{{{1
+fu! window#scroll_preview(lhs) abort "{{{1
     " don't do anything if there's no preview window
     if index(map(range(1, winnr('$')), {_,v -> getwinvar(v, '&pvw')}), 1) == -1
         return
@@ -151,8 +151,8 @@ fu! window#scroll_preview(notation) abort "{{{1
 
     " move/scroll
     exe 'sil! norm! zR'
-        \ ..(index(['j', 'k'], a:notation) >= 0 ? 'g' : '')
-        \ ..s:AOF_NOTATION2MOTION[a:notation]
+        \ ..(index(['j', 'k'], a:lhs) >= 0 ? 'g' : '')
+        \ ..s:AOF_KEY2NORM[a:lhs]
         \ ..'zMzv'
     " `zMzv` may cause the distance between the current line and the first line of the window to change unexpectedly.{{{
     "
