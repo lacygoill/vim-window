@@ -90,7 +90,7 @@ fu! s:get_diff_height(...) abort "{{{2
     "                          │    │ we must take its height into account
     "                          │    │}}}
     let lines = &lines - &ch - 2 - (tabpagenr('$') > 1 ? 1 : 0)
-    return fmod(lines,2) ==# 0 || (a:0 ? a:1 : winnr()) !=# 1
+    return fmod(lines,2) == 0 || (a:0 ? a:1 : winnr()) != 1
        \ ?     lines/2
        \ :     lines/2 + 1
 endfu
@@ -204,7 +204,7 @@ endfu
 fu! s:save_change_position() abort "{{{2
     let changelist = get(getchangelist('%'), 0, [])
     let b:my_change_position = get(getchangelist('%'), 1, -1)
-    if b:my_change_position ==# -1
+    if b:my_change_position == -1
         let b:my_change_position = 100
     endif
 endfu
@@ -315,7 +315,7 @@ fu! s:set_window_height() abort "{{{2
     " just set its height (`wincmd _`).
     " Only the heights of the other windows:
     "
-    "     && v[0] !=# winnr_orig
+    "     && v[0] != winnr_orig
     "
     " Finally, there're  some special cases,  where we  don't want to  reset the
     " height of a special window.
@@ -328,7 +328,7 @@ fu! s:set_window_height() abort "{{{2
         \     {_,v -> s:if_special_get_nr_and_height(v)}
         \    ),
         \ {_,v ->    v    !=# []
-        \         && v[0] !=# winnr_orig
+        \         && v[0] != winnr_orig
         \         && s:height_should_be_reset(v[0])
         \ })
 
@@ -394,11 +394,11 @@ fu! s:restore_change_position() abort "{{{2
     "  │  Without `sil!`, `norm!` would stop typing the key sequence.
     "  │
     sil! exe 'norm! 99g;'
-    \ .(b:my_change_position ==# 1 ? 'g,' : (b:my_change_position - 2).'g,g,')
+    \ .(b:my_change_position == 1 ? 'g,' : (b:my_change_position - 2).'g,g,')
     " TODO: Simplify the code once Neovim has integrated the patch `8.0.1817`:{{{
     "
     "     sil! exe 'norm! 99g;'
-    "     \ .(b:my_change_position ==# 1 ? 'g,' : (b:my_change_position - 1).'g,')
+    "     \ .(b:my_change_position == 1 ? 'g,' : (b:my_change_position - 1).'g,')
     "}}}
 endfu
 
@@ -647,8 +647,8 @@ nmap          <unique>  <c-w>v  Zv
 "
 "     augroup nowrap_in_vert_splits
 "         au!
-"         au WinLeave * if winwidth(0) !=# &columns | setl nowrap | endif
-"         au WinEnter * if winwidth(0) !=# &columns | setl nowrap | endif
+"         au WinLeave * if winwidth(0) != &columns | setl nowrap | endif
+"         au WinEnter * if winwidth(0) != &columns | setl nowrap | endif
 "     augroup END
 "
 " Pro: Will probably cover more cases.

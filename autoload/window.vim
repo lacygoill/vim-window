@@ -168,7 +168,7 @@ endfu
 
 fu! window#terminal_close() abort "{{{1
     let term_buffer = s:get_terminal_buffer()
-    if term_buffer !=# 0
+    if term_buffer != 0
         noa call win_gotoid(bufwinid(term_buffer))
         " Why executing this autocmd?{{{
         "
@@ -196,7 +196,7 @@ endfu
 
 fu! window#terminal_open() abort "{{{1
     let term_buffer = s:get_terminal_buffer()
-    if term_buffer !=# 0
+    if term_buffer != 0
         let id = bufwinid(term_buffer)
         call win_gotoid(id)
         return
@@ -216,11 +216,11 @@ fu! window#terminal_open() abort "{{{1
 endfu
 
 fu! window#zoom_toggle() abort "{{{1
-    if winnr('$') ==# 1
+    if winnr('$') == 1
         return
     endif
 
-    if exists('t:zoom_restore') && win_getid() ==# t:zoom_restore.winid
+    if exists('t:zoom_restore') && win_getid() == t:zoom_restore.winid
         exe get(t:zoom_restore, 'cmd', '')
         unlet t:zoom_restore
     else
