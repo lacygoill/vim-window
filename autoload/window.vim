@@ -68,9 +68,9 @@ fu! window#quit_everything() abort "{{{1
         qall
     catch
         let exception = string(v:exception)
-        call timer_start(0, {-> execute('echohl ErrorMsg | echo '.exception.' | echohl NONE', '')})
-        "                                                         │
-        "                         can't use `string(v:exception)` ┘
+        call timer_start(0, {_ -> execute('echohl ErrorMsg | echo '.exception.' | echohl NONE', '')})
+        "                                                           │
+        "                           can't use `string(v:exception)` ┘
         "
         " …  because when  the timer  will be  executed `v:exception`  will be
         " empty; we  need to save `v:exception`  in a variable: any  scope would
@@ -87,7 +87,7 @@ fu! window#resize(key) abort "{{{1
         call timer_stop(s:timer_id)
         unlet! s:timer_id
     endif
-    let s:timer_id = timer_start(1000, {-> execute('let s:in_submode_window_resize = 0')})
+    let s:timer_id = timer_start(1000, {_ -> execute('let s:in_submode_window_resize = 0')})
     if a:key =~# '[hl]'
         " Why returning different keys depending on the position of the window?{{{
         "

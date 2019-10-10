@@ -29,17 +29,13 @@ augroup preserve_view_and_pos_in_changelist
     au!
     au BufWinLeave * if !s:is_special() | call s:save_view() | call s:save_change_position() | endif
     au BufWinEnter * if !s:is_special() | call s:restore_change_position() | call s:restore_view() | endif
-    " You must restore the view AFTER the position in the change list.
+    " You must restore the view *after* the position in the change list.
     " Otherwise it wouldn't be restored correctly.
 augroup END
 
 augroup window_height
     au!
-    if has('nvim')
-        au TermOpen     * if !s:is_alone_in_tabpage() | exe 'resize ' . s:T_HEIGHT | endif
-    else
-        au TerminalOpen * if !s:is_alone_in_tabpage() | exe 'resize ' . s:T_HEIGHT | endif
-    endif
+    exe 'au '..(has('nvim') ? 'TermOpen' : 'TerminalOpen')..' * call s:set_terminal_height()'
     " Why `BufWinEnter`?{{{
     "
     " This is useful when splitting a window to open a ‘websearch’ file.
@@ -151,27 +147,6 @@ fu! s:height_should_be_reset(nr) abort "{{{2
     "}}}
     return winwidth(a:nr) >= &columns/2
     \ ||  (getwinvar(a:nr, '&pvw', 0) && winwidth(0) <= &columns/2)
-
-    " You want a condition to test whether a window is maximized vertically?{{{
-    " Try this:
-    "
-    "         ┌ no viewport above/below:
-    "         │
-    "         │         every time you open a viewport above/below
-    "         │         the difference increases by 2,
-    "         │         for the new stl + the visible line in the other viewport
-    "         │
-    "         ├───────────────────────────────┐
-    "         &lines - winheight(a:nr) <= &ch+2
-    "                                  ├┘ ├─┘ │
-    "                                  │  │   └ status line + tabline
-    "                                  │  │
-    "                                  │  └ command-line
-    "                                  │
-    "                                  └ there could be a tabline,
-    "                                    if there are several tabpages,
-    "                                    or not (if there's a single tabpage)
-"}}}
 endfu
 
 fu! s:is_alone_in_tabpage() abort "{{{2
@@ -187,6 +162,19 @@ endfu
 
 fu! s:is_wide() abort "{{{2
     return winwidth(0) >= &columns/2
+endfu
+
+fu! s:is_maximized_vertically() abort "{{{2
+    " Every time you open a  window above/below, the difference between `&lines`
+    " and `winheight(0)` increases by 2:
+    " 1 for the new stl + 1 for the visible line in the other window
+    return (&lines - winheight(0)) <= (&ch + 1 + (tabpagenr('$') > 1))
+    "                                  ├─┘   │   ├──────────────────┘
+    "                                  │     │   └ tabline
+    "                                  │     │
+    "                                  │     └ status line
+    "                                  │
+    "                                  └ command-line
 endfu
 
 fu! s:make_window_small() abort "{{{2
@@ -347,6 +335,7 @@ fu! s:set_window_height() abort "{{{2
             " Focusing the window to resize it may have unexpected effects.
             " It would be better to find a way to resize it without altering the
             " current focus.
+            " Update: use `win_execute()`. But wait for Nvim to merge it.
             noa exe winnr.'windo resize '.height
         endif
     endfor
@@ -360,6 +349,12 @@ fu! s:set_window_height() abort "{{{2
     "}}}
     sil! noa exe winnr_prev.'wincmd w'
     sil! noa exe winnr_orig.'wincmd w'
+endfu
+
+fu! s:set_terminal_height() abort "{{{2
+    if !s:is_alone_in_tabpage() && !s:is_maximized_vertically()
+        exe 'resize ' . s:T_HEIGHT
+    endif
 endfu
 
 fu! s:restore_change_position() abort "{{{2
