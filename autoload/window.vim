@@ -5,7 +5,7 @@ let g:autoloaded_window = 1
 
 " Init {{{1
 
-let s:AOF_KEY2NORM = {
+const s:AOF_KEY2NORM = {
     \ 'j': 'j',
     \ 'k': 'k',
     \ 'h': '5zh',
@@ -16,20 +16,20 @@ let s:AOF_KEY2NORM = {
     \ 'G': 'G',
     \ }
 
-fu! window#disable_wrap_when_moving_to_vert_split(dir) abort "{{{1
+fu window#disable_wrap_when_moving_to_vert_split(dir) abort "{{{1
     call setwinvar(winnr('#'), '&wrap', 0)
     exe 'wincmd '.a:dir
     setl nowrap
     return ''
 endfu
 
-fu! s:get_terminal_buffer() abort "{{{1
+fu s:get_terminal_buffer() abort "{{{1
     let buflist = tabpagebuflist(tabpagenr())
     call filter(buflist, {_,v -> getbufvar(v, '&bt', '') is# 'terminal'})
     return get(buflist, 0 , 0)
 endfu
 
-fu! window#navigate_or_resize(dir) abort "{{{1
+fu window#navigate_or_resize(dir) abort "{{{1
     if get(s:, 'in_submode_window_resize', 0) | return window#resize(a:dir) | endif
     try
         exe 'wincmd '.a:dir
@@ -38,7 +38,7 @@ fu! window#navigate_or_resize(dir) abort "{{{1
     endtry
 endfu
 
-fu! window#preview_open() abort "{{{1
+fu window#preview_open() abort "{{{1
     " if we're already in the preview window, get back to previous window
     if &l:pvw
         wincmd p
@@ -56,7 +56,7 @@ fu! window#preview_open() abort "{{{1
     endtry
 endfu
 
-fu! window#quit_everything() abort "{{{1
+fu window#quit_everything() abort "{{{1
     try
         " We must force the wiping the terminal buffers if we want to be able to quit.
         if !has('nvim')
@@ -81,13 +81,14 @@ fu! window#quit_everything() abort "{{{1
     endtry
 endfu
 
-fu! window#resize(key) abort "{{{1
+fu window#resize(key) abort "{{{1
     let s:in_submode_window_resize = 1
     if exists('s:timer_id')
         call timer_stop(s:timer_id)
         unlet! s:timer_id
     endif
     let s:timer_id = timer_start(1000, {_ -> execute('let s:in_submode_window_resize = 0')})
+    let winnr = winnr()
     if a:key =~# '[hl]'
         " Why returning different keys depending on the position of the window?{{{
         "
@@ -106,7 +107,7 @@ fu! window#resize(key) abort "{{{1
         "      the left instead of the right, to increase the visible size of
         "      the window, like it does in the other windows
         "}}}
-        if lg#window#has_neighbor('right')
+        if winnr('l') != winnr
             let keys = a:key is# 'h'
                    \ ?     "\<c-w>3<"
                    \ :     "\<c-w>3>"
@@ -117,7 +118,7 @@ fu! window#resize(key) abort "{{{1
         endif
 
     else
-        if lg#window#has_neighbor('down')
+        if winnr('j') != winnr
             let keys = a:key is# 'k'
                    \ ?     "\<c-w>3-"
                    \ :     "\<c-w>3+"
@@ -131,7 +132,7 @@ fu! window#resize(key) abort "{{{1
     call feedkeys(keys, 'in')
 endfu
 
-fu! window#scroll_preview(lhs) abort "{{{1
+fu window#scroll_preview(lhs) abort "{{{1
     " don't do anything if there's no preview window
     if index(map(range(1, winnr('$')), {_,v -> getwinvar(v, '&pvw')}), 1) == -1
         return
@@ -166,7 +167,7 @@ fu! window#scroll_preview(lhs) abort "{{{1
     noa wincmd p
 endfu
 
-fu! window#terminal_close() abort "{{{1
+fu window#terminal_close() abort "{{{1
     let term_buffer = s:get_terminal_buffer()
     if term_buffer != 0
         noa call win_gotoid(bufwinid(term_buffer))
@@ -194,7 +195,7 @@ fu! window#terminal_close() abort "{{{1
     endif
 endfu
 
-fu! window#terminal_open() abort "{{{1
+fu window#terminal_open() abort "{{{1
     let term_buffer = s:get_terminal_buffer()
     if term_buffer != 0
         let id = bufwinid(term_buffer)
@@ -215,7 +216,7 @@ fu! window#terminal_open() abort "{{{1
     exe printf('exe %s %s', string(how_to_open), resize)
 endfu
 
-fu! window#zoom_toggle() abort "{{{1
+fu window#zoom_toggle() abort "{{{1
     if winnr('$') == 1
         return
     endif

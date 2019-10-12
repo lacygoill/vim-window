@@ -6,13 +6,13 @@ let g:loaded_window = 1
 " Init {{{1
 
 " Default height
-let s:D_HEIGHT = 10
+const s:D_HEIGHT = 10
 " Terminal window
-let s:T_HEIGHT = 10
+const s:T_HEIGHT = 10
 " Quickfix window
-let s:Q_HEIGHT = 10
+const s:Q_HEIGHT = 10
 " file “Running” current line (websearch, tmuxprompt)
-let s:R_HEIGHT = 5
+const s:R_HEIGHT = 5
 
 " Autocmds {{{1
 
@@ -48,11 +48,11 @@ augroup window_height
 augroup END
 
 " Functions {{{1
-fu! s:if_special_get_nr_and_height(v) abort "{{{2
-"     │                            │
-"     │                            └ a window number
-"     │
-"     └ if it's a special window, get me its number and the desired height
+fu s:if_special_get_nr_and_height(v) abort "{{{2
+"    │                            │
+"    │                            └ a window number
+"    │
+"    └ if it's a special window, get me its number and the desired height
 
     return getwinvar(a:v, '&pvw', 0)
         \ ?     [a:v, &pvh]
@@ -67,7 +67,7 @@ fu! s:if_special_get_nr_and_height(v) abort "{{{2
         \ :     []
 endfu
 
-fu! s:get_diff_height(...) abort "{{{2
+fu s:get_diff_height(...) abort "{{{2
     " Purpose:{{{
     " Return the height of a horizontal window whose 'diff' option is enabled.
     "
@@ -91,7 +91,7 @@ fu! s:get_diff_height(...) abort "{{{2
        \ :     lines/2 + 1
 endfu
 
-fu! s:height_should_be_reset(nr) abort "{{{2
+fu s:height_should_be_reset(nr) abort "{{{2
     " Tests:{{{
     " Whatever change you perform on this  function, make sure the height of the
     " windows are correct after executing:
@@ -149,22 +149,22 @@ fu! s:height_should_be_reset(nr) abort "{{{2
     \ ||  (getwinvar(a:nr, '&pvw', 0) && winwidth(0) <= &columns/2)
 endfu
 
-fu! s:is_alone_in_tabpage() abort "{{{2
+fu s:is_alone_in_tabpage() abort "{{{2
     return winnr('$') <= 1
 endfu
 
-fu! s:is_special() abort "{{{2
+fu s:is_special() abort "{{{2
     return &l:pvw
       \ || &l:diff
       \ || &ft is# 'gitcommit' || index(['tmuxprompt', 'websearch'], &ft) >= 0
       \ || &bt =~# '^\%(quickfix\|terminal\)$'
 endfu
 
-fu! s:is_wide() abort "{{{2
+fu s:is_wide() abort "{{{2
     return winwidth(0) >= &columns/2
 endfu
 
-fu! s:is_maximized_vertically() abort "{{{2
+fu s:is_maximized_vertically() abort "{{{2
     " Every time you open a  window above/below, the difference between `&lines`
     " and `winheight(0)` increases by 2:
     " 1 for the new stl + 1 for the visible line in the other window
@@ -177,7 +177,7 @@ fu! s:is_maximized_vertically() abort "{{{2
     "                                  └ command-line
 endfu
 
-fu! s:make_window_small() abort "{{{2
+fu s:make_window_small() abort "{{{2
     exe 'resize '.(&l:pvw
     \ ?                &l:pvh
     \ :            &bt is# 'quickfix'
@@ -189,7 +189,7 @@ fu! s:make_window_small() abort "{{{2
     \ :            s:D_HEIGHT)
 endfu
 
-fu! s:save_change_position() abort "{{{2
+fu s:save_change_position() abort "{{{2
     let changelist = get(getchangelist('%'), 0, [])
     let b:my_change_position = get(getchangelist('%'), 1, -1)
     if b:my_change_position == -1
@@ -197,7 +197,7 @@ fu! s:save_change_position() abort "{{{2
     endif
 endfu
 
-fu! s:save_view() abort "{{{2
+fu s:save_view() abort "{{{2
 " Save current view settings on a per-window, per-buffer basis.
     if !exists('w:saved_views')
         let w:saved_views = {}
@@ -205,7 +205,7 @@ fu! s:save_view() abort "{{{2
     let w:saved_views[bufnr('%')] = winsaveview()
 endfu
 
-fu! s:set_window_height() abort "{{{2
+fu s:set_window_height() abort "{{{2
     " Goal:{{{
     "
     " Maximize  the  height of  all  windows,  except  the  ones which  are  not
@@ -262,10 +262,12 @@ fu! s:set_window_height() abort "{{{2
 
     if getcmdwintype() isnot# '' | exe 'resize '..&cwh | return | endif
 
+    let winnr = winnr()
+
     if    s:is_special()
     \ &&  s:is_wide()
     \ && !s:is_alone_in_tabpage()
-        if lg#window#has_neighbor('up') || lg#window#has_neighbor('down')
+        if winnr('j') != winnr || winnr('k') != winnr
             return s:make_window_small()
         " If there's no window above or below, resetting the height of a special
         " window would lead to a big cmdline.
@@ -351,13 +353,13 @@ fu! s:set_window_height() abort "{{{2
     sil! noa exe winnr_orig.'wincmd w'
 endfu
 
-fu! s:set_terminal_height() abort "{{{2
+fu s:set_terminal_height() abort "{{{2
     if !s:is_alone_in_tabpage() && !s:is_maximized_vertically()
         exe 'resize ' . s:T_HEIGHT
     endif
 endfu
 
-fu! s:restore_change_position() abort "{{{2
+fu s:restore_change_position() abort "{{{2
     if !exists('b:my_change_position')
         " Why this guard `!empty(...)`?{{{
         "
@@ -397,7 +399,7 @@ fu! s:restore_change_position() abort "{{{2
     "}}}
 endfu
 
-fu! s:restore_view() abort "{{{2
+fu s:restore_view() abort "{{{2
 " Restore current view settings.
     let n = bufnr('%')
     if exists('w:saved_views') && has_key(w:saved_views, n)
@@ -474,7 +476,7 @@ xno  <silent><unique>  <space>q  :<c-u>call lg#window#quit()<cr>
 "
 "     nno cd :exe Func()<cr>
 "
-"     fu! Func() abort
+"     fu Func() abort
 "         try
 "             qall
 "         catch
