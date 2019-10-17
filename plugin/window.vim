@@ -413,10 +413,10 @@ endfu
 " Mappings {{{1
 " C-hjkl               move across windows {{{2
 
-nno  <silent><unique>  <c-h>  :<c-u>call window#navigate_or_resize('h')<cr>
-nno  <silent><unique>  <c-j>  :<c-u>call window#navigate_or_resize('j')<cr>
-nno  <silent><unique>  <c-k>  :<c-u>call window#navigate_or_resize('k')<cr>
-nno  <silent><unique>  <c-l>  :<c-u>call window#navigate_or_resize('l')<cr>
+nno <silent><unique> <c-h> :<c-u>call window#navigate_or_resize('h')<cr>
+nno <silent><unique> <c-j> :<c-u>call window#navigate_or_resize('j')<cr>
+nno <silent><unique> <c-k> :<c-u>call window#navigate_or_resize('k')<cr>
+nno <silent><unique> <c-l> :<c-u>call window#navigate_or_resize('l')<cr>
 
 " M-hjkl du gg G       scroll preview window {{{2
 
@@ -460,9 +460,9 @@ nno <silent><unique> <m-g>G     :<c-u>call window#scroll_preview('G')<cr>
 " And the mapping in itself can  be confusing to understand/debug; I much prefer
 " a mapping where the lhs is not repeated in the rhs.
 "}}}
-nmap <silent><unique>  <space>q  <plug>(my_quit)
-nno  <silent><unique>  <plug>(my_quit)  :<c-u>call lg#window#quit()<cr>
-xno  <silent><unique>  <space>q  :<c-u>call lg#window#quit()<cr>
+nmap <silent><unique> <space>q <plug>(my_quit)
+nno <silent><unique> <plug>(my_quit) :<c-u>call lg#window#quit()<cr>
+xno <silent><unique> <space>q :<c-u>call lg#window#quit()<cr>
 " FIXME:{{{
 " When  an  instruction causes  several  errors,  and  it's  executed in  a  try
 " conditional, the  first error can be  catched and converted into  an exception
@@ -492,8 +492,8 @@ xno  <silent><unique>  <space>q  :<c-u>call lg#window#quit()<cr>
 " function, when  an error  occurs, call  a timer to  display the  message right
 " afterwards.
 "}}}
-nno  <silent><unique>  <space>Q  :<c-u>sil! call window#quit_everything()<cr>
-xno  <silent><unique>  <space>Q  :<c-u>sil! call window#quit_everything()<cr>
+nno <silent><unique> <space>Q :<c-u>sil! call window#quit_everything()<cr>
+xno <silent><unique> <space>Q :<c-u>sil! call window#quit_everything()<cr>
 " Why not `SPC u`?{{{
 "
 " We often type it by accident.
@@ -502,29 +502,29 @@ xno  <silent><unique>  <space>Q  :<c-u>sil! call window#quit_everything()<cr>
 "
 " Let's try `SPC U`; it should be harder to press by accident.
 "}}}
-nno  <silent><unique>  <space>U  :<c-u>call lg#window#restore_closed(v:count1)<cr>
-nno  <silent><unique>  <space>u  <nop>
+nno <silent><unique> <space>U :<c-u>call lg#window#restore_closed(v:count1)<cr>
+nno <silent><unique> <space>u <nop>
 
-nno  <silent><unique>  <space>z  :<c-u>call window#zoom_toggle()<cr>
+nno <silent><unique> <space>z :<c-u>call window#zoom_toggle()<cr>
 
 " z (prefix) {{{2
 " z<  z>               open/focus/close terminal window {{{3
 
-nno  <silent><unique>  z<  :<c-u>call window#terminal_open()<cr>
-nno  <silent><unique>  z>  :<c-u>call window#terminal_close()<cr>
+nno <silent><unique> z< :<c-u>call window#terminal_open()<cr>
+nno <silent><unique> z> :<c-u>call window#terminal_close()<cr>
 
 "z(  z)  z[  z]                        qf/ll    window {{{3
 
-nno  <silent><unique>  z(  :<c-u>exe lg#window#qf_open('qf')<cr>
-nno  <silent><unique>  z)  :<c-u>cclose<cr>
+nno <silent><unique> z( :<c-u>exe lg#window#qf_open('qf')<cr>
+nno <silent><unique> z) :<c-u>cclose<cr>
 
-nno  <silent><unique>  z[  :<c-u>exe lg#window#qf_open('loc')<cr>
-nno  <silent><unique>  z]  :<c-u>lclose<cr>
+nno <silent><unique> z[ :<c-u>exe lg#window#qf_open('loc')<cr>
+nno <silent><unique> z] :<c-u>lclose<cr>
 
 " z{  z}                                preview  window {{{3
 
-nno  <silent><unique>  z{  :<c-u>call window#preview_open()<cr>
-nno          <unique>  z}  <c-w>z
+nno <silent><unique> z{ :<c-u>call window#preview_open()<cr>
+nno         <unique> z} <c-w>z
 
 " z C-[hjkl]           resize window (repeatable with ; ,) {{{3
 
@@ -544,22 +544,22 @@ nno          <unique>  z}  <c-w>z
 "
 " Btw, this is consistent with how we resize panes in tmux.
 "}}}
-nno  <silent><unique>  z<c-h>  :<c-u>call window#resize('h')<cr>
-nno  <silent><unique>  z<c-j>  :<c-u>call window#resize('j')<cr>
-nno  <silent><unique>  z<c-k>  :<c-u>call window#resize('k')<cr>
-nno  <silent><unique>  z<c-l>  :<c-u>call window#resize('l')<cr>
+nno <silent><unique> z<c-h> :<c-u>call window#resize('h')<cr>
+nno <silent><unique> z<c-j> :<c-u>call window#resize('j')<cr>
+nno <silent><unique> z<c-k> :<c-u>call window#resize('k')<cr>
+nno <silent><unique> z<c-l> :<c-u>call window#resize('l')<cr>
 
 " z[hjkl]              split in any direction {{{3
 
-nno  <silent><unique>  zh  :<c-u>setl nowrap <bar> leftabove vsplit  <bar> setl nowrap<cr>
-nno  <silent><unique>  zl  :<c-u>setl nowrap <bar> rightbelow vsplit <bar> setl nowrap<cr>
-nno  <silent><unique>  zj  :<c-u>belowright split<cr>
-nno  <silent><unique>  zk  :<c-u>aboveleft split<cr>
+nno <silent><unique> zh :<c-u>setl nowrap <bar> leftabove vsplit  <bar> setl nowrap<cr>
+nno <silent><unique> zl :<c-u>setl nowrap <bar> rightbelow vsplit <bar> setl nowrap<cr>
+nno <silent><unique> zj :<c-u>belowright split<cr>
+nno <silent><unique> zk :<c-u>aboveleft split<cr>
 
-nmap  <unique>  <c-w>h  zh
-nmap  <unique>  <c-w>l  zl
-nmap  <unique>  <c-w>j  zj
-nmap  <unique>  <c-w>k  zk
+nmap <unique> <c-w>h zh
+nmap <unique> <c-w>l zl
+nmap <unique> <c-w>j zj
+nmap <unique> <c-w>k zk
 
 "}}}2
 " Z (prefix) {{{2
@@ -637,8 +637,8 @@ xno <c-w>GF <c-w>GFzv
 " ZH  ZL  Zv           disable 'wrap' in vert splits when splitting or moving a window {{{3
 
 " disable wrapping of long lines when we create a vertical split
-nno   <silent><unique>  Zv      :<c-u>setl nowrap <bar> vsplit <bar> setl nowrap<cr>
-nmap          <unique>  <c-w>v  Zv
+nno  <silent><unique> Zv     :<c-u>setl nowrap <bar> vsplit <bar> setl nowrap<cr>
+nmap         <unique> <c-w>v Zv
 
 " Alternative:
 "
@@ -652,17 +652,17 @@ nmap          <unique>  <c-w>v  Zv
 "
 " Con: WinLeave/WinEnter is not fired after moving a window.
 
-nno   <silent><unique>  ZH      :<c-u>call window#disable_wrap_when_moving_to_vert_split('H')<cr>
-nno   <silent><unique>  ZL      :<c-u>call window#disable_wrap_when_moving_to_vert_split('L')<cr>
-nmap          <unique>  <c-w>L  ZL
-nmap          <unique>  <c-w>H  ZH
+nno  <silent><unique> ZH     :<c-u>call window#disable_wrap_when_moving_to_vert_split('H')<cr>
+nno  <silent><unique> ZL     :<c-u>call window#disable_wrap_when_moving_to_vert_split('L')<cr>
+nmap         <unique> <c-w>L ZL
+nmap         <unique> <c-w>H ZH
 
 " ZQ  ZZ {{{3
 
 " Our `SPC q` mapping is special, it creates a session file so that we can undo
 " the closing of the window. `ZQ` should behave in the same way.
 
-nmap  <unique>  ZQ  <space>q
+nmap <unique> ZQ <space>q
 
 " Restore original `ZZ` (C-w Z doesn't do anything).
 nno <plug>(my_ZZ_update) :<c-u>update<cr>
