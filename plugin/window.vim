@@ -342,6 +342,7 @@ fu s:set_window_height() abort "{{{2
         endif
     endfor
 
+    let height_save = winheight(0)
     " Why `silent!` ?{{{
     "
     " Sometimes, E788 is raised.
@@ -351,6 +352,29 @@ fu s:set_window_height() abort "{{{2
     "}}}
     sil! noa exe winnr_prev.'wincmd w'
     sil! noa exe winnr_orig.'wincmd w'
+    " Why?{{{
+    "
+    " This line may have altered the size of the original window:
+    "
+    "     sil! noa exe winnr_prev.'wincmd w'
+    "
+    " Suppose you have set `'wmh'` to 0.
+    " As a result, the  other windows can be squashed to 0  lines, but only when
+    " they are not focused.
+    "
+    " When focusing a window, its height will always be set to at least one line.
+    " See `:h 'wmh`:
+    "
+    " > They will return to at least one line when they become active
+    " > (since the cursor has to have somewhere to go.)
+    "
+    " IOW,  the mere  fact of  temporarily focusing  a window  – even  while the
+    " autocmds are disabled –  may increase its height by 1,  which in turn will
+    " decrease the height of your original window by 1.
+    "}}}
+    if winheight(0) == height_save - 1
+        noa resize +1
+    endif
 endfu
 
 fu s:set_terminal_height() abort "{{{2
@@ -560,7 +584,6 @@ nmap <unique> <c-w>h zh
 nmap <unique> <c-w>l zl
 nmap <unique> <c-w>j zj
 nmap <unique> <c-w>k zk
-
 "}}}2
 " Z (prefix) {{{2
 " Z                    simpler window prefix {{{3
