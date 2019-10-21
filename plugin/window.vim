@@ -178,15 +178,15 @@ fu s:is_maximized_vertically() abort "{{{2
 endfu
 
 fu s:make_window_small() abort "{{{2
-    exe 'resize '.(&l:pvw
-    \ ?                &l:pvh
-    \ :            &bt is# 'quickfix'
-    \ ?                min([s:Q_HEIGHT, line('$')])
-    \ :            &l:diff
-    \ ?                s:get_diff_height()
-    \ :            index(['tmuxprompt', 'websearch'], &ft) >= 0
-    \ ?                s:R_HEIGHT
-    \ :            s:D_HEIGHT)
+    exe 'resize '..(&l:pvw
+    \ ?                 &l:pvh
+    \ :             &bt is# 'quickfix'
+    \ ?                 min([s:Q_HEIGHT, line('$')])
+    \ :             &l:diff
+    \ ?                 s:get_diff_height()
+    \ :             index(['tmuxprompt', 'websearch'], &ft) >= 0
+    \ ?                 s:R_HEIGHT
+    \ :             s:D_HEIGHT)
 endfu
 
 fu s:save_change_position() abort "{{{2
@@ -338,7 +338,7 @@ fu s:set_window_height() abort "{{{2
             " It would be better to find a way to resize it without altering the
             " current focus.
             " Update: use `win_execute()`. But wait for Nvim to merge it.
-            noa exe winnr.'windo resize '.height
+            noa exe winnr..'windo resize '..height
         endif
     endfor
 
@@ -350,8 +350,8 @@ fu s:set_window_height() abort "{{{2
     "     $ vim +'sp | Man man | wincmd p' ~/.vim/vimrc
     "     " press `gt`
     "}}}
-    sil! noa exe winnr_prev.'wincmd w'
-    sil! noa exe winnr_orig.'wincmd w'
+    sil! noa exe winnr_prev..'wincmd w'
+    sil! noa exe winnr_orig..'wincmd w'
     " Why?{{{
     "
     " This line may have altered the size of the original window:
@@ -372,14 +372,14 @@ fu s:set_window_height() abort "{{{2
     " autocmds are disabled –  may increase its height by 1,  which in turn will
     " decrease the height of your original window by 1.
     "}}}
-    if winheight(0) == height_save - 1
+    if &wmh == 0 && (winheight(0) == height_save - 1)
         noa resize +1
     endif
 endfu
 
 fu s:set_terminal_height() abort "{{{2
     if !s:is_alone_in_tabpage() && !s:is_maximized_vertically()
-        exe 'resize ' . s:T_HEIGHT
+        exe 'resize '..s:T_HEIGHT
     endif
 endfu
 
@@ -415,7 +415,7 @@ fu s:restore_change_position() abort "{{{2
     "  │  Without `sil!`, `norm!` would stop typing the key sequence.
     "  │
     sil! exe 'norm! 99g;'
-    \ .(b:my_change_position == 1 ? 'g,' : (b:my_change_position - 2).'g,g,')
+    \ ..(b:my_change_position == 1 ? 'g,' : (b:my_change_position - 2)..'g,g,')
     " TODO: Simplify the code once Neovim has integrated the patch `8.0.1817`:{{{
     "
     "     sil! exe 'norm! 99g;'
@@ -693,40 +693,6 @@ nmap <silent> ZZ <plug>(my_ZZ_update)<plug>(my_quit)
 " }}}1
 " Options {{{1
 
-" Why setting these options?{{{
-"
-" When opening a file with long lines, I prefer to do it:
-"
-"    - on the right if it's vertical
-"    - at the bottom if it's horizontal
-"
-" Rationale:
-" When you read a book, the next page is on the right, not on the left.
-" When you read a pdf, the next page is below, not above.
-"
-" ---
-"
-" However, when displaying  a buffer with short lines (ex: TOC),  I prefer to do
-" it on the  left.
-"
-" Rationale:
-" When you write annotations in  a page, you do it  in the left margin.
-"
-" ---
-"
-" Bottom Line:
-" `set splitbelow` and `set splitright`  seem to define good default directions.
-" Punctually  though, we  may  need  `:topleft` or  `:leftabove`  to change  the
-" direction.
-"}}}
-
-" when we create a new horizontal viewport, it should be displayed at the
-" bottom of the screen
-set splitbelow
-
-" and a new vertical one should be displayed on the right
-set splitright
-
 " Do *not* reset `'equalalways'`!{{{
 "
 " It would raise `E36` whenever you run `:helpgrep` and the qfl has less than 3 entries.
@@ -774,4 +740,40 @@ set splitright
 " Source: https://www.reddit.com/r/vim/comments/bha7yk/how_to_precisely_control_restore_layouts/elrict0/
 "}}}
 "     set equalalways
+
+" Why setting `'splitbelow'` and `'splitright'`?{{{
+"
+" When opening a file with long lines, I prefer to do it:
+"
+"    - on the right if it's vertical
+"    - at the bottom if it's horizontal
+"
+" Rationale:
+" When you read a book, the next page is on the right, not on the left.
+" When you read a pdf, the next page is below, not above.
+"
+" ---
+"
+" However, when displaying  a buffer with short lines (ex: TOC),  I prefer to do
+" it on the  left.
+"
+" Rationale:
+" When you write annotations in  a page, you do it  in the left margin.
+"
+" ---
+"
+" Bottom Line:
+" `set splitbelow` and `set splitright`  seem to define good default directions.
+" Punctually  though, we  may  need  `:topleft` or  `:leftabove`  to change  the
+" direction.
+"}}}
+" when we create a new horizontal viewport, it should be displayed at the bottom of the screen
+set splitbelow
+" and a new vertical one should be displayed on the right
+set splitright
+
+" let us squash an unfocused window to 0 lines
+set winminheight=0
+" let us squash an unfocused window to 0 columns (useful when we zoom a window with `SPC z`)
+set winminwidth=0
 
