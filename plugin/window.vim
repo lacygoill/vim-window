@@ -3,6 +3,13 @@ if exists('g:loaded_window')
 endif
 let g:loaded_window = 1
 
+" Free keys:{{{
+"
+" By default `C-w [hjkl]` move the focus to a neighbouring window.
+" We don't use those; we use `C-[hjkl]` instead.
+" So you can map them to anything you like.
+"}}}
+
 " Init {{{1
 
 " Default height
@@ -393,16 +400,7 @@ fu s:restore_change_position() abort "{{{2
         "     Error detected while processing function <SNR>103_restore_change_position:
         "}}}
         if !empty(get(getchangelist(0), 0, []))
-            " Why `g,` after `99g,`?{{{
-            "
-            " To be sure `v:count`  is properly reset to `0` as  soon as `:norm` has
-            " been executed by the autocmd, even if it happens via a timer.
-            " It should not be necessary anymore:
-            " https://github.com/vim/vim/commit/b0f42ba60d9e6d101d103421ba0c351811615c15
-            "
-            " But could still be useful for Neovim.
-            "}}}
-            sil! norm! 99g,g,
+            sil! norm! 99g,
         endif
         return
     endif
@@ -415,12 +413,7 @@ fu s:restore_change_position() abort "{{{2
     "  │  Without `sil!`, `norm!` would stop typing the key sequence.
     "  │
     sil! exe 'norm! 99g;'
-    \ ..(b:my_change_position == 1 ? 'g,' : (b:my_change_position - 2)..'g,g,')
-    " TODO: Simplify the code once Neovim has integrated the patch `8.0.1817`:{{{
-    "
-    "     sil! exe 'norm! 99g;'
-    "     \ .(b:my_change_position == 1 ? 'g,' : (b:my_change_position - 1).'g,')
-    "}}}
+    \ ..(b:my_change_position == 1 ? 'g,' : (b:my_change_position - 1).'g,')
 endfu
 
 fu s:restore_view() abort "{{{2
@@ -435,14 +428,14 @@ fu s:restore_view() abort "{{{2
 endfu
 " }}}1
 " Mappings {{{1
-" C-hjkl               move across windows {{{2
+" C-[hjkl]             move across windows {{{2
 
 nno <silent><unique> <c-h> :<c-u>call window#navigate_or_resize('h')<cr>
 nno <silent><unique> <c-j> :<c-u>call window#navigate_or_resize('j')<cr>
 nno <silent><unique> <c-k> :<c-u>call window#navigate_or_resize('k')<cr>
 nno <silent><unique> <c-l> :<c-u>call window#navigate_or_resize('l')<cr>
 
-" M-hjkl du gg G       scroll preview window {{{2
+" M-[hjkl] du gg G     scroll preview window {{{2
 
 nno <silent><unique> <m-h> :<c-u>call window#scroll_preview('h')<cr>
 nno <silent><unique> <m-j> :<c-u>call window#scroll_preview('j')<cr>
@@ -463,7 +456,7 @@ nno <silent><unique> <m-d> :<c-u>call window#scroll_preview('c-d')<cr>
 nno <silent><unique> <m-g><m-g> :<c-u>call window#scroll_preview('gg')<cr>
 nno <silent><unique> <m-g>G     :<c-u>call window#scroll_preview('G')<cr>
 
-" SPC q  Q  U  z                                               {{{2
+" SPC (prefix) {{{2
 
 " Provide a `<plug>` mapping to access our `lg#window#quit()` function, so that
 " we can call it more easily from other plugins.
@@ -488,9 +481,10 @@ nmap <silent><unique> <space>q <plug>(my_quit)
 nno <silent><unique> <plug>(my_quit) :<c-u>call lg#window#quit()<cr>
 xno <silent><unique> <space>q :<c-u>call lg#window#quit()<cr>
 " FIXME:{{{
+"
 " When  an  instruction causes  several  errors,  and  it's  executed in  a  try
 " conditional, the  first error can be  catched and converted into  an exception
-" with `v:exception` (:h except-several-errors).
+" with `v:exception` (`:h except-several-errors`).
 " However, for  some reason,  I can't display  its message.  All  I have  is the
 " hit-enter prompt,  which usually accompanies  a multi-line message (as  if Vim
 " was trying to display all the error messages).
@@ -512,6 +506,7 @@ xno <silent><unique> <space>q :<c-u>call lg#window#quit()<cr>
 " Press `cd`.
 "}}}
 " Temporary_solution:{{{
+"
 " Call the  function silently, to  bypass the hit-enter prompt. And,  inside the
 " function, when  an error  occurs, call  a timer to  display the  message right
 " afterwards.
@@ -531,94 +526,29 @@ nno <silent><unique> <space>u <nop>
 
 nno <silent><unique> <space>z :<c-u>call window#zoom_toggle()<cr>
 
-" z (prefix) {{{2
-" z<  z>               open/focus/close terminal window {{{3
+" C-w (prefix) {{{2
 
-nno <silent><unique> z< :<c-u>call window#terminal_open()<cr>
-nno <silent><unique> z> :<c-u>call window#terminal_close()<cr>
+" update window's height – with `do WinEnter` – when we move it at the very top/bottom
+nno <silent><unique> <c-w>J :<c-u>wincmd J<bar>do WinEnter<cr>
+nno <silent><unique> <c-w>K :<c-u>wincmd K<bar>do WinEnter<cr>
 
-"z(  z)  z[  z]                        qf/ll    window {{{3
-
-nno <silent><unique> z( :<c-u>exe lg#window#qf_open('qf')<cr>
-nno <silent><unique> z) :<c-u>cclose<cr>
-
-nno <silent><unique> z[ :<c-u>exe lg#window#qf_open('loc')<cr>
-nno <silent><unique> z] :<c-u>lclose<cr>
-
-" z{  z}                                preview  window {{{3
-
-nno <silent><unique> z{ :<c-u>call window#preview_open()<cr>
-nno         <unique> z} <c-w>z
-
-" z C-[hjkl]           resize window (repeatable with ; ,) {{{3
-
-" Why using the `z` prefix instead of the `Z` one?{{{
+" disable `'wrap'` when turning a split into a vertical one
+" Alternative:{{{
 "
-" Easier to type.
+"     augroup nowrap_in_vert_splits
+"         au!
+"         au WinLeave * if winwidth(0) != &columns | setl nowrap | endif
+"         au WinEnter * if winwidth(0) != &columns | setl nowrap | endif
+"     augroup END
 "
-" Z C-h would mean pressing the right shift with our right pinky,
-" then the left control with our left pinky.
-" That's 2 pinkys, on different hands; too awkward.
+" Pro: Will probably cover more cases.
+"
+" Con: WinLeave/WinEnter is not fired after moving a window.
 "}}}
-" Pressing the lhs repeatedly is too difficult!{{{
-"
-" You don't have to.
-" You only need to press the prefix key  once; after that, for a short period of
-" time (1s atm), you can just press `C-[hjkl]` to resize in any direction.
-"
-" Btw, this is consistent with how we resize panes in tmux.
-"}}}
-nno <silent><unique> z<c-h> :<c-u>call window#resize('h')<cr>
-nno <silent><unique> z<c-j> :<c-u>call window#resize('j')<cr>
-nno <silent><unique> z<c-k> :<c-u>call window#resize('k')<cr>
-nno <silent><unique> z<c-l> :<c-u>call window#resize('l')<cr>
+nno <silent><unique> <c-w>H :<c-u>call window#disable_wrap_when_moving_to_vert_split('H')<cr>
+nno <silent><unique> <c-w>L :<c-u>call window#disable_wrap_when_moving_to_vert_split('L')<cr>
 
-" z[hjkl]              split in any direction {{{3
-
-nno <silent><unique> zh :<c-u>setl nowrap <bar> leftabove vsplit  <bar> setl nowrap<cr>
-nno <silent><unique> zl :<c-u>setl nowrap <bar> rightbelow vsplit <bar> setl nowrap<cr>
-nno <silent><unique> zj :<c-u>belowright split<cr>
-nno <silent><unique> zk :<c-u>aboveleft split<cr>
-
-nmap <unique> <c-w>h zh
-nmap <unique> <c-w>l zl
-nmap <unique> <c-w>j zj
-nmap <unique> <c-w>k zk
-"}}}2
-" Z (prefix) {{{2
-" Z                    simpler window prefix {{{3
-
-" Why a *recursive* mapping?{{{
-"
-" We need the recursiveness, so that, when we type, we can replace <c-w>
-" with Z in custom mappings (own+third party).
-"
-" MWE:
-"
-"     nno  <c-w><cr>  :echo 'hello'<cr>
-"     nno  Z          <c-w>
-"     " press 'Z cr': doesn't work ✘
-"
-"     nno  <c-w><cr>  :echo 'hello'<cr>
-"     nmap Z          <c-w>
-"     " press 'Z cr': works ✔
-"
-" Indeed,  once `Z`  has been  expanded into  `C-w`, we  may need  to expand  it
-" *further* for custom mappings using `C-w` in their lhs.
-"}}}
-nmap <unique> Z <c-w>
-" Why no `<unique>`?{{{
-"
-" `vim-sneak` installs a `Z` mapping:
-"
-"     xmap Z <Plug>Sneak_S
-"
-" See: `~/.vim/plugged/vim-sneak/plugin/sneak.vim`
-"}}}
-xmap          Z <c-w>
-
-" ZF, ZGF, ...         open path in split window/tabpage and unfold {{{3
-
+" open path in split window/tabpage and unfold
 " `C-w f`, `C-w F`, `C-w gf`, ... I'm confused!{{{
 "
 " Some default normal commands can open a path in another split window or tabpage.
@@ -656,29 +586,101 @@ xno <c-w>GF <c-w>GFzv
 " Like `<C-w>F` does in normal mode.
 "
 " Also, move all mappings which open a path into a dedicated plugin (`vim-gf`).
+"}}}2
+" z (prefix) {{{2
+" z <>              open/focus/close terminal window {{{3
 
-" ZH  ZL  Zv           disable 'wrap' in vert splits when splitting or moving a window {{{3
-
-" disable wrapping of long lines when we create a vertical split
-nno  <silent><unique> Zv     :<c-u>setl nowrap <bar> vsplit <bar> setl nowrap<cr>
-nmap         <unique> <c-w>v Zv
-
-" Alternative:
+" Why `do WinEnter`?{{{
 "
-"     augroup nowrap_in_vert_splits
-"         au!
-"         au WinLeave * if winwidth(0) != &columns | setl nowrap | endif
-"         au WinEnter * if winwidth(0) != &columns | setl nowrap | endif
-"     augroup END
+" To update the height of the focused window.
+" Atm, we have an autocmd listening  to `WinEnter` which maximizes the height of
+" windows displaying a non-special buffer.
 "
-" Pro: Will probably cover more cases.
+" So, if  we are in such  a window, we expect  its height to still  be maximized
+" after closing a terminal/qf/preview window.
+" But that's not what happens without `do WinEnter`:
 "
-" Con: WinLeave/WinEnter is not fired after moving a window.
+"     $ vim +'sp|helpg foobar'
+"     :wincmd t
+"     :cclose
+"}}}
+nno <silent><unique> z< :<c-u>call window#terminal_open()<cr>
+nno <silent><unique> z> :<c-u>call window#terminal_close()<bar>do WinEnter<cr>
 
-nno  <silent><unique> ZH     :<c-u>call window#disable_wrap_when_moving_to_vert_split('H')<cr>
-nno  <silent><unique> ZL     :<c-u>call window#disable_wrap_when_moving_to_vert_split('L')<cr>
-nmap         <unique> <c-w>L ZL
-nmap         <unique> <c-w>H ZH
+"z ()  z []                         qf/ll    window {{{3
+
+nno <silent><unique> z( :<c-u>exe lg#window#qf_open('qf')<cr>
+nno <silent><unique> z) :<c-u>cclose<bar>do WinEnter<cr>
+
+nno <silent><unique> z[ :<c-u>exe lg#window#qf_open('loc')<cr>
+nno <silent><unique> z] :<c-u>lclose<bar>do WinEnter<cr>
+
+" z {}                               preview  window {{{3
+
+nno <silent><unique> z{ :<c-u>call window#preview_open()<cr>
+nno <silent><unique> z} <c-w>z:do WinEnter<cr>
+
+" z C-[hjkl]        resize window {{{3
+
+" Why using the `z` prefix instead of the `Z` one?{{{
+"
+" Easier to type.
+"
+" `Z C-h`  would mean pressing  the right shift with  our right pinky,  then the
+" left control with our left pinky.
+" That's 2 pinkys, on different hands; too awkward.
+"}}}
+" Pressing the lhs repeatedly is too difficult!{{{
+"
+" You don't have to.
+" You only need to press the prefix key  once; after that, for a short period of
+" time (1s atm), you can just press `C-[hjkl]` to resize in any direction.
+"
+" Btw, this is consistent with how we resize panes in tmux.
+"}}}
+nno <silent><unique> z<c-h> :<c-u>call window#resize('h')<cr>
+nno <silent><unique> z<c-j> :<c-u>call window#resize('j')<cr>
+nno <silent><unique> z<c-k> :<c-u>call window#resize('k')<cr>
+nno <silent><unique> z<c-l> :<c-u>call window#resize('l')<cr>
+
+" z[hjkl]           split in any direction {{{3
+
+nno <silent><unique> zh :<c-u>setl nowrap <bar> leftabove vsplit  <bar> setl nowrap<cr>
+nno <silent><unique> zl :<c-u>setl nowrap <bar> rightbelow vsplit <bar> setl nowrap<cr>
+nno <silent><unique> zj :<c-u>belowright split<cr>
+nno <silent><unique> zk :<c-u>aboveleft split<cr>
+"}}}2
+" Z (prefix) {{{2
+" Z                 simpler window prefix {{{3
+
+" Why a *recursive* mapping?{{{
+"
+" We need the recursiveness, so that, when we type, we can replace <c-w>
+" with Z in custom mappings (own+third party).
+"
+" MWE:
+"
+"     nno  <c-w><cr>  :echo 'hello'<cr>
+"     nno  Z          <c-w>
+"     " press 'Z cr': doesn't work ✘
+"
+"     nno  <c-w><cr>  :echo 'hello'<cr>
+"     nmap Z          <c-w>
+"     " press 'Z cr': works ✔
+"
+" Indeed,  once `Z`  has been  expanded into  `C-w`, we  may need  to expand  it
+" *further* for custom mappings using `C-w` in their lhs.
+"}}}
+nmap <unique> Z <c-w>
+" Why no `<unique>`?{{{
+"
+" `vim-sneak` installs a `Z` mapping:
+"
+"     xmap Z <Plug>Sneak_S
+"
+" See: `~/.vim/plugged/vim-sneak/plugin/sneak.vim`
+"}}}
+xmap          Z <c-w>
 
 " ZQ  ZZ {{{3
 
@@ -687,9 +689,10 @@ nmap         <unique> <c-w>H ZH
 
 nmap <unique> ZQ <space>q
 
-" Restore original `ZZ` (C-w Z doesn't do anything).
-nno <plug>(my_ZZ_update) :<c-u>update<cr>
+" If we press `ZZ`, Vim will remap the keys into `C-w Z`, which doesn't do anything.
+" We need to restore `ZZ` original behavior.
 nmap <silent> ZZ <plug>(my_ZZ_update)<plug>(my_quit)
+nno <plug>(my_ZZ_update) :<c-u>update<cr>
 " }}}1
 " Options {{{1
 
