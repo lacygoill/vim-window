@@ -51,7 +51,74 @@ augroup window_height
     "
     " OTOH, when `BufWinEnter` is fired, the filetype *has* been set.
     "}}}
-    au BufWinEnter,WinEnter * call s:set_window_height()
+    " Why `VimResized`?{{{
+    "
+    " Split the Vim window horizontally and focus the top window.
+    " Split the tmux window horizontally.
+    " Close the tmux pane which you've just opened.
+    " Notice how the height of the current Vim window is not maximized anymore.
+    "}}}
+    au BufWinEnter,WinEnter,VimResized * call s:set_window_height()
+    " Rationale:{{{
+    "
+    "     $ vim ~/.shrc
+    "     :sp
+    "     :call system("tmux splitw \\; lastp")
+    "     " press `q:`
+    "     :call system("tmux killp -t :.-")
+    "     " press `q` to close command-line window: the height of the focused window is not maximized
+    "
+    " If you  set a breakpoint  in `s:set_window_height()`, you should  see that
+    " when you press `q`, the window is correctly maximized.
+    "
+    " If you go on running `>n` even after the function has finished, you should
+    " see that  the height  of the window  changes (e.g. `29` →  15) at  a point
+    " where the last Ex command can't explain the change.
+    "
+    " MWE:
+    "
+    "     " open xterm without tmux
+    "     $ vim -Nu NONE +'au WinEnter * wincmd _' +'bo sp' +'set lines=10' +'call feedkeys("q:", "in")'
+    "     :set lines=30
+    "     :q
+    "
+    " The height of the new focused window is 6 (height of the old command-line window + 2).
+    " The `+2` comes from the status line and the text line of the above window.
+    " If you set `'wmh'` to 0, the height of the new focused window is 7 (height
+    " of the old command-line window + 1).
+    "
+    " If you replace `bo sp` with `sp`:
+    "
+    "    - the previous window changes from 2 to 1
+    "    - the issue is not triggered
+    "
+    " ---
+    "
+    " Here is the list of events fired when you close the command-line window:
+    "
+    "     CmdwinLeave
+    "     BufLeave
+    "     WinLeave
+    "     WinEnter
+    "     BufEnter
+    "     BufWinLeave
+    "     BufUnload
+    "     BufDelete
+    "     BufWipeout
+    "     CursorMoved
+    "     SafeState
+    "
+    " `CursorMoved` seems to be the earliest you can invoke `s:set_window_height()`.
+    " You could also use `SafeState`.
+    "
+    " ---
+    "
+    " This should have been fixed by the patch 8.1.2227.
+    " https://github.com/vim/vim/issues/5130
+    "
+    " But it does not seem to be fixed, so we need to keep this autocmd.
+    "}}}
+    au CmdWinLeave * au CursorMoved * ++once call s:set_window_height()
 augroup END
 
 " Functions {{{1
@@ -340,48 +407,9 @@ fu s:set_window_height() abort "{{{2
         "     10wincmd _
         "}}}
         if lg#window#has_neighbor('up', winnr) || lg#window#has_neighbor('down', winnr)
-            " FIXME:
-            " Focusing the window to resize it may have unexpected effects.
-            " It would be better to find a way to resize it without altering the
-            " current focus.
-            " Update: use `win_execute()`. But wait for Nvim to merge it.
-            noa exe winnr..'windo resize '..height
+            noa call lg#win_execute(win_getid(winnr), 'resize '..height)
         endif
     endfor
-
-    let height_save = winheight(0)
-    " Why `silent!` ?{{{
-    "
-    " Sometimes, E788 is raised.
-    " MWE:
-    "     $ vim +'sp | Man man | wincmd p' ~/.vim/vimrc
-    "     " press `gt`
-    "}}}
-    sil! noa exe winnr_prev..'wincmd w'
-    sil! noa exe winnr_orig..'wincmd w'
-    " Why?{{{
-    "
-    " This line may have altered the size of the original window:
-    "
-    "     sil! noa exe winnr_prev.'wincmd w'
-    "
-    " Suppose you have set `'wmh'` to 0.
-    " As a result, the  other windows can be squashed to 0  lines, but only when
-    " they are not focused.
-    "
-    " When focusing a window, its height will always be set to at least one line.
-    " See `:h 'wmh`:
-    "
-    " > They will return to at least one line when they become active
-    " > (since the cursor has to have somewhere to go.)
-    "
-    " IOW,  the mere  fact of  temporarily focusing  a window  – even  while the
-    " autocmds are disabled –  may increase its height by 1,  which in turn will
-    " decrease the height of your original window by 1.
-    "}}}
-    if &wmh == 0 && (winheight(0) == height_save - 1)
-        noa resize +1
-    endif
 endfu
 
 fu s:set_terminal_height() abort "{{{2
