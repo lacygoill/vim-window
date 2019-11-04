@@ -59,6 +59,7 @@ augroup window_height
     " Notice how the height of the current Vim window is not maximized anymore.
     "}}}
     au BufWinEnter,WinEnter,VimResized * call s:set_window_height()
+    au User GoyoLeave call s:set_window_height()
     " Rationale:{{{
     "
     "     $ vim ~/.shrc
