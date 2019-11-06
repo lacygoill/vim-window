@@ -59,8 +59,15 @@ augroup window_height
     " Notice how the height of the current Vim window is not maximized anymore.
     "}}}
     au BufWinEnter,WinEnter,VimResized * call s:set_window_height()
-    au User GoyoLeave call s:set_window_height()
-    " Rationale:{{{
+    " Purpose:{{{
+    "
+    " After running  `:PluginsToCommit` and  pushing a  commit by  pressing `Up`
+    " from a fugitive buffer, the current window is not maximized.
+    "
+    " Same issue when we leave goyo mode.
+    "}}}
+    au User Fugitive,GoyoLeave call s:set_window_height()
+    " Purpose:{{{
     "
     "     $ vim ~/.shrc
     "     :sp
@@ -120,6 +127,13 @@ augroup window_height
     " But it does not seem to be fixed, so we need to keep this autocmd.
     "}}}
     au CmdWinLeave * au CursorMoved * ++once call s:set_window_height()
+    " TODO: The Vim patch 8.1.2227 fixes an issue, but has not yet been merged in Nvim.{{{
+    "
+    "     $ nvim +'sp|sp|2wincmd w'
+    "     " press `q:`: the windows are equally split; the old current one should be maximized
+    "
+    " If it's not merged in the next months, report the issue on Nvim's bug tracker.
+    "}}}
 augroup END
 
 " Functions {{{1
