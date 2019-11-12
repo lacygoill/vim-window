@@ -31,11 +31,44 @@ endfu
 
 fu window#navigate_or_resize(dir) abort "{{{1
     if get(s:, 'in_submode_window_resize', 0) | return window#resize(a:dir) | endif
-    try
-        exe 'wincmd '.a:dir
-    catch
-        return lg#catch_error()
-    endtry
+    " Purpose:{{{
+    "
+    "     $ vim -Nu NONE +'sp|vs|vs|wincmd l'
+    "     :wincmd j
+    "     :wincmd k
+    "
+    "     $ vim -Nu NONE +'vs|sp|sp|wincmd j'
+    "     :wincmd l
+    "     :wincmd h
+    "
+    " In both cases, you don't focus back the middle window; that's jarring.
+    "}}}
+    if s:previous_window_is_in_same_direction(a:dir)
+        try | wincmd p | catch | return lg#catch_error() | endtry
+    else
+        try | exe 'wincmd '..a:dir | catch | return lg#catch_error() | endtry
+    endif
+endfu
+
+fu s:previous_window_is_in_same_direction(dir) abort
+    let [cnr, pnr] = [winnr(), winnr('#')]
+    if a:dir is# 'h'
+        let leftedge_current_window = win_screenpos(cnr)[1]
+        let rightedge_previous_window = win_screenpos(pnr)[1] + winwidth(pnr) - 1
+        return leftedge_current_window - 1 == rightedge_previous_window + 1
+    elseif a:dir is# 'l'
+        let rightedge_current_window = win_screenpos(cnr)[1] + winwidth(cnr) - 1
+        let leftedge_previous_window = win_screenpos(pnr)[1]
+        return rightedge_current_window + 1 == leftedge_previous_window - 1
+    elseif a:dir is# 'j'
+        let bottomedge_current_window = win_screenpos(cnr)[0] + winheight(cnr) - 1
+        let topedge_previous_window = win_screenpos(pnr)[0]
+        return bottomedge_current_window + 1 == topedge_previous_window - 1
+    elseif a:dir is# 'k'
+        let topedge_current_window = win_screenpos(cnr)[0]
+        let bottomedge_previous_window = win_screenpos(pnr)[0] + winheight(pnr) - 1
+        return topedge_current_window - 1 == bottomedge_previous_window + 1
+    endif
 endfu
 
 fu window#preview_open() abort "{{{1
