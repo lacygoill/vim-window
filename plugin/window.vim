@@ -18,8 +18,9 @@ const s:D_HEIGHT = 10
 const s:T_HEIGHT = 10
 " Quickfix window
 const s:Q_HEIGHT = 10
-" file “Running” current line (websearch, tmuxprompt)
+" file “Running” current line (tmuxprompt, websearch)
 const s:R_HEIGHT = 5
+const s:R_FT = ['tmuxprompt', 'websearch']
 
 " Autocmds {{{1
 
@@ -145,7 +146,7 @@ fu s:if_special_get_nr_and_height(v) abort "{{{2
 
     return getwinvar(a:v, '&pvw', 0)
         \ ?     [a:v, &pvh]
-        \ : index(['tmuxprompt', 'websearch'], getbufvar(winbufnr(a:v), '&ft', '')) >= 0
+        \ : index(s:R_FT, getbufvar(winbufnr(a:v), '&ft', '')) >= 0
         \ ?     [a:v, s:R_HEIGHT]
         \ : &l:diff
         \ ?     [a:v, s:get_diff_height(a:v)]
@@ -166,7 +167,7 @@ fu s:get_diff_height(...) abort "{{{2
     " If the available  number of lines is odd, example  29, should consistently
     " return the bigger half to the upper viewport.
     " Otherwise, when we would change the focus between the two viewports, their
-    " heights would constantly change ([15,14] → [14,15]), which is jarring.
+    " heights would constantly change ([15,14] ↔ [14,15]), which is jarring.
     "}}}
 
     "                          ┌ the two statuslines of the two diff'ed windows{{{
@@ -245,7 +246,7 @@ endfu
 fu s:is_special() abort "{{{2
     return &l:pvw
       \ || &l:diff
-      \ || &ft is# 'gitcommit' || index(['tmuxprompt', 'websearch'], &ft) >= 0
+      \ || &ft is# 'gitcommit' || index(s:R_FT, &ft) >= 0
       \ || &bt =~# '^\%(quickfix\|terminal\)$'
 endfu
 
@@ -273,7 +274,7 @@ fu s:make_window_small() abort "{{{2
     \ ?                 min([s:Q_HEIGHT, line('$')])
     \ :             &l:diff
     \ ?                 s:get_diff_height()
-    \ :             index(['tmuxprompt', 'websearch'], &ft) >= 0
+    \ :             index(s:R_FT, &ft) >= 0
     \ ?                 s:R_HEIGHT
     \ :             s:D_HEIGHT)
 endfu
@@ -372,13 +373,6 @@ fu s:set_window_height() abort "{{{2
     " special window somewhere else in the current tab page.
     " In this case, we need to reset their height.
     let winnr_orig = winnr()
-    " Why?{{{
-    "
-    " To resize the size of a window, we'll need to temporarily focus it.
-    " This will alter  the value of `winnr('#')`, on which  we sometimes rely to
-    " get the number of the previously focused window.
-    "}}}
-    let winnr_prev = winnr('#')
     " What's the output of `map()`?{{{
     "
     " All numbers (and the corresponding desired heights) of all special windows
