@@ -81,8 +81,8 @@ augroup window_height
     " when you press `q`, the window is correctly maximized.
     "
     " If you go on running `>n` even after the function has finished, you should
-    " see that  the height  of the window  changes (e.g. `29` →  15) at  a point
-    " where the last Ex command can't explain the change.
+    " see that the height of the window  changes (e.g. 29 → 15) at a point where
+    " the last Ex command can't explain the change.
     "
     " MWE:
     "
@@ -397,13 +397,11 @@ fu s:set_window_height() abort "{{{2
     "     && !s:height_should_be_reset(v[0])
     "}}}
     let special_windows = filter(map(
-        \     range(1, winnr('$')),
-        \     {_,v -> s:if_special_get_nr_and_height(v)}
-        \    ),
-        \ {_,v ->    v    !=# []
-        \         && v[0] != winnr_orig
-        \         && s:height_should_be_reset(v[0])
-        \ })
+        \ range(1, winnr('$')),
+        \ {_,v -> s:if_special_get_nr_and_height(v)}),
+        \ {_,v -> v !=# []
+        \      && v[0] != winnr_orig
+        \      && s:height_should_be_reset(v[0])})
 
     for [winnr, height] in special_windows
         " Why this check?{{{
