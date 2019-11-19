@@ -644,10 +644,10 @@ nno <silent><unique> z> :<c-u>call window#terminal_close()<bar>do WinEnter<cr>
 
 "z ()  z []                         qf/ll    window {{{3
 
-nno <silent><unique> z( :<c-u>exe lg#window#qf_open('qf')<cr>
+nno <silent><unique> z( :<c-u>call lg#window#qf_open_or_focus('qf')<cr>
 nno <silent><unique> z) :<c-u>cclose<bar>do WinEnter<cr>
 
-nno <silent><unique> z[ :<c-u>exe lg#window#qf_open('loc')<cr>
+nno <silent><unique> z[ :<c-u>call lg#window#qf_open_or_focus('loc')<cr>
 nno <silent><unique> z] :<c-u>lclose<bar>do WinEnter<cr>
 
 " z {}                               preview  window {{{3
