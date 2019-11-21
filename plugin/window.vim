@@ -414,7 +414,7 @@ fu s:set_window_height() abort "{{{2
         "     10wincmd _
         "}}}
         if lg#window#has_neighbor('up', winnr) || lg#window#has_neighbor('down', winnr)
-            noa call lg#win_execute(win_getid(winnr), 'resize '..height)
+            noa exe winnr..'resize '..height
         endif
     endfor
 endfu
