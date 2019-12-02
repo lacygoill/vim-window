@@ -221,7 +221,7 @@ fu window#terminal_close() abort "{{{1
         " We don't install it in Neovim.
         "}}}
         if exists('#toggle_keysyms_in_terminal#bufleave')
-            do toggle_keysyms_in_terminal BufLeave
+            do <nomodeline> toggle_keysyms_in_terminal BufLeave
         endif
         noa call lg#window#quit()
         noa wincmd p

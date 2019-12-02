@@ -46,7 +46,7 @@ augroup window_height
     exe 'au '..(has('nvim') ? 'TermOpen' : 'TerminalOpen')..' * call s:set_terminal_height()'
     " Why `BufWinEnter`?{{{
     "
-    " This is useful when splitting a window to open a ‘websearch’ file.
+    " This is useful when splitting a window to open a "websearch" file.
     " When that happens, and `WinEnter` is fired, the filetype has not yet been set.
     " So `s:set_window_height()` will not properly set the height of the window.
     "
@@ -60,81 +60,52 @@ augroup window_height
     " Notice how the height of the current Vim window is not maximized anymore.
     "}}}
     au BufWinEnter,WinEnter,VimResized * call s:set_window_height()
-    " Purpose:{{{
+    " Why ?{{{
     "
     " After running  `:PluginsToCommit` and  pushing a  commit by  pressing `Up`
-    " from a fugitive buffer, the current window is not maximized.
-    "
-    " Same issue when we leave goyo mode.
+    " from a fugitive buffer, the current window is not maximized anymore.
     "}}}
-    au User Fugitive,GoyoLeave call s:set_window_height()
-    " Purpose:{{{
-    "
-    "     $ vim ~/.shrc
-    "     :sp
-    "     :call system("tmux splitw \\; lastp")
-    "     " press `q:`
-    "     :call system("tmux killp -t :.-")
-    "     " press `q` to close command-line window: the height of the focused window is not maximized
-    "
-    " If you  set a breakpoint  in `s:set_window_height()`, you should  see that
-    " when you press `q`, the window is correctly maximized.
-    "
-    " If you go on running `>n` even after the function has finished, you should
-    " see that the height of the window  changes (e.g. 29 → 15) at a point where
-    " the last Ex command can't explain the change.
-    "
-    " MWE:
-    "
-    "     " open xterm without tmux
-    "     $ vim -Nu NONE +'au WinEnter * wincmd _' +'bo sp' +'set lines=10' +'call feedkeys("q:", "in")'
-    "     :set lines=30
-    "     :q
-    "
-    " The height of the new focused window is 6 (height of the old command-line window + 2).
-    " The `+2` comes from the status line and the text line of the above window.
-    " If you set `'wmh'` to 0, the height of the new focused window is 7 (height
-    " of the old command-line window + 1).
-    "
-    " If you replace `bo sp` with `sp`:
-    "
-    "    - the previous window changes from 2 to 1
-    "    - the issue is not triggered
-    "
-    " ---
-    "
-    " Here is the list of events fired when you close the command-line window:
-    "
-    "     CmdwinLeave
-    "     BufLeave
-    "     WinLeave
-    "     WinEnter
-    "     BufEnter
-    "     BufWinLeave
-    "     BufUnload
-    "     BufDelete
-    "     BufWipeout
-    "     CursorMoved
-    "     SafeState
-    "
-    " `CursorMoved` seems to be the earliest you can invoke `s:set_window_height()`.
-    " You could also use `SafeState`.
-    "
-    " ---
-    "
-    " This should have been fixed by the patch 8.1.2227.
-    " https://github.com/vim/vim/issues/5130
-    "
-    " But it does not seem to be fixed, so we need to keep this autocmd.
-    "}}}
-    au CmdWinLeave * au CursorMoved * ++once call s:set_window_height()
-    " TODO: The Vim patch 8.1.2227 fixes an issue, but has not yet been merged in Nvim.{{{
-    "
-    "     $ nvim +'sp|sp|2wincmd w'
-    "     " press `q:`: the windows are equally split; the old current one should be maximized
-    "
-    " If it's not merged in the next months, report the issue on Nvim's bug tracker.
-    "}}}
+    au User Fugitive call s:set_window_height()
+    " TODO: This autocmd is only necessary in Nvim, probably because of a missing Vim patch (8.1.2227 ?).
+    " Try to remove it in the future.
+    if has('nvim')
+        " Purpose:{{{
+        "
+        "     $ vim ~/.shrc
+        "     :sp
+        "     :call system("tmux splitw \\; lastp")
+        "     " press `q:`
+        "     :call system("tmux killp -t :.-")
+        "     " press `q` to close command-line window: the height of the focused window is not maximized
+        "
+        " This example is fixed in Vim (but not in Nvim) if you disable `'ea'`.
+        "
+        " MWE:
+        "
+        "     " open xterm without tmux
+        "     $ nvim -Nu NONE +'au WinEnter * wincmd _' +'bo sp' +'set lines=10' +'call feedkeys("q:", "in")'
+        "     :set lines=30
+        "     :q
+        "
+        " The  height  of  the new  focused  window  is  6  (height of  the  old
+        " command-line window + 2).
+        " The `+2` comes from the status line and the text line of the above window.
+        " If you  set `'wmh'` to 0,  the height of  the new focused window  is 7
+        " (height of the old command-line window + 1).
+        "
+        " If you replace `bo sp` with `sp`:
+        "
+        "    - the previous window changes from 2 to 1
+        "    - the issue is not triggered
+        "
+        " ---
+        "
+        " You really need  a timer; I tried to install  a one-shot autocmd after
+        " `CmdWinLeave` is fired, listening to  various events, but none of them
+        " worked (except for `CursorHold` which is too late for my liking).
+        "}}}
+        au CmdWinLeave * call timer_start(0, {-> s:set_window_height()})
+    endif
 augroup END
 
 " Functions {{{1
@@ -153,8 +124,9 @@ fu s:if_special_get_nr_and_height(v) abort "{{{2
         \ : getbufvar(winbufnr(a:v), '&bt', '') is# 'terminal'
         \ ?     [a:v, s:T_HEIGHT]
         \ : getbufvar(winbufnr(a:v), '&bt', '') is# 'quickfix'
-        \ ?     [a:v, min([s:Q_HEIGHT, len(getbufline(winbufnr(a:v), 1, s:Q_HEIGHT))])]
+        \ ?     [a:v, min([s:Q_HEIGHT, max([&wmh+2, len(getbufline(winbufnr(a:v), 1, s:Q_HEIGHT))])])]
         \ :     []
+    " to understand the purpose of `&wmh+2`, see our comments around `'set noequalalways'`
 endfu
 
 fu s:get_diff_height(...) abort "{{{2
@@ -186,7 +158,7 @@ fu s:height_should_be_reset(nr) abort "{{{2
     " Whatever change you perform on this  function, make sure the height of the
     " windows are correct after executing:
     "
-    "     :vert pedit $MYVIMRC
+    "     :vert pedit ~/.vim/vimrc
     "
     " Also, when  moving from  the preview  window to the  regular window  A, in
     " these layouts:
@@ -268,10 +240,11 @@ fu s:is_maximized_vertically() abort "{{{2
 endfu
 
 fu s:make_window_small() abort "{{{2
+    " to understand the purpose of `&wmh+2`, see our comments around `'set noequalalways'`
     exe 'resize '..(&l:pvw
     \ ?                 &l:pvh
     \ :             &bt is# 'quickfix'
-    \ ?                 min([s:Q_HEIGHT, line('$')])
+    \ ?                 min([s:Q_HEIGHT, max([line('$'), &wmh + 2])])
     \ :             &l:diff
     \ ?                 s:get_diff_height()
     \ :             index(s:R_FT, &ft) >= 0
@@ -459,6 +432,11 @@ fu s:restore_view() abort "{{{2
             call winrestview(w:saved_views[n])
         endif
         unlet w:saved_views[n]
+    else
+        " `:h last-position-jump`
+        if line("'\"") >= 1 && line("'\"") <= line('$') && &ft !~# 'commit'
+            norm! g`"
+        endif
     endif
 endfu
 " }}}1
@@ -564,8 +542,8 @@ nno <silent><unique> <space>z :<c-u>call window#zoom_toggle()<cr>
 " C-w (prefix) {{{2
 
 " update window's height – with `do WinEnter` – when we move it at the very top/bottom
-nno <silent><unique> <c-w>J :<c-u>wincmd J<bar>do WinEnter<cr>
-nno <silent><unique> <c-w>K :<c-u>wincmd K<bar>do WinEnter<cr>
+nno <silent><unique> <c-w>J :<c-u>wincmd J<bar>do <nomodeline> WinEnter<cr>
+nno <silent><unique> <c-w>K :<c-u>wincmd K<bar>do <nomodeline> WinEnter<cr>
 
 " disable `'wrap'` when turning a split into a vertical one
 " Alternative:{{{
@@ -640,20 +618,20 @@ xno <c-w>GF <c-w>GFzv
 "     :cclose
 "}}}
 nno <silent><unique> z< :<c-u>call window#terminal_open()<cr>
-nno <silent><unique> z> :<c-u>call window#terminal_close()<bar>do WinEnter<cr>
+nno <silent><unique> z> :<c-u>call window#terminal_close()<bar>do <nomodeline> WinEnter<cr>
 
 "z ()  z []                         qf/ll    window {{{3
 
 nno <silent><unique> z( :<c-u>call lg#window#qf_open_or_focus('qf')<cr>
-nno <silent><unique> z) :<c-u>cclose<bar>do WinEnter<cr>
+nno <silent><unique> z) :<c-u>cclose<bar>do <nomodeline> WinEnter<cr>
 
 nno <silent><unique> z[ :<c-u>call lg#window#qf_open_or_focus('loc')<cr>
-nno <silent><unique> z] :<c-u>lclose<bar>do WinEnter<cr>
+nno <silent><unique> z] :<c-u>lclose<bar>do <nomodeline> WinEnter<cr>
 
 " z {}                               preview  window {{{3
 
 nno <silent><unique> z{ :<c-u>call window#preview_open()<cr>
-nno <silent><unique> z} <c-w>z:do WinEnter<cr>
+nno <silent><unique> z} <c-w>z:do <nomodeline> WinEnter<cr>
 
 " z C-[hjkl]        resize window {{{3
 
@@ -731,53 +709,70 @@ nno <plug>(my_ZZ_update) :<c-u>update<cr>
 " }}}1
 " Options {{{1
 
-" Do *not* reset `'equalalways'`!{{{
+" Purpose:{{{
 "
-" It would raise `E36` whenever you run `:helpgrep` and the qfl has less than 3 entries.
-" Indeed, `:helpgrep` would try to split the qf window to display the first entry.
-" But if the window has only 2 lines, and Vim can't resize the windows, it can't
-" make more room for the new window.
+" When you split a window, by default, all the windows are automatically resized
+" to have the same height.
+" Also when you close a window; although,  this doesn't seem to be the case when
+" you close a help window.
 "
-" As a result, you  would never be able to visit any of the 1  or 2 entries of a
-" short qfl.
+" This  is annoying  in  various  situations, because  it  can *un*maximize  the
+" current window, and *un*squash the non-focused windows.
+"
+" For example, suppose that:
+"
+"    - you have 2 horizontal splits
+"    - you open our custom file explorer fex (`-t`)
+"    - you move your cursor on a file path
+"    - you open it in a vertical split (`C-w f`)
+"    - you close the latter (`:q`)
+"
+" The original 2 horizontal splits are unexpectedly resized.
+"
+" All of this  shows that it's a general issue which can  affect you in too many
+" circumstances.
+" Trying to handle  each of them is a  waste of time; let's fix  the root cause;
+" let's disable `'ea'`.
+"}}}
+set noequalalways
+" Which pitfall should I be aware of when resetting `'ea'`?{{{
+"
+" It can  cause `E36`  to be  raised whenever  you try  to visit  a qf  entry by
+" pressing Enter in the qf window, while the latter is only 1 line high.
+"
+" Example:
+"
+"     $ vim +'helpg Arthur!'
+"     :res 1
+"     " press Enter
+"
+" Indeed, Vim tries to split the qf window to display the entry.
+" But if  the window is only  1 line high, and  Vim can't resize any  window, it
+" can't make more room for the new one.
 "
 " MWE:
 "
-"     $ vim -Nu NONE +'set noequalalways' +'au QuickFixCmdPost * botright cwindow2' +'helpgrep readnews'
+"     $ vim -Nu NONE +'set noea' +'au QuickFixCmdPost * bo cwindow2' +'helpg readnews'
 "     E36: Not enough room~
 "
-"     $ vim -Nu NONE +'set noequalalways' +2sp +sp
+"     $ vim -Nu NONE +'set noea' +2sp +sp
 "     E36: Not enough room~
+"
+" In the last example, the final `:sp` raises `E36`, because:
+"
+"    - creating a second window would require 2 lines
+"      (one for the text – because `'wmh'` is 1 – and one for the status line)
+"
+"    - the top window would still need 2 lines (one for the text, and one for its status line)
+"
+"    - the top window occupies 3 lines, which is not enough for 2 + 2 lines;
+"      it needs to be resized, but Vim can't because `'ea'` is reset
 "
 " ---
 "
-" If  you  wanted  to fix  this  issue,  you  would  probably have  to  refactor
-" `qf#open()`, `s:make_window_small()` and  `s:set_window_height()`, so that the
-" minimal height of a window is 3 or more, but never 1 or 2.
-
+" That's why we make sure – here and  in `vim-qf` – that the qf window is always
+" at least `&wmh+2` lines high.
 "}}}
-"   If I find a workaround, how would `'equalalways'` be useful?{{{
-"
-" When you split a window, by default, all the windows are automatically resized
-" to have the same sizes; same thing when you close a window.
-" Although, this doesn't seem to be the case when you close a help window.
-"
-" We disable this feature.
-" When we split/close a window, the sizes of the other windows are not affected.
-"
-" ---
-"
-" See also this comment:
-"
-" > If you are talking  about how Gpush forces a resize of  every window, does
-" > `:set noequalalways` solve it for you? I  was always frustrated how closing a
-" > window causes vim to  resize every split equally, blew my  mind when I found
-" > out it was  a design choice that  could be disabled. Used to think  it was a
-" > limitation of its window handling or something.
-"
-" Source: https://www.reddit.com/r/vim/comments/bha7yk/how_to_precisely_control_restore_layouts/elrict0/
-"}}}
-"     set equalalways
 
 " Why setting `'splitbelow'` and `'splitright'`?{{{
 "
