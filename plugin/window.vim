@@ -108,6 +108,21 @@ augroup window_height
     endif
 augroup END
 
+if has('nvim')
+    " https://github.com/neovim/neovim/issues/11313
+    augroup fix_winline
+        au!
+        au WinLeave * let w:my_winline = winline()
+        au WinEnter * au CursorMoved * ++once call s:fix_winline()
+    augroup END
+    fu s:fix_winline() abort
+        if !exists('w:my_winline') | return | endif
+        let offset = w:my_winline - winline()
+        if offset == 0 | return | endif
+        exe 'norm! '..abs(offset)..(offset > 0 ? "\<c-y>" : "\<c-e>")
+    endfu
+endif
+
 " Functions {{{1
 fu s:if_special_get_nr_and_height(v) abort "{{{2
 "    │                            │
