@@ -73,9 +73,9 @@ augroup window_height
         "
         "     $ vim ~/.shrc
         "     :sp
-        "     :call system("tmux splitw \\; lastp")
+        "     :call system('tmux splitw \; lastp')
         "     " press `q:`
-        "     :call system("tmux killp -t :.-")
+        "     :call system('tmux killp -t :.-')
         "     " press `q` to close command-line window: the height of the focused window is not maximized
         "
         " This example is fixed in Vim (but not in Nvim) if you disable `'ea'`.
