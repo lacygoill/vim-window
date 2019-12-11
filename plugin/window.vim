@@ -112,7 +112,7 @@ if has('nvim')
     " https://github.com/neovim/neovim/issues/11313
     augroup fix_winline
         au!
-        au WinLeave * let w:my_winline = winline()
+        au WinLeave * if ! get(g:, 'SessionLoad', 0) | let w:my_winline = winline() | endif
         au WinEnter * au CursorMoved * ++once call s:fix_winline()
     augroup END
     fu s:fix_winline() abort
