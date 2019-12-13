@@ -18,7 +18,7 @@ const s:AOF_KEY2NORM = {
 
 fu window#disable_wrap_when_moving_to_vert_split(dir) abort "{{{1
     call setwinvar(winnr('#'), '&wrap', 0)
-    exe 'wincmd '.a:dir
+    exe 'wincmd '..a:dir
     setl nowrap
     return ''
 endfu
@@ -95,15 +95,15 @@ fu window#quit_everything() abort "{{{1
         if !has('nvim')
             let term_buffers = term_list()
             if !empty(term_buffers)
-                exe 'bw! '.join(term_buffers)
+                exe 'bw! '..join(term_buffers)
             endif
         endif
         qall
     catch
         let exception = string(v:exception)
-        call timer_start(0, {_ -> execute('echohl ErrorMsg | echo '.exception.' | echohl NONE', '')})
-        "                                                           │
-        "                           can't use `string(v:exception)` ┘
+        call timer_start(0, {_ -> execute('echohl ErrorMsg | echo '..exception..' | echohl NONE', '')})
+        "                                                            │
+        "                            can't use `string(v:exception)` ┘
         "
         " …  because when  the timer  will be  executed `v:exception`  will be
         " empty; we  need to save `v:exception`  in a variable: any  scope would
@@ -239,8 +239,8 @@ fu window#terminal_open() abort "{{{1
     let mod = lg#window#get_modifier()
 
     let how_to_open = has('nvim')
-                  \ ?     mod.' split | terminal'
-                  \ :     mod.' terminal'
+                  \ ?     mod..' split | terminal'
+                  \ :     mod..' terminal'
 
     let resize = mod =~# '^vert'
              \ ?     ' | vert resize 30 | resize 30'
