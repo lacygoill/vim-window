@@ -181,7 +181,7 @@ fu window#scroll_preview(lhs) abort "{{{1
     "
     " We can't use `C-e`/`C-y`; it wouldn't work as expected because of `zMzv`.
     "}}}
-    if ! &l:cul | setl cul | endif
+    if !&l:cul | setl cul | endif
 
     " move/scroll
     exe 'sil! norm! zR'
