@@ -124,13 +124,13 @@ if has('nvim')
 endif
 
 " Functions {{{1
-fu s:if_special_get_nr_and_height(v) abort "{{{2
-"    │                            │
-"    │                            └ a window number
+fu s:if_special_get_nr_height_topline(v) abort "{{{2
+"    │                                │
+"    │                                └ a window number
 "    │
-"    └ if it's a special window, get me its number and the desired height
+"    └ if it's a special window, get me its number, its desired height, and its current topline
 
-    return getwinvar(a:v, '&pvw', 0)
+    let info = getwinvar(a:v, '&pvw', 0)
         \ ?     [a:v, &pvh]
         \ : index(s:R_FT, getbufvar(winbufnr(a:v), '&ft', '')) >= 0
         \ ?     [a:v, s:R_HEIGHT]
@@ -142,6 +142,7 @@ fu s:if_special_get_nr_and_height(v) abort "{{{2
         \ ?     [a:v, min([s:Q_HEIGHT, max([&wmh+2, len(getbufline(winbufnr(a:v), 1, s:Q_HEIGHT))])])]
         \ :     []
     " to understand the purpose of `&wmh+2`, see our comments around `'set noequalalways'`
+    return empty(info) ? [] : info  + [getwininfo(win_getid(a:v))[0].topline]
 endfu
 
 fu s:get_diff_height(...) abort "{{{2
@@ -256,15 +257,15 @@ endfu
 
 fu s:make_window_small() abort "{{{2
     " to understand the purpose of `&wmh+2`, see our comments around `'set noequalalways'`
-    exe 'resize '..(&l:pvw
-    \ ?                 &l:pvh
-    \ :             &bt is# 'quickfix'
-    \ ?                 min([s:Q_HEIGHT, max([line('$'), &wmh + 2])])
-    \ :             &l:diff
-    \ ?                 s:get_diff_height()
-    \ :             index(s:R_FT, &ft) >= 0
-    \ ?                 s:R_HEIGHT
-    \ :             s:D_HEIGHT)
+    noa exe 'res '..(&l:pvw
+        \ ?              &l:pvh
+        \ :          &bt is# 'quickfix'
+        \ ?              min([s:Q_HEIGHT, max([line('$'), &wmh + 2])])
+        \ :          &l:diff
+        \ ?              s:get_diff_height()
+        \ :          index(s:R_FT, &ft) >= 0
+        \ ?              s:R_HEIGHT
+        \ :          s:D_HEIGHT)
 endfu
 
 fu s:save_change_position() abort "{{{2
@@ -338,33 +339,25 @@ fu s:set_window_height() abort "{{{2
     "}}}
     if &l:pvw | return | endif
 
-    if getcmdwintype() isnot# '' | exe 'resize '..&cwh | return | endif
+    if getcmdwintype() isnot# '' | noa exe 'res '..&cwh | return | endif
 
-    let winnr = winnr()
-
-    if    s:is_special()
-    \ &&  s:is_wide()
-    \ && !s:is_alone_in_tabpage()
-        if winnr('j') != winnr || winnr('k') != winnr
-            return s:make_window_small()
+    let curwinnr = winnr()
+    if s:is_special() && s:is_wide() && !s:is_alone_in_tabpage()
+        if winnr('j') != curwinnr || winnr('k') != curwinnr
+            call s:make_window_small()
+        endif
         " If there's no window above or below, resetting the height of a special
         " window would lead to a big cmdline.
-        else
-            return
-        endif
-    else
-        " if we enter a regular window, maximize it, but don't stop yet
-        wincmd _
+        return
     endif
 
-    " If we've maximized a  regular window, we may have altered  the height of a
+    " If we're going to maximize a regular  window, we may alter the height of a
     " special window somewhere else in the current tab page.
     " In this case, we need to reset their height.
-    let winnr_orig = winnr()
     " What's the output of `map()`?{{{
     "
-    " All numbers (and the corresponding desired heights) of all special windows
-    " in the current tabpage.
+    " All numbers of all special windows in  the current tabpage, as well as the
+    " corresponding desired heights and original toplines.
     "}}}
     " Why invoking `filter()`?{{{
     "
@@ -376,7 +369,7 @@ fu s:set_window_height() abort "{{{2
     " just set its height (`wincmd _`).
     " Only the heights of the other windows:
     "
-    "     && v[0] != winnr_orig
+    "     && v[0] != curwinnr
     "
     " Finally, there're  some special cases,  where we  don't want to  reset the
     " height of a special window.
@@ -386,30 +379,109 @@ fu s:set_window_height() abort "{{{2
     "}}}
     let special_windows = filter(map(
         \ range(1, winnr('$')),
-        \ {_,v -> s:if_special_get_nr_and_height(v)}),
+        \ {_,v -> s:if_special_get_nr_height_topline(v)}),
         \ {_,v -> v !=# []
-        \      && v[0] != winnr_orig
+        \      && v[0] != curwinnr
         \      && s:height_should_be_reset(v[0])})
 
-    for [winnr, height] in special_windows
-        " Why this check?{{{
-        "
-        " If there's  no window above nor  below the current window,  and we set
-        " its height to a few lines only, then the layout becomes wrong.
-        "
-        " Try this to understand:
-        "
-        "     10wincmd _
-        "}}}
-        if lg#window#has_neighbor('up', winnr) || lg#window#has_neighbor('down', winnr)
-            noa exe winnr..'resize '..height
-        endif
-    endfor
+    " if we enter a regular window, maximize it
+    noa wincmd _
+
+    " Why does `'so'` need to be temporarily reset?{{{
+    "
+    " We may need to restore the position  of the topline in a special window by
+    " scrolling with `C-e` or `C-y`.
+    "
+    " When that happens, if `&so` has a  non-zero value, we may scroll more than
+    " what we expect.
+    "
+    " MWE:
+    "
+    "     $ vim -Nu NONE +'set so=3|helpg foobar' +'cw|2q'
+    "     :clast | wincmd _ | 2res 10
+    "     :call win_execute(win_getid(2), "norm! \<c-y>")
+    "
+    " After the first Ex command, the last line of the qf buffer is the topline.
+    " The second Ex  command should scroll one line upward;  but in practice, it
+    " scrolls 4 lines upward (`1 + &so`).
+    "
+    " It could be a bug, because I can't always reproduce.
+    " For example, if you scroll back so that the last line is again the topline:
+    "
+    "     :call win_execute(win_getid(2), "norm! 4\<c-e>")
+    "
+    " Then, invoke `win_execute()` exactly as  when you triggered the unexpected
+    " scrolling earlier:
+    "
+    "     :call win_execute(win_getid(2), "norm! \<c-y>")
+    "
+    " This time, Vim scrolls only 1 line upward.
+    "
+    " ---
+    "
+    " Sth else is weird:
+    "
+    "     $ vim -Nu NONE +'set so=3|helpg foobar' +'cw|2q'
+    "     :clast
+    "
+    " The last line of the qf buffer is the *last* line of the window.
+    "
+    "     :wincmd _ | 2res 10
+    "
+    " The last line of the qf buffer is the *first* line of the window.
+    "
+    "     :wincmd w | exe "norm! 6\<c-y>" | wincmd w
+    "
+    " The last line of the qf buffer is the last line of the window.
+    "
+    "     :wincmd _ | 2res 10
+    "
+    " The last line of the qf buffer is *still* the last line of the window.
+    "
+    " So, we  have a unique  command (`:wincmd  _ | 2res  10`) which can  have a
+    " different effect on  the qf window; and  the difference is not  due to the
+    " view in the latter, because it's always  the same (the last line of the qf
+    " buffer is the last line of the window).
+    "}}}
+    " Warning:{{{
+    "
+    " In Vim, `'so'` is global-local (in Nvim, it's still global).
+    " So, to be  completely reliable, we would probably need  to reset the local
+    " value of the option.
+    " It's not  an issue  at the  moment, because  we only  only set  the global
+    " value, but keep that in mind.
+    "}}}
+    let so_save = &so | noa set so=0
+    " Why the `lg#window#has_neighbor()` guard?{{{
+    "
+    " If there's no  window above nor below  the current window, and  we set its
+    " height to a few lines only, then the command-line height becomes too big.
+    "
+    " Try this to understand:
+    "
+    "     10wincmd _
+    "}}}
+    call map(special_windows, {_,v ->
+        \ (lg#window#has_neighbor('up', v[0]) || lg#window#has_neighbor('down', v[0]))
+        \ && s:fix_special_window(v)})
+    noa let &so = so_save
+endfu
+
+fu s:fix_special_window(v) abort
+    let [winnr, height, orig_topline] = a:v
+    " restore the height
+    noa exe winnr..'res '..height
+    " restore the original topline
+    let id = win_getid(winnr)
+    let offset = getwininfo(id)[0].topline - orig_topline
+    if offset
+        call lg#win_execute(id, 'noa norm! '..abs(offset)..(offset > 0 ? "\<c-y>" : "\<c-e>"))
+    endif
 endfu
 
 fu s:set_terminal_height() abort "{{{2
     if !s:is_alone_in_tabpage() && !s:is_maximized_vertically()
-        exe 'resize '..s:T_HEIGHT
+        noa exe 'res '..s:T_HEIGHT
     endif
 endfu
 
