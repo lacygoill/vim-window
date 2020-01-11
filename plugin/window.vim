@@ -448,8 +448,8 @@ fu s:set_window_height() abort "{{{2
     " In Vim, `'so'` is global-local (in Nvim, it's still global).
     " So, to be  completely reliable, we would probably need  to reset the local
     " value of the option.
-    " It's not  an issue  at the  moment, because  we only  only set  the global
-    " value, but keep that in mind.
+    " It's not an issue at the moment, because we only set the global value, but
+    " keep that in mind.
     "}}}
     let so_save = &so | noa set so=0
     " Why the `lg#window#has_neighbor()` guard?{{{
