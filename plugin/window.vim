@@ -231,6 +231,10 @@ fu s:is_alone_in_tabpage() abort "{{{2
     return winnr('$') <= 1
 endfu
 
+fu s:is_float() abort "{{{2
+    return has('nvim') && has_key(nvim_win_get_config(0), 'anchor')
+endfu
+
 fu s:is_special() abort "{{{2
     return &l:pvw
       \ || &l:diff
@@ -307,7 +311,11 @@ fu s:set_window_height() abort "{{{2
     " trying and fix it.
     "}}}
 
-    " Why this check?{{{
+    " Why the `s:is_float()` guard?{{{
+    "
+    " In Nvim, we don't want to maximize a floating window.
+    "}}}
+    " Why the `&l:pvw` guard?{{{
     "
     " Suppose we preview a file from a file explorer.
     " Chances are  the file explorer, and  thus the preview window,  are not
@@ -318,7 +326,7 @@ fu s:set_window_height() abort "{{{2
     " As a result, it will be treated like a regular window and maximized.
     " We don't want that.
     "}}}
-    " Ok, but how will the height of a preview window will be set then?{{{
+    "   Ok, but how will the height of a preview window will be set then?{{{
     "
     " The preview window is a special case.
     " When you open one, 2 WinEnter are fired; when Vim:
@@ -337,7 +345,9 @@ fu s:set_window_height() abort "{{{2
     "
     " So, in the end, the height of the preview window is correctly set.
     "}}}
-    if &l:pvw | return | endif
+    if &l:pvw || s:is_float()
+        return
+    endif
 
     if getcmdwintype() isnot# '' | noa exe 'res '..&cwh | return | endif
 
@@ -480,7 +490,7 @@ fu s:fix_special_window(v) abort
 endfu
 
 fu s:set_terminal_height() abort "{{{2
-    if !s:is_alone_in_tabpage() && !s:is_maximized_vertically()
+    if !s:is_alone_in_tabpage() && !s:is_maximized_vertically() && !s:is_float()
         noa exe 'res '..s:T_HEIGHT
     endif
 endfu
