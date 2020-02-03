@@ -232,8 +232,7 @@ fu s:is_alone_in_tabpage() abort "{{{2
 endfu
 
 fu s:is_float() abort "{{{2
-    " TODO: explain why `sil!`.
-    " Hint: if the current window is not a popup window, an error is raised
+    " `:sil!` because if the current window is not a popup window, in Vim, `E993` is raised.
     sil! return has('nvim') && has_key(nvim_win_get_config(0), 'anchor')
         \ || !has('nvim') && !empty(popup_getoptions(win_getid()))
 endfu
@@ -493,9 +492,6 @@ fu s:fix_special_window(v) abort
 endfu
 
 fu s:set_terminal_height() abort "{{{2
-    " TODO: explain why `&bt is# terminal`.
-    " Hint: I think it fixes an issue we  have when we invoke fzf (popup window)
-    " while we have 2 regular horizontal splits.
     if !s:is_alone_in_tabpage() && !s:is_maximized_vertically() && !s:is_float() && &bt is# 'terminal'
         noa exe 'res '..s:T_HEIGHT
     endif
