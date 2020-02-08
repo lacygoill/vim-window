@@ -43,7 +43,7 @@ augroup END
 
 augroup window_height
     au!
-    exe 'au '..(has('nvim') ? 'TermOpen' : 'TerminalOpen')..' * call s:set_terminal_height()'
+    exe 'au '..(has('nvim') ? 'TermOpen' : 'TerminalWinOpen')..' * call s:set_terminal_height()'
     " Why `BufWinEnter`?{{{
     "
     " This is useful when splitting a window to open a "websearch" file.
@@ -106,6 +106,11 @@ augroup window_height
         "}}}
         au CmdWinLeave * call timer_start(0, {-> s:set_window_height()})
     endif
+augroup END
+
+augroup unclose_window
+    au!
+    au QuitPre * call window#unclose#save()
 augroup END
 
 if has('nvim')
@@ -464,7 +469,7 @@ fu s:set_window_height() abort "{{{2
     " keep that in mind.
     "}}}
     let so_save = &so | noa set so=0
-    " Why the `lg#window#has_neighbor()` guard?{{{
+    " Why the `s:has_neighbor_above_or_below()` guard?{{{
     "
     " If there's no  window above nor below  the current window, and  we set its
     " height to a few lines only, then the command-line height becomes too big.
@@ -473,10 +478,20 @@ fu s:set_window_height() abort "{{{2
     "
     "     10wincmd _
     "}}}
-    call map(special_windows, {_,v ->
-        \ (lg#window#has_neighbor('up', v[0]) || lg#window#has_neighbor('down', v[0]))
-        \ && s:fix_special_window(v)})
+    call map(special_windows, {_,v -> s:has_neighbor_above_or_below(v[0]) && s:fix_special_window(v)})
     noa let &so = so_save
+endfu
+
+fu s:has_neighbor_above_or_below(winnr) abort
+    " TODO: Once Nvim supports `win_execute()`, rewrite the function like this:{{{
+    "
+    "     call win_execute(win_getid(a:winnr), 'let has_above = winnr("k") != winnr()')
+    "     call win_execute(win_getid(a:winnr), 'let has_below = winnr("j") != winnr()')
+    "     return has_above || has_below
+    "}}}
+    let has_above = lg#win_execute(win_getid(a:winnr), 'echo winnr("k") != winnr()')[1:]
+    let has_below = lg#win_execute(win_getid(a:winnr), 'echo winnr("j") != winnr()')[1:]
+    return has_above || has_below
 endfu
 
 fu s:fix_special_window(v) abort
@@ -492,7 +507,7 @@ fu s:fix_special_window(v) abort
 endfu
 
 fu s:set_terminal_height() abort "{{{2
-    if !s:is_alone_in_tabpage() && !s:is_maximized_vertically() && !s:is_float() && &bt is# 'terminal'
+    if !s:is_alone_in_tabpage() && !s:is_maximized_vertically() && !s:is_float()
         noa exe 'res '..s:T_HEIGHT
     endif
 endfu
@@ -570,8 +585,8 @@ nno <silent><unique> <m-g>G     :<c-u>call window#scroll_preview('G')<cr>
 
 " SPC (prefix) {{{2
 
-" Provide a `<plug>` mapping to access our `lg#window#quit()` function, so that
-" we can call it more easily from other plugins.
+" Provide a  `<plug>` mapping  to access  our `window#quit#main()`  function, so
+" that we can call it more easily from other plugins.
 " Why don't you use `:norm 1 q` to quit in your plugins?{{{
 "
 " Yes, we did this in the past:
@@ -590,8 +605,8 @@ nno <silent><unique> <m-g>G     :<c-u>call window#scroll_preview('G')<cr>
 " a mapping where the lhs is not repeated in the rhs.
 "}}}
 nmap <silent><unique> <space>q <plug>(my_quit)
-nno <silent><unique> <plug>(my_quit) :<c-u>call lg#window#quit()<cr>
-xno <silent><unique> <space>q :<c-u>call lg#window#quit()<cr>
+nno <silent><unique> <plug>(my_quit) :<c-u>call window#quit#main()<cr>
+xno <silent><unique> <space>q :<c-u>call window#quit#main()<cr>
 " FIXME:{{{
 "
 " When  an  instruction causes  several  errors,  and  it's  executed in  a  try
@@ -633,7 +648,7 @@ xno <silent><unique> <space>Q :<c-u>sil! call window#quit_everything()<cr>
 "
 " Let's try `SPC U`; it should be harder to press by accident.
 "}}}
-nno <silent><unique> <space>U :<c-u>call lg#window#restore_closed(v:count1)<cr>
+nno <silent><unique> <space>U :<c-u>call window#unclose#restore(v:count1)<cr>
 nno <silent><unique> <space>u <nop>
 
 nno <silent><unique> <space>z :<c-u>call window#zoom_toggle()<cr>
