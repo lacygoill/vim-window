@@ -179,7 +179,7 @@ fu s:height_should_be_reset(nr) abort "{{{2
     " Whatever change you perform on this  function, make sure the height of the
     " windows are correct after executing:
     "
-    "     :vert pedit ~/.vim/vimrc
+    "     :vert pedit $MYVIMRC
     "
     " Also, when  moving from  the preview  window to the  regular window  A, in
     " these layouts:
