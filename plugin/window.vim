@@ -237,9 +237,8 @@ fu s:is_alone_in_tabpage() abort "{{{2
 endfu
 
 fu s:is_float() abort "{{{2
-    " `:sil!` because if the current window is not a popup window, in Vim, `E993` is raised.
-    sil! return has('nvim') && has_key(nvim_win_get_config(0), 'anchor')
-        \ || !has('nvim') && !empty(popup_getoptions(win_getid()))
+    return has('nvim') && has_key(nvim_win_get_config(0), 'anchor')
+        \ || !has('nvim') && win_gettype() is# 'popup'
 endfu
 
 fu s:is_special() abort "{{{2
