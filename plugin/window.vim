@@ -236,11 +236,6 @@ fu s:is_alone_in_tabpage() abort "{{{2
     return winnr('$') <= 1
 endfu
 
-fu s:is_float() abort "{{{2
-    return has('nvim') && has_key(nvim_win_get_config(0), 'anchor')
-        \ || !has('nvim') && win_gettype() is# 'popup'
-endfu
-
 fu s:is_special() abort "{{{2
     return &l:pvw
       \ || &l:diff
@@ -317,7 +312,7 @@ fu s:set_window_height() abort "{{{2
     " trying and fix it.
     "}}}
 
-    " Why the `s:is_float()` guard?{{{
+    " Why the `#is_popup()` guard?{{{
     "
     " In Nvim, we don't want to maximize a floating window.
     "}}}
@@ -351,7 +346,7 @@ fu s:set_window_height() abort "{{{2
     "
     " So, in the end, the height of the preview window is correctly set.
     "}}}
-    if &l:pvw || s:is_float()
+    if &l:pvw || window#util#is_popup()
         return
     endif
 
@@ -506,7 +501,7 @@ fu s:fix_special_window(v) abort
 endfu
 
 fu s:set_terminal_height() abort "{{{2
-    if !s:is_alone_in_tabpage() && !s:is_maximized_vertically() && !s:is_float()
+    if !s:is_alone_in_tabpage() && !s:is_maximized_vertically() && !window#util#is_popup()
         noa exe 'res '..s:T_HEIGHT
     endif
 endfu

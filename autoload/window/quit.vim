@@ -63,7 +63,15 @@ fu window#quit#main() abort "{{{1
 
     " In neovim, we could also test the existence of `b:terminal_job_pid`.
     elseif &bt is# 'terminal'
-        bw!
+        " A popup terminal is a special case.{{{
+        "
+        " We don't want to wipe the buffer; just close the window.
+        "}}}
+        if window#util#is_popup()
+            if has('nvim') | close | else | call popup_close(win_getid()) | endif
+        else
+            bw!
+        endif
 
     else
         let was_loclist = get(b:, 'qf_is_loclist', 0)
