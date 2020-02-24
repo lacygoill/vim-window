@@ -141,7 +141,7 @@ fu s:if_special_get_nr_height_topline(v) abort "{{{2
         \ ?     [a:v, s:R_HEIGHT]
         \ : &l:diff
         \ ?     [a:v, s:get_diff_height(a:v)]
-        \ : getbufvar(winbufnr(a:v), '&bt', '') is# 'terminal'
+        \ : getbufvar(winbufnr(a:v), '&bt', '') is# 'terminal' && !window#util#is_popup(a:v)
         \ ?     [a:v, s:T_HEIGHT]
         \ : getbufvar(winbufnr(a:v), '&bt', '') is# 'quickfix'
         \ ?     [a:v, min([s:Q_HEIGHT, max([&wmh+2, len(getbufline(winbufnr(a:v), 1, s:Q_HEIGHT))])])]
