@@ -117,12 +117,33 @@ if has('nvim')
     " https://github.com/neovim/neovim/issues/11313
     augroup fix_winline
         au!
-        au WinLeave * if !get(g:, 'SessionLoad', 0) | let w:my_winline = winline() | endif
+        au WinLeave * if !get(g:, 'SessionLoad', 0)
+            \ | let w:fix_winline = {'winline': winline(), 'pos': getcurpos()}
+            \ | endif
         au WinEnter * au CursorMoved * ++once call s:fix_winline()
     augroup END
     fu s:fix_winline() abort
-        if !exists('w:my_winline') | return | endif
-        let offset = w:my_winline - winline()
+        if !exists('w:fix_winline') | return | endif
+        " TODO: If one day Nvim fixes this issue, make sure it also fixes the MWE which follows.{{{
+        "
+        " Perform this check with all your configuration.
+        " And perform a check with a fold starting on the second line of `/tmp/x.vim`
+        " (I had a similar issue in the past which could only be reproduced when
+        " a fold started on the second line).
+        "}}}
+        " Sometimes, the original position is lost.{{{
+        "
+        " MWE:
+        "
+        "     $ printf -- 'a\nb' >/tmp/x.vim; nvim -Nu NONE +'filetype on|set wmh=0|au BufWinEnter,WinEnter * noa wincmd _' +'au FileType * noa wincmd p|noa wincmd p' +1 /tmp/x.vim
+        "     :sp /tmp/y.vim
+        "     :wincmd w
+        "     " the cursor is on line 2, while originally it was on line 1
+        "}}}
+        if getcurpos() != w:fix_winline.pos
+            call setpos('.', w:fix_winline.pos)
+        endif
+        let offset = w:fix_winline.winline - winline()
         if offset == 0 | return | endif
         exe 'norm! '..abs(offset)..(offset > 0 ? "\<c-y>" : "\<c-e>")
     endfu
