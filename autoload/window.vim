@@ -39,9 +39,9 @@ fu window#navigate_or_resize(dir) abort "{{{2
     " In both cases, you don't focus back the middle window; that's jarring.
     "}}}
     if s:previous_window_is_in_same_direction(a:dir)
-        try | wincmd p | catch | return lg#catch_error() | endtry
+        try | wincmd p | catch | return lg#catch() | endtry
     else
-        try | exe 'wincmd '..a:dir | catch | return lg#catch_error() | endtry
+        try | exe 'wincmd '..a:dir | catch | return lg#catch() | endtry
     endif
 endfu
 
@@ -80,7 +80,7 @@ fu window#preview_open() abort "{{{2
         norm! zMzvzz
         wincmd p
     catch
-        return lg#catch_error()
+        return lg#catch()
     endtry
 endfu
 

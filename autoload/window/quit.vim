@@ -139,7 +139,7 @@ fu window#quit#main() abort "{{{1
             "}}}
             q
         catch
-            return lg#catch_error()
+            return lg#catch()
         endtry
     endif
 endfu
