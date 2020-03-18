@@ -762,6 +762,10 @@ nno <silent><unique> z] :<c-u>lclose<bar>do <nomodeline> WinEnter<cr>
 nno <silent><unique> z{ :<c-u>call window#preview_open()<cr>
 nno <silent><unique> z} <c-w>z:do <nomodeline> WinEnter<cr>
 
+" zp                close all popup/foating windows {{{3
+
+nno <silent><unique> zp :<c-u>call window#popup#close_all()<cr>
+
 " z C-[hjkl]        resize window {{{3
 
 " Why using the `z` prefix instead of the `Z` one?{{{
