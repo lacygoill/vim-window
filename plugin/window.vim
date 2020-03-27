@@ -579,24 +579,25 @@ nno <silent><unique> <c-l> :<c-u>call window#navigate_or_resize('l')<cr>
 
 " M-[hjkl] du gg G     scroll preview window {{{2
 
-nno <silent><unique> <m-h> :<c-u>call window#scroll_preview('h')<cr>
-nno <silent><unique> <m-j> :<c-u>call window#scroll_preview('j')<cr>
-nno <silent><unique> <m-k> :<c-u>call window#scroll_preview('k')<cr>
-nno <silent><unique> <m-l> :<c-u>call window#scroll_preview('l')<cr>
+nno <silent><unique> <m-h> :<c-u>call window#scroll_preview_or_popup('h')<cr>
+nno <silent><unique> <m-j> :<c-u>call window#scroll_preview_or_popup('j')<cr>
+nno <silent><unique> <m-k> :<c-u>call window#scroll_preview_or_popup('k')<cr>
+nno <silent><unique> <m-l> :<c-u>call window#scroll_preview_or_popup('l')<cr>
 
-nno <silent><unique> <m-d> :<c-u>call window#scroll_preview('c-d')<cr>
+nno <silent><unique> <m-d> :<c-u>call window#scroll_preview_or_popup('c-d')<cr>
 " Why don't you install a mapping for `M-u`?{{{
 "
 " It would conflict with the `M-u` mapping from `vim-readline`.
 " As a workaround, we've overloaded the latter.
-" We make it check whether a preview window is opened in the current tab page:
+" We make it  check whether a preview  or popup window is opened  in the current
+" tab page:
 "
-"    - if there is one, it scrolls half a page up in the preview window
+"    - if there is one, it scrolls half a page up in the latter
 "    - otherwise, it upcases the text up to the end of the next/current word
 "}}}
 
-nno <silent><unique> <m-g><m-g> :<c-u>call window#scroll_preview('gg')<cr>
-nno <silent><unique> <m-g>G     :<c-u>call window#scroll_preview('G')<cr>
+nno <silent><unique> <m-g> :<c-u>call window#scroll_preview_or_popup('gg')<cr>
+nno <silent><unique> <m-s-g> :<c-u>call window#scroll_preview_or_popup('G')<cr>
 
 " SPC (prefix) {{{2
 
