@@ -3,19 +3,6 @@ if exists('g:autoloaded_window')
 endif
 let g:autoloaded_window = 1
 
-" Init {{{1
-
-const s:AOF_KEY2NORM = {
-    \ 'j': 'j',
-    \ 'k': 'k',
-    \ 'h': '5zh',
-    \ 'l': '5zl',
-    \ 'c-d': "\<c-d>",
-    \ 'c-u': "\<c-u>",
-    \ 'gg': 'gg',
-    \ 'G': 'G',
-    \ }
-
 " Interface {{{1
 fu window#disable_wrap_when_moving_to_vert_split(dir) abort "{{{2
     call setwinvar(winnr('#'), '&wrap', 0)
@@ -24,8 +11,7 @@ fu window#disable_wrap_when_moving_to_vert_split(dir) abort "{{{2
     return ''
 endfu
 
-fu window#navigate_or_resize(dir) abort "{{{2
-    if get(s:, 'in_submode_window_resize', 0) | return window#resize(a:dir) | endif
+fu window#navigate(dir) abort "{{{2
     " Purpose:{{{
     "
     "     $ vim -Nu NONE +'sp|vs|vs|wincmd l'
@@ -110,12 +96,6 @@ fu window#quit_everything() abort "{{{2
 endfu
 
 fu window#resize(key) abort "{{{2
-    let s:in_submode_window_resize = 1
-    if exists('s:timer_id')
-        call timer_stop(s:timer_id)
-        unlet! s:timer_id
-    endif
-    let s:timer_id = timer_start(1000, {-> execute('let s:in_submode_window_resize = 0')})
     let winnr = winnr()
     if a:key =~# '[hl]'
         " Why returning different keys depending on the position of the window?{{{
@@ -158,14 +138,6 @@ fu window#resize(key) abort "{{{2
     endif
 
     call feedkeys(keys, 'in')
-endfu
-
-fu window#scroll_preview_or_popup(lhs) abort "{{{2
-    if window#has_preview()
-        call s:scroll_preview(a:lhs)
-    elseif window#has_popup()
-        call s:scroll_popup(a:lhs)
-    endif
 endfu
 
 fu window#terminal_close() abort "{{{2
@@ -230,91 +202,6 @@ fu window#zoom_toggle() abort "{{{2
     endif
 endfu
 
-fu window#has_preview() abort "{{{2
-    " Why is this a public function?{{{
-    "
-    " To be able to invoke it from the readline plugin (`readline#m_u#main()`).
-    "}}}
-    return index(map(range(1, winnr('$')), {_,v -> getwinvar(v, '&pvw')}), 1) >= 0
-endfu
-
-fu window#has_popup() abort "{{{2
-    " Use a cache if possible.{{{
-    "
-    " In Vim, I  don't know any simple way  to get the list of popup  ids in the
-    " current tab page.  We have to manually find them, by iterating over a good
-    " chunk of screen cells and invoking `popup_locate()` on each of them.
-    " This is  costly; a cache  should help keep  good performance even  when we
-    " smash a scrolling key.
-    "}}}
-    if exists('t:_lastpopup') | return t:_lastpopup != 0 | endif
-    if has('nvim')
-        let popup_ids = map(range(1, winnr('$')), 'window#util#is_popup(v:val) ? win_getid(v:key) : 0')
-    else
-        let popup_ids = []
-        for r in range(1, &lines)->filter('v:val % 3 == 0')
-            for c in range(1, &columns)->filter('v:val % 3 == 0')
-                let id = popup_locate(r, c)
-                if id
-                    let popup_ids += [id]
-                endif
-            endfor
-        endfor
-    endif
-    " this assumes that you want to interact with the latest created popup (whose id should be the biggest)
-    let t:_lastpopup = max(popup_ids)
-    " don't let the cache go stale for too long
-    call timer_start(1000, {-> execute('unlet! t:_lastpopup')})
-    return t:_lastpopup != 0
-endfu
-"}}}1
-" Core {{{1
-fu s:scroll_preview(lhs) abort "{{{2
-    " go to preview window
-    noa wincmd P
-
-    " Useful to see where we are.{{{
-    "
-    " Would not be necessary if we *scrolled* with `C-e`/`C-y`.
-    " But it is necessary because we *move* with `j`/`k`.
-    "
-    " We can't use `C-e`/`C-y`; it wouldn't work as expected because of `zMzv`.
-    "}}}
-    if !&l:cul | setl cul | endif
-
-    " move/scroll
-    exe s:get_scrolling_cmd(a:lhs)
-
-    " get back to previous window
-    noa wincmd p
-endfu
-
-fu s:scroll_popup(lhs) abort "{{{2
-    if !exists('t:_lastpopup') | return | endif
-    " let us see the current line in the popup
-    call setwinvar(t:_lastpopup, '&cursorline', 1)
-    let cmd = s:get_scrolling_cmd(a:lhs)
-    if has('nvim')
-        sil! call lg#win_execute(t:_lastpopup, cmd)
-    else
-        call win_execute(t:_lastpopup, cmd)
-    endif
-endfu
-
-fu s:get_scrolling_cmd(lhs) abort "{{{2
-    return 'sil! norm! zR'
-        "\ make `M-j` and `M-k` scroll through *screen* lines, not buffer lines
-        \ ..(index(['j', 'k'], a:lhs) >= 0 ? 'g' : '')
-        \ ..s:AOF_KEY2NORM[a:lhs]
-        \ ..'zMzv'
-    " `zMzv` may cause the distance between the current line and the first line of the window to change unexpectedly.{{{
-    "
-    " If that bothers you, you could improve the function.
-    " See how we handled the issue in `s:move_and_open_fold()` from:
-    "
-    "     ~/.vim/plugged/vim-toggle-settings/autoload/toggle_settings.vim
-    "}}}
-endfu
 "}}}1
 " Utilities {{{1
 fu s:get_terminal_buffer() abort "{{{2

@@ -122,53 +122,58 @@ if has('nvim')
             \ | endif
         au WinEnter * au CursorMoved * ++once call s:fix_winline()
     augroup END
-    fu s:fix_winline() abort
-        if !exists('w:fix_winline') | return | endif
-        " TODO: If one day Nvim fixes this issue, make sure it also fixes the MWE which follows.{{{
-        "
-        " Perform this check with all your configuration.
-        " And perform a check with a fold starting on the second line of `/tmp/x.vim`
-        " (I had a similar issue in the past which could only be reproduced when
-        " a fold started on the second line).
-        "}}}
-        " Sometimes, the original position is lost.{{{
-        "
-        " MWE:
-        "
-        "     $ printf -- 'a\nb' >/tmp/x.vim; nvim -Nu NONE +'filetype on|set wmh=0|au BufWinEnter,WinEnter * noa wincmd _' +'au FileType * noa wincmd p|noa wincmd p' +1 /tmp/x.vim
-        "     :sp /tmp/y.vim
-        "     :wincmd w
-        "     " the cursor is on line 2, while originally it was on line 1
-        "}}}
-        if getcurpos() != w:fix_winline.pos
-            call setpos('.', w:fix_winline.pos)
-        endif
-        let offset = w:fix_winline.winline - winline()
-        if offset == 0 | return | endif
-        exe 'norm! '..abs(offset)..(offset > 0 ? "\<c-y>" : "\<c-e>")
-    endfu
+else
+    augroup customize_preview_popup
+        au!
+        au BufWinEnter * call s:customize_preview_popup()
+    augroup END
 endif
 
 " Functions {{{1
-fu s:if_special_get_nr_height_topline(v) abort "{{{2
-"    │                                │
-"    │                                └ a window number
-"    │
-"    └ if it's a special window, get me its number, its desired height, and its current topline
+fu s:customize_preview_popup() abort "{{{2
+    let winid = win_getid()
+    if win_gettype(winid) isnot# 'popup' | return | endif
+    call setwinvar(winid, '&wincolor', 'Normal')
+    " less noise
+    let opts = #{
+        \ borderchars: ['─', '│', '─', '│', '┌', '┐', '┘', '└'],
+        \ close: 'none',
+        \ resize: v:false,
+        \ scrollbar: v:false,
+        \ title: '',
+        \ }
+    " Why to delay until the next `WinLeave`?{{{
+    "
+    " For some reason, the title would not be cleared without the delay.
+    " I guess Vim sets it slightly later.
+    "}}}
+    exe printf('au WinLeave * ++once call popup_setoptions(%d, %s)', winid, opts)
+endfu
 
-    let info = getwinvar(a:v, '&pvw', 0)
-        \ ?     [a:v, &pvh]
-        \ : index(s:R_FT, getbufvar(winbufnr(a:v), '&ft', '')) >= 0
-        \ ?     [a:v, s:R_HEIGHT]
-        \ : &l:diff
-        \ ?     [a:v, s:get_diff_height(a:v)]
-        \ : getbufvar(winbufnr(a:v), '&bt', '') is# 'terminal' && !window#util#is_popup(a:v)
-        \ ?     [a:v, s:T_HEIGHT]
-        \ : getbufvar(winbufnr(a:v), '&bt', '') is# 'quickfix'
-        \ ?     [a:v, min([s:Q_HEIGHT, max([&wmh+2, len(getbufline(winbufnr(a:v), 1, s:Q_HEIGHT))])])]
-        \ :     []
-    " to understand the purpose of `&wmh+2`, see our comments around `'set noequalalways'`
-    return empty(info) ? [] : info  + [getwininfo(win_getid(a:v))[0].topline]
+fu s:fix_winline() abort "{{{2
+    if !exists('w:fix_winline') | return | endif
+    " TODO: If one day Nvim fixes this issue, make sure it also fixes the MWE which follows.{{{
+    "
+    " Perform this check with all your configuration.
+    " And perform a check with a fold starting on the second line of `/tmp/x.vim`
+    " (I had a similar issue in the past which could only be reproduced when
+    " a fold started on the second line).
+    "}}}
+    " Sometimes, the original position is lost.{{{
+    "
+    " MWE:
+    "
+    "     $ printf -- 'a\nb' >/tmp/x.vim; nvim -Nu NONE +'filetype on|set wmh=0|au BufWinEnter,WinEnter * noa wincmd _' +'au FileType * noa wincmd p|noa wincmd p' +1 /tmp/x.vim
+    "     :sp /tmp/y.vim
+    "     :wincmd w
+    "     " the cursor is on line 2, while originally it was on line 1
+    "}}}
+    if getcurpos() != w:fix_winline.pos
+        call setpos('.', w:fix_winline.pos)
+    endif
+    let offset = w:fix_winline.winline - winline()
+    if offset == 0 | return | endif
+    exe 'norm! '..abs(offset)..(offset > 0 ? "\<c-y>" : "\<c-e>")
 endfu
 
 fu s:get_diff_height(...) abort "{{{2
@@ -251,6 +256,27 @@ fu s:height_should_be_reset(nr) abort "{{{2
     "}}}
     return winwidth(a:nr) >= &columns/2
     \ ||  (getwinvar(a:nr, '&pvw', 0) && winwidth(0) <= &columns/2)
+endfu
+
+fu s:if_special_get_nr_height_topline(v) abort "{{{2
+"    │                                │
+"    │                                └ a window number
+"    │
+"    └ if it's a special window, get me its number, its desired height, and its current topline
+
+    let info = getwinvar(a:v, '&pvw', 0)
+        \ ?     [a:v, &pvh]
+        \ : index(s:R_FT, getbufvar(winbufnr(a:v), '&ft', '')) >= 0
+        \ ?     [a:v, s:R_HEIGHT]
+        \ : &l:diff
+        \ ?     [a:v, s:get_diff_height(a:v)]
+        \ : getbufvar(winbufnr(a:v), '&bt', '') is# 'terminal' && !window#util#is_popup(a:v)
+        \ ?     [a:v, s:T_HEIGHT]
+        \ : getbufvar(winbufnr(a:v), '&bt', '') is# 'quickfix'
+        \ ?     [a:v, min([s:Q_HEIGHT, max([&wmh+2, len(getbufline(winbufnr(a:v), 1, s:Q_HEIGHT))])])]
+        \ :     []
+    " to understand the purpose of `&wmh+2`, see our comments around `'set noequalalways'`
+    return empty(info) ? [] : info  + [getwininfo(win_getid(a:v))[0].topline]
 endfu
 
 fu s:is_alone_in_tabpage() abort "{{{2
@@ -572,19 +598,19 @@ endfu
 " Mappings {{{1
 " C-[hjkl]             move across windows {{{2
 
-nno <silent><unique> <c-h> :<c-u>call window#navigate_or_resize('h')<cr>
-nno <silent><unique> <c-j> :<c-u>call window#navigate_or_resize('j')<cr>
-nno <silent><unique> <c-k> :<c-u>call window#navigate_or_resize('k')<cr>
-nno <silent><unique> <c-l> :<c-u>call window#navigate_or_resize('l')<cr>
+nno <silent><unique> <c-h> :<c-u>call window#navigate('h')<cr>
+nno <silent><unique> <c-j> :<c-u>call window#navigate('j')<cr>
+nno <silent><unique> <c-k> :<c-u>call window#navigate('k')<cr>
+nno <silent><unique> <c-l> :<c-u>call window#navigate('l')<cr>
 
-" M-[hjkl] du gg G     scroll preview window {{{2
+" M-[hjkl] du gg G     scroll popup (or preview) window {{{2
 
-nno <silent><unique> <m-h> :<c-u>call window#scroll_preview_or_popup('h')<cr>
-nno <silent><unique> <m-j> :<c-u>call window#scroll_preview_or_popup('j')<cr>
-nno <silent><unique> <m-k> :<c-u>call window#scroll_preview_or_popup('k')<cr>
-nno <silent><unique> <m-l> :<c-u>call window#scroll_preview_or_popup('l')<cr>
+nno <silent><unique> <m-h> :<c-u>call window#popup#scroll('h')<cr>
+nno <silent><unique> <m-j> :<c-u>call window#popup#scroll('j')<cr>
+nno <silent><unique> <m-k> :<c-u>call window#popup#scroll('k')<cr>
+nno <silent><unique> <m-l> :<c-u>call window#popup#scroll('l')<cr>
 
-nno <silent><unique> <m-d> :<c-u>call window#scroll_preview_or_popup('c-d')<cr>
+nno <silent><unique> <m-d> :<c-u>call window#popup#scroll('c-d')<cr>
 " Why don't you install a mapping for `M-u`?{{{
 "
 " It would conflict with the `M-u` mapping from `vim-readline`.
@@ -596,8 +622,8 @@ nno <silent><unique> <m-d> :<c-u>call window#scroll_preview_or_popup('c-d')<cr>
 "    - otherwise, it upcases the text up to the end of the next/current word
 "}}}
 
-nno <silent><unique> <m-g> :<c-u>call window#scroll_preview_or_popup('gg')<cr>
-nno <silent><unique> <m-s-g> :<c-u>call window#scroll_preview_or_popup('G')<cr>
+nno <silent><unique> <m-g> :<c-u>call window#popup#scroll('gg')<cr>
+nno <silent><unique> <m-s-g> :<c-u>call window#popup#scroll('G')<cr>
 
 " SPC (prefix) {{{2
 
@@ -777,18 +803,19 @@ nno <silent><unique> zp :<c-u>call window#popup#close_all()<cr>
 " left control with our left pinky.
 " That's 2 pinkys, on different hands; too awkward.
 "}}}
-" Pressing the lhs repeatedly is too difficult!{{{
+" Why `<plug>` mappings?{{{
 "
-" You don't have to.
-" You only need to press the prefix key  once; after that, for a short period of
-" time (1s atm), you can just press `C-[hjkl]` to resize in any direction.
-"
-" Btw, this is consistent with how we resize panes in tmux.
+" Useful to make them repeatable from another script, via functions provided by `vim-submode`.
 "}}}
-nno <silent><unique> z<c-h> :<c-u>call window#resize('h')<cr>
-nno <silent><unique> z<c-j> :<c-u>call window#resize('j')<cr>
-nno <silent><unique> z<c-k> :<c-u>call window#resize('k')<cr>
-nno <silent><unique> z<c-l> :<c-u>call window#resize('l')<cr>
+nmap <unique> z<c-h> <plug>(window-resize-h)
+nmap <unique> z<c-j> <plug>(window-resize-j)
+nmap <unique> z<c-k> <plug>(window-resize-k)
+nmap <unique> z<c-l> <plug>(window-resize-l)
+
+nno <silent> <plug>(window-resize-h) :<c-u>call window#resize('h')<cr>
+nno <silent> <plug>(window-resize-j) :<c-u>call window#resize('j')<cr>
+nno <silent> <plug>(window-resize-k) :<c-u>call window#resize('k')<cr>
+nno <silent> <plug>(window-resize-l) :<c-u>call window#resize('l')<cr>
 
 " z[hjkl]           split in any direction {{{3
 
@@ -943,4 +970,17 @@ set splitright
 set winminheight=0
 " let us squash an unfocused window to 0 columns (useful when we zoom a window with `SPC z`)
 set winminwidth=0
+
+let &previewheight = &lines/3
+if !has('nvim')
+    " make commands which by default would open a preview window, use a popup instead
+    "     let &previewpopup = 'height:'..&pvh..',width:'..(&columns*2/3)
+
+    " TODO: It causes an issue with some of our commands/mappings; like `!m` for example.
+    "
+    " This is because  `debug#log#output()` runs `:wincmd P`  which is forbidden
+    " when the preview window is also a popup window.
+    " Adapt your  code (everywhere) so that  it works whether you  use a regular
+    " preview window, or a popup preview window.
+endif
 
