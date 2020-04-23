@@ -145,25 +145,6 @@ fu window#terminal_close() abort "{{{2
     if term_buffer == 0 | return | endif
     let curwin = win_getid()
     noa call win_gotoid(bufwinid(term_buffer))
-    " Why executing this autocmd?{{{
-    "
-    " In a terminal buffer, we disable the meta keys. When we give the focus
-    " to another buffer, BufLeave is fired, and a custom autocmd restores the
-    " meta keys.
-    "
-    " But if we're in the terminal window when we press `z>` to close it,
-    " `BufLeave` hasn't been fired yet since the meta keys were disabled.
-    "
-    " So, they are not re-enabled. We need to make sure the autocmd is fired
-    " before wiping the terminal buffer with `window#quit#main()`.
-    "}}}
-    " Why checking its existence?{{{
-    "
-    " We don't install it in Neovim.
-    "}}}
-    if exists('#toggle_keysyms_in_terminal#bufleave')
-        do <nomodeline> toggle_keysyms_in_terminal BufLeave
-    endif
     noa call window#quit#main()
     noa call win_gotoid(curwin)
 endfu
