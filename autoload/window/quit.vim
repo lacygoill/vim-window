@@ -13,7 +13,7 @@ fu window#quit#main() abort "{{{1
     endif
 
     " If we're recording a macro, don't close the window; stop the recording.
-    if reg_recording() isnot# '' | return feedkeys('q', 'in')[-1] | endif
+    if reg_recording() isnot# '' | return feedkeys('q', 'n')[-1] | endif
 
     " In Nvim, a floating window has a number, and thus increases the value of `winnr('$')`.{{{
     " This is not the case for a popup window in Vim.

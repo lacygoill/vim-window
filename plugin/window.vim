@@ -605,12 +605,12 @@ nno <silent><unique> <c-l> :<c-u>call window#navigate('l')<cr>
 
 " M-[hjkl] du gg G     scroll popup (or preview) window {{{2
 
-nno <silent><unique> <m-h> :<c-u>call window#popup#scroll('h')<cr>
-nno <silent><unique> <m-j> :<c-u>call window#popup#scroll('j')<cr>
-nno <silent><unique> <m-k> :<c-u>call window#popup#scroll('k')<cr>
-nno <silent><unique> <m-l> :<c-u>call window#popup#scroll('l')<cr>
+sil! call lg#map#meta('h', ':<c-u>call window#popup#scroll("h")<cr>', 'n', 'su')
+sil! call lg#map#meta('j', ':<c-u>call window#popup#scroll("j")<cr>', 'n', 'su')
+sil! call lg#map#meta('k', ':<c-u>call window#popup#scroll("k")<cr>', 'n', 'su')
+sil! call lg#map#meta('l', ':<c-u>call window#popup#scroll("l")<cr>', 'n', 'su')
 
-nno <silent><unique> <m-d> :<c-u>call window#popup#scroll('c-d')<cr>
+sil! call lg#map#meta('d', ':<c-u>call window#popup#scroll("c-d")<cr>', 'n', 'su')
 " Why don't you install a mapping for `M-u`?{{{
 "
 " It would conflict with the `M-u` mapping from `vim-readline`.
@@ -622,8 +622,8 @@ nno <silent><unique> <m-d> :<c-u>call window#popup#scroll('c-d')<cr>
 "    - otherwise, it upcases the text up to the end of the next/current word
 "}}}
 
-nno <silent><unique> <m-g> :<c-u>call window#popup#scroll('gg')<cr>
-nno <silent><unique> <m-s-g> :<c-u>call window#popup#scroll('G')<cr>
+sil! call lg#map#meta('g', ':<c-u>call window#popup#scroll("gg")<cr>', 'n', 'su')
+sil! call lg#map#meta('G', ':<c-u>call window#popup#scroll("G")<cr>', 'n', 'su')
 
 " SPC (prefix) {{{2
 
