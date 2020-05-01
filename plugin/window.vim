@@ -637,7 +637,7 @@ sil! call lg#map#meta('G', ':<c-u>call window#popup#scroll("G")<cr>', 'n', 'su')
 "
 " But it seems to cause too many issues.
 " We  had  one  in  the  past  involving  an  interaction  between  `:norm`  and
-" `feedkeys()` with the 't' flag.
+" `feedkeys()` with the `t` flag.
 "
 " I also had a `E169: Command too recursive` error, but I can't reproduce anymore.
 " I suspect the issue was somewhere else (maybe the `<space>q` was not installed
