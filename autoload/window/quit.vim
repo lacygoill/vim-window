@@ -27,11 +27,11 @@ fu window#quit#main() abort "{{{1
     "
     " From `:h nvim_open_win()`:
     "
-    " > •  `anchor` : Decides which corner of the float to place at (row,col):
-    " >   • "NW" northwest (default)
-    " >   • "NE" northeast
-    " >   • "SW" southwest
-    " >   • "SE" southeast
+    " >     •  `anchor` : Decides which corner of the float to place at (row,col):
+    " >       • "NW" northwest (default)
+    " >       • "NE" northeast
+    " >       • "SW" southwest
+    " >       • "SE" southeast
     "
     " ---
     "
