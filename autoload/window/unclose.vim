@@ -44,6 +44,7 @@ fu window#unclose#restore(cnt) abort "{{{2
     exe layout.tabpagenr..'tabnext'
     " start from a single empty window
     new | only
+    let newbuf = bufnr('%')
 
     " restore windows (with correct buffers in them)
     call s:apply_layout(layout.windows)
@@ -56,6 +57,8 @@ fu window#unclose#restore(cnt) abort "{{{2
 
     " remove used layout
     let s:undo_layouts = s:undo_layouts[:-2]
+
+    exe 'bw! '..newbuf
 endfu
 " }}}1
 " Core {{{1

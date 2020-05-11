@@ -33,16 +33,14 @@ const s:R_FT = ['tmuxprompt', 'websearch']
 " The position in the changelist is local to the window. It should be local
 " to the buffer. We want it to be also preserved when switching buffers.
 
-augroup preserve_view_and_pos_in_changelist
-    au!
+augroup preserve_view_and_pos_in_changelist | au!
     au BufWinLeave * if !s:is_special() | call s:save_view() | call s:save_change_position() | endif
     au BufWinEnter * if !s:is_special() | call s:restore_change_position() | call s:restore_view() | endif
     " You must restore the view *after* the position in the change list.
     " Otherwise it wouldn't be restored correctly.
 augroup END
 
-augroup window_height
-    au!
+augroup window_height | au!
     exe 'au '..(has('nvim') ? 'TermOpen' : 'TerminalWinOpen')..' * call s:set_terminal_height()'
     " Why `BufWinEnter`?{{{
     "
@@ -108,23 +106,20 @@ augroup window_height
     endif
 augroup END
 
-augroup unclose_window
-    au!
+augroup unclose_window | au!
     au QuitPre * call window#unclose#save()
 augroup END
 
 if has('nvim')
     " https://github.com/neovim/neovim/issues/11313
-    augroup fix_winline
-        au!
+    augroup fix_winline | au!
         au WinLeave * if !get(g:, 'SessionLoad', 0)
             \ | let w:fix_winline = {'winline': winline(), 'pos': getcurpos()}
             \ | endif
         au WinEnter * au CursorMoved * ++once call s:fix_winline()
     augroup END
 else
-    augroup customize_preview_popup
-        au!
+    augroup customize_preview_popup | au!
         au BufWinEnter * call s:customize_preview_popup()
     augroup END
 endif
@@ -704,8 +699,7 @@ nno <silent><unique> <c-w>K :<c-u>wincmd K<bar>do <nomodeline> WinEnter<cr>
 " disable `'wrap'` when turning a split into a vertical one
 " Alternative:{{{
 "
-"     augroup nowrap_in_vert_splits
-"         au!
+"     augroup nowrap_in_vert_splits | au!
 "         au WinLeave * if winwidth(0) != &columns | setl nowrap | endif
 "         au WinEnter * if winwidth(0) != &columns | setl nowrap | endif
 "     augroup END
