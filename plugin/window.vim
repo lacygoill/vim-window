@@ -644,39 +644,8 @@ sil! call lg#map#meta('G', ':<c-u>call window#popup#scroll("G")<cr>', 'n', 'su')
 nmap <silent><unique> <space>q <plug>(my_quit)
 nno <silent><unique> <plug>(my_quit) :<c-u>call window#quit#main()<cr>
 xno <silent><unique> <space>q :<c-u>call window#quit#main()<cr>
-" FIXME:{{{
-"
-" When  an  instruction causes  several  errors,  and  it's  executed in  a  try
-" conditional, the  first error can be  catched and converted into  an exception
-" with `v:exception` (`:h except-several-errors`).
-" However, for  some reason,  I can't display  its message.  All  I have  is the
-" hit-enter prompt,  which usually accompanies  a multi-line message (as  if Vim
-" was trying to display all the error messages).
-"
-" MWE:
-" Create a modified buffer, and source this mapping:
-"
-"     nno cd :exe Func()<cr>
-"
-"     fu Func() abort
-"         try
-"             qall
-"         catch
-"             return 'echoerr '.string(v:exception)
-"         endtry
-"         return ''
-"     endfu
-"
-" Press `cd`.
-"}}}
-" Temporary_solution:{{{
-"
-" Call the  function silently, to  bypass the hit-enter prompt. And,  inside the
-" function, when  an error  occurs, call  a timer to  display the  message right
-" afterwards.
-"}}}
-nno <silent><unique> <space>Q :<c-u>sil! call window#quit_everything()<cr>
-xno <silent><unique> <space>Q :<c-u>sil! call window#quit_everything()<cr>
+nno <silent><unique> <space>Q :<c-u>qa!<cr>
+xno <silent><unique> <space>Q :<c-u>qa!<cr>
 " Why not `SPC u`?{{{
 "
 " We often type it by accident.

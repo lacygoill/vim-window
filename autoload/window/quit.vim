@@ -129,15 +129,15 @@ fu window#quit#main() abort "{{{1
                     return
                 endif
             endif
-            " Don't replace `:q` with `:close`.{{{
+            " Don't replace `:quit` with `:close`.{{{
             "
-            " `:q` fires `QuitPre`; not `:close`.
+            " `:quit` fires `QuitPre`; not `:close`.
             "
             " We need `QuitPre`  to be fired so  that `window#unclose#save()` is
             " automatically called  to save the  current layout, and be  able to
             " undo the closing.
             "}}}
-            q
+            quit
         catch
             return lg#catch()
         endtry

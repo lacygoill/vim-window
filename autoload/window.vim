@@ -70,31 +70,6 @@ fu window#preview_open() abort "{{{2
     endtry
 endfu
 
-fu window#quit_everything() abort "{{{2
-    try
-        " We must force the wiping the terminal buffers if we want to be able to quit.
-        if !has('nvim')
-            let term_buffers = term_list()
-            if !empty(term_buffers)
-                exe 'bw! '..join(term_buffers)
-            endif
-        endif
-        qall
-    catch
-        let exception = string(v:exception)
-        call timer_start(0, {-> execute(['echohl ErrorMsg', 'echo '..exception, 'echohl NONE'], '')})
-        "                                                            │
-        "                            can't use `string(v:exception)` ┘
-        "
-        " …  because when  the timer  will be  executed `v:exception`  will be
-        " empty; we  need to save `v:exception`  in a variable: any  scope would
-        " probably works, but a function-local one is the most local.
-        " Here, it works because a lambda can access its outer scope.
-        " This seems to indicate that the callback of a timer is executed in the
-        " context of the function where it was started.
-    endtry
-endfu
-
 fu window#resize(key) abort "{{{2
     let winnr = winnr()
     if a:key =~# '[hl]'

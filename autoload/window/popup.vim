@@ -33,16 +33,9 @@ fu window#popup#close_all() abort "{{{2
     endif
 
     if !has('nvim')
-        " `popup_clear()` doesn't close a terminal popup (`E994`)
-        let g = 0 | while g < 99 | let g += 1
-            try
-                call popup_close(win_getid())
-            catch /^Vim\%((\a\+)\)\=:E99[34]:/
-                break
-            endtry
-        endwhile
         try
-            call popup_clear()
+            " `v:true` to close a popup terminal and avoid `E994`
+            call popup_clear(v:true)
         " `E994` may still happen in some weird circumstances;
         " example: https://github.com/vim/vim/issues/5744
         catch /^Vim\%((\a\+)\)\=:E994:/
@@ -107,8 +100,11 @@ endfu
 fu window#popup#scroll(lhs) abort "{{{2
     if window#util#has_preview()
         call s:scroll_preview(a:lhs)
-    elseif window#util#has_popup()
-        call s:scroll_popup(a:lhs)
+    else
+        let popup = window#util#latest_popup()
+        if popup != 0
+            call s:scroll_popup(a:lhs, popup)
+        endif
     endif
 endfu
 "}}}1
@@ -134,15 +130,14 @@ fu s:scroll_preview(lhs) abort "{{{2
     noa call win_gotoid(curwin)
 endfu
 
-fu s:scroll_popup(lhs) abort "{{{2
-    if !exists('t:_lastpopup') | return | endif
+fu s:scroll_popup(lhs, winid) abort "{{{2
     " let us see the current line in the popup
-    call setwinvar(t:_lastpopup, '&cursorline', 1)
+    call setwinvar(a:winid, '&cursorline', 1)
     let cmd = s:get_scrolling_cmd(a:lhs)
     if has('nvim')
-        sil! call lg#win_execute(t:_lastpopup, cmd)
+        sil! call lg#win_execute(a:winid, cmd)
     else
-        call win_execute(t:_lastpopup, cmd)
+        call win_execute(a:winid, cmd)
     endif
 endfu
 

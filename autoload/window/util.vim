@@ -4,34 +4,13 @@ fu window#util#is_popup(...) abort "{{{1
         \ || !has('nvim') && win_gettype(n) is# 'popup'
 endfu
 
-fu window#util#has_popup() abort "{{{1
-    " Use a cache if possible.{{{
-    "
-    " In Vim, I  don't know any simple way  to get the list of popup  ids in the
-    " current tab page.  We have to manually find them, by iterating over a good
-    " chunk of screen cells and invoking `popup_locate()` on each of them.
-    " This is  costly; a cache  should help keep  good performance even  when we
-    " smash a scrolling key.
-    "}}}
-    if exists('t:_lastpopup') | return t:_lastpopup != 0 | endif
+fu window#util#latest_popup() abort "{{{1
     if has('nvim')
         let popup_ids = map(range(1, winnr('$')), 'window#util#is_popup(v:val) ? win_getid(v:key) : 0')
     else
-        let popup_ids = []
-        for r in range(1, &lines)->filter('v:val % 3 == 0')
-            for c in range(1, &columns)->filter('v:val % 3 == 0')
-                let id = popup_locate(r, c)
-                if id
-                    let popup_ids += [id]
-                endif
-            endfor
-        endfor
+        let popup_ids = popup_list()
     endif
-    " this assumes that you want to interact with the latest created popup (whose id should be the biggest)
-    let t:_lastpopup = max(popup_ids)
-    " don't let the cache go stale for too long
-    call timer_start(1000, {-> execute('unlet! t:_lastpopup')})
-    return t:_lastpopup != 0
+    return max(popup_ids)
 endfu
 
 fu window#util#has_preview() abort "{{{1

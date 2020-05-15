@@ -18,7 +18,7 @@ fu window#unclose#save() abort "{{{2
     let layout.resizecmd = winrestcmd()
     let layout.tabpagenr = tabpagenr()
     let layout.activewindow = winnr()
-    let layout.was_lastwindow = winnr('$') == 1
+    let layout.was_onlywindow = winnr('$') == 1
     let layout.view = winsaveview()
 
     let s:undo_layouts = get(s:, 'undo_layouts', []) + [layout]
@@ -37,7 +37,7 @@ fu window#unclose#restore(cnt) abort "{{{2
     let layout = s:undo_layouts[-1]
 
     " recreate a closed tab page
-    if layout.was_lastwindow
+    if layout.was_onlywindow
         exe (layout.tabpagenr-1)..'tabnew'
     endif
     " make sure we're in the right tab page
@@ -58,7 +58,9 @@ fu window#unclose#restore(cnt) abort "{{{2
     " remove used layout
     let s:undo_layouts = s:undo_layouts[:-2]
 
-    exe 'bw! '..newbuf
+    if bufexists(newbuf)
+        exe 'bw! '..newbuf
+    endif
 endfu
 " }}}1
 " Core {{{1
