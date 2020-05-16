@@ -7,6 +7,15 @@ fu window#quit#main() abort "{{{1
     "         │
     if !empty(getcmdwintype()) | q | return | endif
 
+    " pressing `q` in a help/man window which  is alone in a tab page causes the
+    " latter to be  closed; maybe we want to  keep the tab page open;  give us a
+    " chance to change our mind
+    if winnr('$') == 1 && (&bt is# 'help' || &ft is# 'man')
+        if confirm('Close window and tab page?', "&Yes\n&No\n&Cancel") != 1
+            return
+        endif
+    endif
+
     " a sign may be left in the sign column if you close an undotree diff panel with `:q` or `:close`
     if bufname('%') =~# '^diffpanel_\d\+$'
         return plugin#undotree#close_diff_panel()
