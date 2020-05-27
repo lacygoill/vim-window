@@ -934,16 +934,22 @@ set winminheight=0
 " let us squash an unfocused window to 0 columns (useful when we zoom a window with `SPC z`)
 set winminwidth=0
 
-let &previewheight = &lines/3
-if !has('nvim')
-    " make commands which by default would open a preview window, use a popup instead
-    "     let &previewpopup = 'height:'..&pvh..',width:'..(&columns*2/3)
+augroup set_preview_popup_heights | au!
+    au VimEnter,VimResized * call s:set_preview_popup_heights()
+augroup END
 
-    " TODO: It causes an issue with some of our commands/mappings; like `!m` for example.
-    "
-    " This is because  `debug#log#output()` runs `:wincmd P`  which is forbidden
-    " when the preview window is also a popup window.
-    " Adapt your  code (everywhere) so that  it works whether you  use a regular
-    " preview window, or a popup preview window.
-endif
+fu s:set_preview_popup_heights() abort
+    let &previewheight = &lines/3
+    if !has('nvim')
+        " make commands which by default would open a preview window, use a popup instead
+        "     let &previewpopup = 'height:'..&pvh..',width:'..(&columns*2/3)
+
+        " TODO: It causes an issue with some of our commands/mappings; like `!m` for example.
+        "
+        " This is because  `debug#log#output()` runs `:wincmd P`  which is forbidden
+        " when the preview window is also a popup window.
+        " Adapt your  code (everywhere) so that  it works whether you  use a regular
+        " preview window, or a popup preview window.
+    endif
+endfu
 
