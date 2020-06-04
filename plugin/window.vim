@@ -317,9 +317,9 @@ endfu
 
 fu s:save_change_position() abort "{{{2
     let changelist = get(getchangelist('%'), 0, [])
-    let b:my_change_position = get(getchangelist('%'), 1, -1)
-    if b:my_change_position == -1
-        let b:my_change_position = 100
+    let b:_change_position = get(getchangelist('%'), 1, -1)
+    if b:_change_position == -1
+        let b:_change_position = 100
     endif
 endfu
 
@@ -549,7 +549,7 @@ fu s:set_terminal_height() abort "{{{2
 endfu
 
 fu s:restore_change_position() abort "{{{2
-    if !exists('b:my_change_position')
+    if !exists('b:_change_position')
         " Why this guard `!empty(...)`?{{{
         "
         " Without, it creates a little noise when we debug Vim with `:set vbs=2 vfile=/tmp/log`:
@@ -571,7 +571,7 @@ fu s:restore_change_position() abort "{{{2
     "  │  Without `sil!`, `norm!` would stop typing the key sequence.
     "  │
     sil! exe 'norm! 99g;'
-    \ ..(b:my_change_position == 1 ? 'g,' : (b:my_change_position - 1).'g,')
+    \ ..(b:_change_position == 1 ? 'g,' : (b:_change_position - 1)..'g,')
 endfu
 
 fu s:restore_view() abort "{{{2
