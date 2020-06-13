@@ -41,7 +41,6 @@ augroup preserve_view_and_pos_in_changelist | au!
 augroup END
 
 augroup window_height | au!
-    exe 'au '..(has('nvim') ? 'TermOpen' : 'TerminalWinOpen')..' * call s:set_terminal_height()'
     " Why `BufWinEnter`?{{{
     "
     " This is useful when splitting a window to open a "websearch" file.
@@ -58,71 +57,27 @@ augroup window_height | au!
     " Notice how the height of the current Vim window is not maximized anymore.
     "}}}
     au BufWinEnter,WinEnter,VimResized * call s:set_window_height()
+
+    au TerminalWinOpen * call s:set_terminal_height()
+
+    " necessary since 8.2.0911
+    au CmdWinEnter * exe 'res '..&cwh
+
     " Why ?{{{
     "
     " After running  `:PluginsToCommit` and  pushing a  commit by  pressing `Up`
     " from a fugitive buffer, the current window is not maximized anymore.
     "}}}
     au User Fugitive call s:set_window_height()
-    " TODO: This autocmd is only necessary in Nvim, probably because of a missing Vim patch (8.1.2227 ?).
-    " Try to remove it in the future.
-    if has('nvim')
-        " Purpose:{{{
-        "
-        "     $ vim ~/.shrc
-        "     :sp
-        "     :call system('tmux splitw \; lastp')
-        "     " press `q:`
-        "     :call system('tmux killp -t :.-')
-        "     " press `q` to close command-line window: the height of the focused window is not maximized
-        "
-        " This example is fixed in Vim (but not in Nvim) if you disable `'ea'`.
-        "
-        " MWE:
-        "
-        "     " open xterm without tmux
-        "     $ nvim -Nu NONE +'au WinEnter * wincmd _' +'bo sp' +'set lines=10' +'call feedkeys("q:", "in")'
-        "     :set lines=30
-        "     :q
-        "
-        " The  height  of  the new  focused  window  is  6  (height of  the  old
-        " command-line window + 2).
-        " The `+2` comes from the status line and the text line of the above window.
-        " If you  set `'wmh'` to 0,  the height of  the new focused window  is 7
-        " (height of the old command-line window + 1).
-        "
-        " If you replace `bo sp` with `sp`:
-        "
-        "    - the previous window changes from 2 to 1
-        "    - the issue is not triggered
-        "
-        " ---
-        "
-        " You really need  a timer; I tried to install  a one-shot autocmd after
-        " `CmdWinLeave` is fired, listening to  various events, but none of them
-        " worked (except for `CursorHold` which is too late for my liking).
-        "}}}
-        au CmdWinLeave * call timer_start(0, {-> s:set_window_height()})
-    endif
 augroup END
 
 augroup unclose_window | au!
     au QuitPre * call window#unclose#save()
 augroup END
 
-if has('nvim')
-    " https://github.com/neovim/neovim/issues/11313
-    augroup fix_winline | au!
-        au WinLeave * if !get(g:, 'SessionLoad', 0)
-            \ | let w:fix_winline = {'winline': winline(), 'pos': getcurpos()}
-            \ | endif
-        au WinEnter * au CursorMoved * ++once call s:fix_winline()
-    augroup END
-else
-    augroup customize_preview_popup | au!
-        au BufWinEnter * call s:customize_preview_popup()
-    augroup END
-endif
+augroup customize_preview_popup | au!
+    au BufWinEnter * call s:customize_preview_popup()
+augroup END
 
 " Functions {{{1
 fu s:customize_preview_popup() abort "{{{2
@@ -143,32 +98,6 @@ fu s:customize_preview_popup() abort "{{{2
     " I guess Vim sets it slightly later.
     "}}}
     exe printf('au WinLeave * ++once call popup_setoptions(%d, %s)', winid, opts)
-endfu
-
-fu s:fix_winline() abort "{{{2
-    if !exists('w:fix_winline') | return | endif
-    " TODO: If one day Nvim fixes this issue, make sure it also fixes the MWE which follows.{{{
-    "
-    " Perform this check with all your configuration.
-    " And perform a check with a fold starting on the second line of `/tmp/x.vim`
-    " (I had a similar issue in the past which could only be reproduced when
-    " a fold started on the second line).
-    "}}}
-    " Sometimes, the original position is lost.{{{
-    "
-    " MWE:
-    "
-    "     $ printf -- 'a\nb' >/tmp/x.vim; nvim -Nu NONE +'filetype on|set wmh=0|au BufWinEnter,WinEnter * noa wincmd _' +'au FileType * noa wincmd p|noa wincmd p' +1 /tmp/x.vim
-    "     :sp /tmp/y.vim
-    "     :wincmd w
-    "     " the cursor is on line 2, while originally it was on line 1
-    "}}}
-    if getcurpos() != w:fix_winline.pos
-        call setpos('.', w:fix_winline.pos)
-    endif
-    let offset = w:fix_winline.winline - winline()
-    if offset == 0 | return | endif
-    exe 'norm! '..abs(offset)..(offset > 0 ? "\<c-y>" : "\<c-e>")
 endfu
 
 fu s:get_diff_height(...) abort "{{{2
@@ -354,10 +283,6 @@ fu s:set_window_height() abort "{{{2
     " trying and fix it.
     "}}}
 
-    " Why the `#is_popup()` guard?{{{
-    "
-    " In Nvim, we don't want to maximize a floating window.
-    "}}}
     " Why the `&l:pvw` guard?{{{
     "
     " Suppose we preview a file from a file explorer.
@@ -388,9 +313,7 @@ fu s:set_window_height() abort "{{{2
     "
     " So, in the end, the height of the preview window is correctly set.
     "}}}
-    if &l:pvw || window#util#is_popup()
-        return
-    endif
+    if &l:pvw | return | endif
 
     if getcmdwintype() isnot# '' | noa exe 'res '..&cwh | return | endif
 
@@ -498,7 +421,7 @@ fu s:set_window_height() abort "{{{2
     "}}}
     " Warning:{{{
     "
-    " In Vim, `'so'` is global-local (in Nvim, it's still global).
+    " `'so'` is global-local.
     " So, to be  completely reliable, we would probably need  to reset the local
     " value of the option.
     " It's not an issue at the moment, because we only set the global value, but
@@ -519,14 +442,8 @@ fu s:set_window_height() abort "{{{2
 endfu
 
 fu s:has_neighbor_above_or_below(winnr) abort
-    " TODO: Once Nvim supports `win_execute()`, rewrite the function like this:{{{
-    "
-    "     call win_execute(win_getid(a:winnr), 'let has_above = winnr("k") != winnr()')
-    "     call win_execute(win_getid(a:winnr), 'let has_below = winnr("j") != winnr()')
-    "     return has_above || has_below
-    "}}}
-    let has_above = lg#win_execute(win_getid(a:winnr), 'echo winnr("k") != winnr()')[1:]
-    let has_below = lg#win_execute(win_getid(a:winnr), 'echo winnr("j") != winnr()')[1:]
+    call win_execute(win_getid(a:winnr), 'let has_above = winnr("k") != winnr()')
+    call win_execute(win_getid(a:winnr), 'let has_below = winnr("j") != winnr()')
     return has_above || has_below
 endfu
 
@@ -538,7 +455,7 @@ fu s:fix_special_window(v) abort
     let id = win_getid(winnr)
     let offset = getwininfo(id)[0].topline - orig_topline
     if offset
-        call lg#win_execute(id, 'noa norm! '..abs(offset)..(offset > 0 ? "\<c-y>" : "\<c-e>"))
+        call win_execute(id, 'noa norm! '..abs(offset)..(offset > 0 ? "\<c-y>" : "\<c-e>"))
     endif
 endfu
 
@@ -940,16 +857,15 @@ augroup END
 
 fu s:set_preview_popup_heights() abort
     let &previewheight = &lines/3
-    if !has('nvim')
-        " make commands which by default would open a preview window, use a popup instead
-        "     let &previewpopup = 'height:'..&pvh..',width:'..(&columns*2/3)
+    " make commands which by default would open a preview window, use a popup instead
+    "
+    "     let &previewpopup = 'height:'..&pvh..',width:'..(&columns*2/3)
 
-        " TODO: It causes an issue with some of our commands/mappings; like `!m` for example.
-        "
-        " This is because  `debug#log#output()` runs `:wincmd P`  which is forbidden
-        " when the preview window is also a popup window.
-        " Adapt your  code (everywhere) so that  it works whether you  use a regular
-        " preview window, or a popup preview window.
-    endif
+    " TODO: It causes an issue with some of our commands/mappings; like `!m` for example.
+    "
+    " This is because  `debug#log#output()` runs `:wincmd P`  which is forbidden
+    " when the preview window is also a popup window.
+    " Adapt your  code (everywhere) so that  it works whether you  use a regular
+    " preview window, or a popup preview window.
 endfu
 

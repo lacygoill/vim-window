@@ -1,15 +1,10 @@
 fu window#util#is_popup(...) abort "{{{1
     let n = a:0 ? win_getid(a:1) : win_getid()
-    return has('nvim') && has_key(nvim_win_get_config(n), 'anchor')
-        \ || !has('nvim') && win_gettype(n) is# 'popup'
+    return win_gettype(n) is# 'popup'
 endfu
 
 fu window#util#latest_popup() abort "{{{1
-    if has('nvim')
-        let popup_ids = map(range(1, winnr('$')), 'window#util#is_popup(v:val) ? win_getid(v:key) : 0')
-    else
-        let popup_ids = popup_list()
-    endif
+    let popup_ids = popup_list()
     return max(popup_ids)
 endfu
 

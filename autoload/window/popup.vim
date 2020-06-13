@@ -1,3 +1,8 @@
+if exists('g:autoloaded_window#popup')
+    finish
+endif
+let g:autoloaded_window#popup = 1
+
 " Init {{{1
 
 const s:AOF_KEY2NORM = {
@@ -32,58 +37,14 @@ fu window#popup#close_all() abort "{{{2
         let view = winsaveview()
     endif
 
-    if !has('nvim')
-        try
-            " `v:true` to close a popup terminal and avoid `E994`
-            call popup_clear(v:true)
-        " `E994` may still happen in some weird circumstances;
-        " example: https://github.com/vim/vim/issues/5744
-        catch /^Vim\%((\a\+)\)\=:E994:/
-            return lg#catch()
-        endtry
-    else
-        " Why not `nvim_list_wins()`?{{{
-        "
-        " Yeah, it could replace:
-        "
-        "     map(range(1, winnr('$')), {_,v -> win_getid(v)})
-        "
-        " But it would  list *all* windows, and thus the  code would close *all*
-        " floating windows.  We don't want that; we only want to close all
-        " floating windows in the *current tab page*.
-        "
-        " We want that for 2 reasons.
-        "
-        " It's consistent with  `popup_clear()` which only closes  popups in the
-        " current tab page (and global popups).
-        "
-        " The purpose of `=d` is to fix  some issue in what is currently visible
-        " on the  screen; whatever  is displayed  on another  tab page  is *not*
-        " currently visible;  therefore, there  is no  reason to  close anything
-        " outside the current tab page.
-        "}}}
-        for winid in map(range(1, winnr('$')), {_,v -> win_getid(v)})
-            if has_key(nvim_win_get_config(winid), 'anchor')
-                " `sil!` to suppress `E5555`.{{{
-                "
-                " Otherwise, `E5555`  is raised when  the current window is  a float
-                " displaying a terminal buffer.
-                "
-                " I think it may be raised because of our current implementation
-                " of borders around floating windows.
-                " We create an extra float just for the border.
-                " And we  have a one-shot  autocmd which closes the  border when
-                " the text  float is closed;  it probably interferes  here; i.e.
-                " when Nvim tries  to close the border, the autocmd  has done it
-                " already.
-                "
-                " Note that an `nvim_win_is_valid()` guard wouldn't work here.
-                " Unless you use it in combination with a timer.
-                "}}}
-                sil! call nvim_win_close(winid, 1)
-            endif
-        endfor
-    endif
+    try
+        " `v:true` to close a popup terminal and avoid `E994`
+        call popup_clear(v:true)
+    " `E994` may still happen in some weird circumstances;
+    " example: https://github.com/vim/vim/issues/5744
+    catch /^Vim\%((\a\+)\)\=:E994:/
+        return lg#catch()
+    endtry
 
     if exists('topline')
         let so_save = &l:so
@@ -134,11 +95,7 @@ fu s:scroll_popup(lhs, winid) abort "{{{2
     " let us see the current line in the popup
     call setwinvar(a:winid, '&cursorline', 1)
     let cmd = s:get_scrolling_cmd(a:lhs)
-    if has('nvim')
-        sil! call lg#win_execute(a:winid, cmd)
-    else
-        call win_execute(a:winid, cmd)
-    endif
+    call win_execute(a:winid, cmd)
 endfu
 
 fu s:get_scrolling_cmd(lhs) abort "{{{2

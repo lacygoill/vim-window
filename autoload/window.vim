@@ -134,9 +134,7 @@ fu window#terminal_open() abort "{{{2
 
     let mod = lg#window#get_modifier()
 
-    let how_to_open = has('nvim')
-                  \ ?     mod..' split | terminal'
-                  \ :     mod..' terminal'
+    let how_to_open = mod..' terminal'
 
     let resize = mod =~# '^vert'
              \ ?     ' | vert resize 30 | resize 30'

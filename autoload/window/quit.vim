@@ -24,34 +24,7 @@ fu window#quit#main() abort "{{{1
     " If we're recording a macro, don't close the window; stop the recording.
     if reg_recording() isnot# '' | return feedkeys('q', 'in')[-1] | endif
 
-    " In Nvim, a floating window has a number, and thus increases the value of `winnr('$')`.{{{
-    " This is not the case for a popup window in Vim.
-    "
-    " Because of that, in Nvim, if we  press `SPC q` while only 1 regular window
-    " – as  well as 1 floating  window – is  opened, `E444` is raised  (the code
-    " path ends up executing `:close` instead of `:qall!`).
-    " We need  to ignore  floating windows  when computing  the total  number of
-    " windows opened  in the current  tab page; we do  this by making  sure that
-    " `nvim_win_get_config(1234)` does *not* have the key `anchor`.
-    "
-    " From `:h nvim_open_win()`:
-    "
-    " >     •  `anchor` : Decides which corner of the float to place at (row,col):
-    " >       • "NW" northwest (default)
-    " >       • "NE" northeast
-    " >       • "SW" southwest
-    " >       • "SE" southeast
-    "
-    " ---
-    "
-    " Is there a better way to detect whether a window is a float?
-    "}}}
-    if has('nvim')
-        let winnr_max = len(filter(range(1, winnr('$')),
-            \ {_,v -> !has_key(nvim_win_get_config(win_getid(v)), 'anchor')}))
-    else
-        let winnr_max = winnr('$')
-    endif
+    let winnr_max = winnr('$')
 
     " Quit everything if:{{{
     "
@@ -70,14 +43,13 @@ fu window#quit#main() abort "{{{1
        \    )
         qall!
 
-    " In neovim, we could also test the existence of `b:terminal_job_pid`.
     elseif &bt is# 'terminal'
         " A popup terminal is a special case.{{{
         "
         " We don't want to wipe the buffer; just close the window.
         "}}}
         if window#util#is_popup()
-            if has('nvim') | close | else | call popup_close(win_getid()) | endif
+            call popup_close(win_getid())
         else
             bw!
         endif
