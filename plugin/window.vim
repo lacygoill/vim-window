@@ -283,6 +283,13 @@ fu s:set_window_height() abort "{{{2
     " trying and fix it.
     "}}}
 
+    " Why the `#is_popup()` guard?{{{
+    "
+    " `wincmd _` would raise `E994` in a popup terminal.
+    "
+    " Note: Not when the  current tab page would contain only  1 window, because
+    " in that case `!s:is_alone_in_tabpage()` would be false.
+    "}}}
     " Why the `&l:pvw` guard?{{{
     "
     " Suppose we preview a file from a file explorer.
@@ -313,7 +320,9 @@ fu s:set_window_height() abort "{{{2
     "
     " So, in the end, the height of the preview window is correctly set.
     "}}}
-    if &l:pvw | return | endif
+    if &l:pvw || window#util#is_popup()
+        return
+    endif
 
     if getcmdwintype() isnot# '' | noa exe 'res '..&cwh | return | endif
 
