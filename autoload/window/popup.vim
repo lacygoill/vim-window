@@ -37,17 +37,8 @@ fu window#popup#close_all() abort "{{{2
         let view = winsaveview()
     endif
 
-    " for some  reason, when  `popup_clear()` closes a  popup terminal,  the new
-    " active window is always the top one; it should be the previous window (the
-    " one from which we opened the popup terminal)
-    if win_gettype() is# 'popup'
-        let prevwin = win_getid(winnr('#'))
-    endif
     " `v:true` to close a popup terminal and avoid `E994`
     call popup_clear(v:true)
-    if exists('prevwin')
-        call win_gotoid(prevwin)
-    endif
 
     if exists('topline')
         let so_save = &l:so
