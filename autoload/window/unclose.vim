@@ -68,7 +68,7 @@ fu s:winid2bufnr(layout) abort "{{{2
     " add bufnr to leaf{{{
     "
     "     ['leaf', 123] → ['leaf', 456]
-    "              ^^^             ^^^
+    "              ^-^             ^-^
     "              winid            bufnr
     "}}}
     if a:layout[0] is# 'leaf'
