@@ -12,6 +12,8 @@ let g:loaded_window = 1
 
 " Init {{{1
 
+import MapMeta from 'lg/map.vim'
+
 " Default height
 const s:D_HEIGHT = 10
 " Terminal window
@@ -30,8 +32,8 @@ const s:R_FT = ['tmuxprompt', 'websearch']
 " Inspiration: https://stackoverflow.com/a/31581929/8243465
 "
 " Similar_issue:
-" The position in the changelist is local to the window. It should be local
-" to the buffer. We want it to be also preserved when switching buffers.
+" The position in the changelist is local  to the window.  It should be local to
+" the buffer.  We want it to be also preserved when switching buffers.
 
 augroup preserve_view_and_pos_in_changelist | au!
     au BufWinLeave * if !s:is_special() | call s:save_view() | call s:save_change_position() | endif
@@ -61,7 +63,7 @@ augroup window_height | au!
     au TerminalWinOpen * call s:set_terminal_height()
 
     " necessary since 8.2.0911
-    au CmdWinEnter * exe 'res '..&cwh
+    au CmdWinEnter * exe 'res ' .. &cwh
 
     " Why ?{{{
     "
@@ -110,7 +112,7 @@ fu s:get_diff_height(...) abort "{{{2
     " If the available  number of lines is odd, example  29, should consistently
     " return the bigger half to the upper viewport.
     " Otherwise, when we would change the focus between the two viewports, their
-    " heights would constantly change ([15,14] ↔ [14,15]), which is jarring.
+    " heights would constantly change ([15, 14] ↔ [14, 15]), which is jarring.
     "}}}
 
     "                          ┌ the two statuslines of the two diff'ed windows{{{
@@ -120,8 +122,8 @@ fu s:get_diff_height(...) abort "{{{2
     "                          │    │}}}
     let lines = &lines - &ch - 2 - (tabpagenr('$') > 1 ? 1 : 0)
     return fmod(lines,2) == 0 || (a:0 ? a:1 : winnr()) != 1
-       \ ?     lines/2
-       \ :     lines/2 + 1
+        \ ?     lines / 2
+        \ :     lines / 2 + 1
 endfu
 
 fu s:height_should_be_reset(nr) abort "{{{2
@@ -148,7 +150,7 @@ fu s:height_should_be_reset(nr) abort "{{{2
     "}}}
     " Interesting_PR:{{{
     " The current code of the function should work most of the time.
-    " But not always. It's based on a heuristic.
+    " But not always.  It's based on a heuristic.
     "
     " We may be able to make it work all the time if one day this PR is merged:
     " https://github.com/vim/vim/pull/2521
@@ -179,7 +181,7 @@ fu s:height_should_be_reset(nr) abort "{{{2
     " The same issue happens with a vim-plug window.
     "}}}
     return winwidth(a:nr) >= &columns/2
-    \ ||  (getwinvar(a:nr, '&pvw', 0) && winwidth(0) <= &columns/2)
+        \ ||  (getwinvar(a:nr, '&pvw', 0) && winwidth(0) <= &columns/2)
 endfu
 
 fu s:if_special_get_nr_height_topline(v) abort "{{{2
@@ -190,17 +192,17 @@ fu s:if_special_get_nr_height_topline(v) abort "{{{2
 
     let info = getwinvar(a:v, '&pvw', 0)
         \ ?     [a:v, &pvh]
-        \ : index(s:R_FT, getbufvar(winbufnr(a:v), '&ft', '')) >= 0
+        \ : index(s:R_FT, winbufnr(a:v)->getbufvar('&ft', '')) >= 0
         \ ?     [a:v, s:R_HEIGHT]
         \ : &l:diff
         \ ?     [a:v, s:get_diff_height(a:v)]
-        \ : getbufvar(winbufnr(a:v), '&bt', '') is# 'terminal' && !window#util#is_popup(a:v)
+        \ : winbufnr(a:v)->getbufvar('&bt', '') is# 'terminal' && !window#util#is_popup(a:v)
         \ ?     [a:v, s:T_HEIGHT]
-        \ : getbufvar(winbufnr(a:v), '&bt', '') is# 'quickfix'
-        \ ?     [a:v, min([s:Q_HEIGHT, max([&wmh+2, len(getbufline(winbufnr(a:v), 1, s:Q_HEIGHT))])])]
+        \ : winbufnr(a:v)->getbufvar('&bt', '') is# 'quickfix'
+        \ ?     [a:v, [s:Q_HEIGHT, [&wmh + 2, winbufnr(a:v)->getbufline(1, s:Q_HEIGHT)->len()]->max()]->min()]
         \ :     []
     " to understand the purpose of `&wmh+2`, see our comments around `'set noequalalways'`
-    return empty(info) ? [] : info  + [getwininfo(win_getid(a:v))[0].topline]
+    return empty(info) ? [] : info  + [win_getid(a:v)->getwininfo()[0].topline]
 endfu
 
 fu s:is_alone_in_tabpage() abort "{{{2
@@ -209,9 +211,9 @@ endfu
 
 fu s:is_special() abort "{{{2
     return &l:pvw
-      \ || &l:diff
-      \ || &ft is# 'gitcommit' || index(s:R_FT, &ft) >= 0
-      \ || &bt =~# '^\%(quickfix\|terminal\)$'
+        \ || &l:diff
+        \ || &ft is# 'gitcommit' || index(s:R_FT, &ft) >= 0
+        \ || &bt =~# '^\%(quickfix\|terminal\)$'
 endfu
 
 fu s:is_wide() abort "{{{2
@@ -233,7 +235,7 @@ endfu
 
 fu s:make_window_small() abort "{{{2
     " to understand the purpose of `&wmh+2`, see our comments around `'set noequalalways'`
-    noa exe 'res '..(&l:pvw
+    noa exe 'res ' .. (&l:pvw
         \ ?              &l:pvh
         \ :          &bt is# 'quickfix'
         \ ?              min([s:Q_HEIGHT, max([line('$'), &wmh + 2])])
@@ -245,8 +247,8 @@ fu s:make_window_small() abort "{{{2
 endfu
 
 fu s:save_change_position() abort "{{{2
-    let changelist = get(getchangelist('%'), 0, [])
-    let b:_change_position = get(getchangelist('%'), 1, -1)
+    let changelist = getchangelist('%')->get(0, [])
+    let b:_change_position = getchangelist('%')->get(1, -1)
     if b:_change_position == -1
         let b:_change_position = 100
     endif
@@ -279,7 +281,7 @@ fu s:set_window_height() abort "{{{2
     "
     " More generally, I think this undesired change of height occur whenever we move
     " in a tab page where there are several windows, but ALL are special.
-    " This is  a unique  and probably  rare case. So, I  don't think  it's worth
+    " This is  a unique and  probably rare case.  So,  I don't think  it's worth
     " trying and fix it.
     "}}}
 
@@ -324,7 +326,7 @@ fu s:set_window_height() abort "{{{2
         return
     endif
 
-    if getcmdwintype() isnot# '' | noa exe 'res '..&cwh | return | endif
+    if getcmdwintype() != '' | noa exe 'res ' .. &cwh | return | endif
 
     let curwinnr = winnr()
     if s:is_special() && s:is_wide() && !s:is_alone_in_tabpage()
@@ -362,12 +364,11 @@ fu s:set_window_height() abort "{{{2
     "
     "     && !s:height_should_be_reset(v[0])
     "}}}
-    let special_windows = filter(map(
-        \ range(1, winnr('$')),
-        \ {_,v -> s:if_special_get_nr_height_topline(v)}),
-        \ {_,v -> v !=# []
-        \      && v[0] != curwinnr
-        \      && s:height_should_be_reset(v[0])})
+    let special_windows = range(1, winnr('$'))
+        \ ->map({_, v -> s:if_special_get_nr_height_topline(v)})
+        \ ->filter({_, v -> v != []
+        \       && v[0] != curwinnr
+        \       && s:height_should_be_reset(v[0])})
 
     " if we enter a regular window, maximize it
     noa wincmd _
@@ -446,7 +447,7 @@ fu s:set_window_height() abort "{{{2
     "
     "     10wincmd _
     "}}}
-    call map(special_windows, {_,v -> s:has_neighbor_above_or_below(v[0]) && s:fix_special_window(v)})
+    call map(special_windows, {_, v -> s:has_neighbor_above_or_below(v[0]) && s:fix_special_window(v)})
     noa let &so = so_save
 endfu
 
@@ -459,18 +460,18 @@ endfu
 fu s:fix_special_window(v) abort
     let [winnr, height, orig_topline] = a:v
     " restore the height
-    noa exe winnr..'res '..height
+    noa exe winnr .. 'res ' .. height
     " restore the original topline
     let id = win_getid(winnr)
     let offset = getwininfo(id)[0].topline - orig_topline
     if offset
-        call win_execute(id, 'noa norm! '..abs(offset)..(offset > 0 ? "\<c-y>" : "\<c-e>"))
+        call win_execute(id, 'noa norm! ' .. abs(offset) .. (offset > 0 ? "\<c-y>" : "\<c-e>"))
     endif
 endfu
 
 fu s:set_terminal_height() abort "{{{2
     if !s:is_alone_in_tabpage() && !s:is_maximized_vertically() && !window#util#is_popup()
-        noa exe 'res '..s:T_HEIGHT
+        noa exe 'res ' .. s:T_HEIGHT
     endif
 endfu
 
@@ -483,7 +484,7 @@ fu s:restore_change_position() abort "{{{2
         "     E664: changelist is empty
         "     Error detected while processing function <SNR>103_restore_change_position:
         "}}}
-        if !empty(get(getchangelist(0), 0, []))
+        if !getchangelist(0)->get(0, [])->empty()
             sil! norm! 99g,
         endif
         return
@@ -497,7 +498,7 @@ fu s:restore_change_position() abort "{{{2
     "  │  Without `sil!`, `norm!` would stop typing the key sequence.
     "  │
     sil! exe 'norm! 99g;'
-    \ ..(b:_change_position == 1 ? 'g,' : (b:_change_position - 1)..'g,')
+        \ .. (b:_change_position == 1 ? 'g,' : (b:_change_position - 1) .. 'g,')
 endfu
 
 fu s:restore_view() abort "{{{2
@@ -526,12 +527,12 @@ nno <silent><unique> <c-l> :<c-u>call window#navigate('l')<cr>
 
 " M-[hjkl] du gg G     scroll popup (or preview) window {{{2
 
-sil! call lg#map#meta('h', ':<c-u>call window#popup#scroll("h")<cr>', 'n', 'su')
-sil! call lg#map#meta('j', ':<c-u>call window#popup#scroll("j")<cr>', 'n', 'su')
-sil! call lg#map#meta('k', ':<c-u>call window#popup#scroll("k")<cr>', 'n', 'su')
-sil! call lg#map#meta('l', ':<c-u>call window#popup#scroll("l")<cr>', 'n', 'su')
+sil! call s:MapMeta('h', ':<c-u>call window#popup#scroll("h")<cr>', 'n', 'su')
+sil! call s:MapMeta('j', ':<c-u>call window#popup#scroll("j")<cr>', 'n', 'su')
+sil! call s:MapMeta('k', ':<c-u>call window#popup#scroll("k")<cr>', 'n', 'su')
+sil! call s:MapMeta('l', ':<c-u>call window#popup#scroll("l")<cr>', 'n', 'su')
 
-sil! call lg#map#meta('d', ':<c-u>call window#popup#scroll("c-d")<cr>', 'n', 'su')
+sil! call s:MapMeta('d', ':<c-u>call window#popup#scroll("c-d")<cr>', 'n', 'su')
 " Why don't you install a mapping for `M-u`?{{{
 "
 " It would conflict with the `M-u` mapping from `vim-readline`.
@@ -543,8 +544,8 @@ sil! call lg#map#meta('d', ':<c-u>call window#popup#scroll("c-d")<cr>', 'n', 'su
 "    - otherwise, it upcases the text up to the end of the next/current word
 "}}}
 
-sil! call lg#map#meta('g', ':<c-u>call window#popup#scroll("gg")<cr>', 'n', 'su')
-sil! call lg#map#meta('G', ':<c-u>call window#popup#scroll("G")<cr>', 'n', 'su')
+sil! call s:MapMeta('g', ':<c-u>call window#popup#scroll("gg")<cr>', 'n', 'su')
+sil! call s:MapMeta('G', ':<c-u>call window#popup#scroll("G")<cr>', 'n', 'su')
 
 " SPC (prefix) {{{2
 
@@ -723,12 +724,12 @@ nno <silent><unique> zk :<c-u>aboveleft split<cr>
 "
 " MWE:
 "
-"     nno  <c-w><cr>  :echo 'hello'<cr>
-"     nno  Z          <c-w>
+"     nno <c-w><cr> :echo 'hello'<cr>
+"     nno Z <c-w>
 "     " press 'Z cr': doesn't work ✘
 "
-"     nno  <c-w><cr>  :echo 'hello'<cr>
-"     nmap Z          <c-w>
+"     nno <c-w><cr> :echo 'hello'<cr>
+"     nmap Z <c-w>
 "     " press 'Z cr': works ✔
 "
 " Indeed,  once `Z`  has been  expanded into  `C-w`, we  may need  to expand  it
@@ -868,7 +869,7 @@ fu s:set_preview_popup_heights() abort
     let &previewheight = &lines/3
     " make commands which by default would open a preview window, use a popup instead
     "
-    "     let &previewpopup = 'height:'..&pvh..',width:'..(&columns*2/3)
+    "     let &previewpopup = 'height:' .. &pvh .. ',width:' .. (&columns * 2 / 3)
 
     " TODO: It causes an issue with some of our commands/mappings; like `!m` for example.
     "

@@ -29,7 +29,7 @@ fu window#popup#close_all() abort "{{{2
     " OTOH, we can get the topline, which for the moment is good enough.
     "}}}
     if window#util#is_popup()
-        let wininfo = getwininfo(win_getid(winnr('#')))
+        let wininfo = winnr('#')->win_getid()->getwininfo()
         if !empty(wininfo)
             let topline = wininfo[0].topline
         endif
@@ -43,9 +43,9 @@ fu window#popup#close_all() abort "{{{2
     if exists('topline')
         let so_save = &l:so
         setl so=0
-        exe 'norm! '..topline..'GztM'
-        "                          ^
-        "                          middle of the window to minimize the distance from the original cursor position
+        exe 'norm! ' .. topline .. 'GztM'
+        "                              ^
+        "                              middle of the window to minimize the distance from the original cursor position
         let &l:so = so_save
     elseif exists('view')
         call winrestview(view)
@@ -95,9 +95,9 @@ endfu
 fu s:get_scrolling_cmd(lhs) abort "{{{2
     return 'sil! norm! zR'
         "\ make `M-j` and `M-k` scroll through *screen* lines, not buffer lines
-        \ ..(index(['j', 'k'], a:lhs) >= 0 ? 'g' : '')
-        \ ..s:AOF_KEY2NORM[a:lhs]
-        \ ..'zMzv'
+        \ .. (index(['j', 'k'], a:lhs) >= 0 ? 'g' : '')
+        \ .. s:AOF_KEY2NORM[a:lhs]
+        \ .. 'zMzv'
     " `zMzv` may cause the distance between the current line and the first line of the window to change unexpectedly.{{{
     "
     " If that bothers you, you could improve the function.

@@ -28,6 +28,6 @@ fu window#util#has_preview() abort "{{{1
     " So, the  function returns what  we want, even if  the preview window  is a
     " popup; all is good.
     "}}}
-    return index(map(range(1, winnr('$')), {_,v -> getwinvar(v, '&pvw')}), 1) >= 0
+    return range(1, winnr('$'))->map({_, v -> getwinvar(v, '&pvw')})->index(1) >= 0
 endfu
 

@@ -3,10 +3,12 @@ if exists('g:autoloaded_window')
 endif
 let g:autoloaded_window = 1
 
+import Catch from 'lg.vim'
+
 " Interface {{{1
 fu window#disable_wrap_when_moving_to_vert_split(dir) abort "{{{2
     call setwinvar(winnr('#'), '&wrap', 0)
-    exe 'wincmd '..a:dir
+    exe 'wincmd ' .. a:dir
     setl nowrap
     return ''
 endfu
@@ -25,9 +27,9 @@ fu window#navigate(dir) abort "{{{2
     " In both cases, you don't focus back the middle window; that's jarring.
     "}}}
     if s:previous_window_is_in_same_direction(a:dir)
-        try | wincmd p | catch | return lg#catch() | endtry
+        try | wincmd p | catch | return s:Catch() | endtry
     else
-        try | exe 'wincmd '..a:dir | catch | return lg#catch() | endtry
+        try | exe 'wincmd ' .. a:dir | catch | return s:Catch() | endtry
     endif
 endfu
 
@@ -66,7 +68,7 @@ fu window#preview_open() abort "{{{2
         norm! zMzvzz
         wincmd p
     catch
-        return lg#catch()
+        return s:Catch()
     endtry
 endfu
 
@@ -92,23 +94,23 @@ fu window#resize(key) abort "{{{2
         "}}}
         if winnr('l') != winnr
             let keys = a:key is# 'h'
-                   \ ?     "\<c-w>3<"
-                   \ :     "\<c-w>3>"
+                \ ?     "\<c-w>3<"
+                \ :     "\<c-w>3>"
         else
             let keys = a:key is# 'h'
-                   \ ?     "\<c-w>3>"
-                   \ :     "\<c-w>3<"
+                \ ?     "\<c-w>3>"
+                \ :     "\<c-w>3<"
         endif
 
     else
         if winnr('j') != winnr
             let keys = a:key is# 'k'
-                   \ ?     "\<c-w>3-"
-                   \ :     "\<c-w>3+"
+                \ ?     "\<c-w>3-"
+                \ :     "\<c-w>3+"
         else
             let keys = a:key is# 'k'
-                   \ ?     "\<c-w>3+"
-                   \ :     "\<c-w>3-"
+                \ ?     "\<c-w>3+"
+                \ :     "\<c-w>3-"
         endif
     endif
 
@@ -119,7 +121,7 @@ fu window#terminal_close() abort "{{{2
     let term_buffer = s:get_terminal_buffer()
     if term_buffer == 0 | return | endif
     let curwin = win_getid()
-    noa call win_gotoid(bufwinid(term_buffer))
+    noa call bufwinid(term_buffer)->win_gotoid()
     noa call window#quit#main()
     noa call win_gotoid(curwin)
 endfu
@@ -134,11 +136,11 @@ fu window#terminal_open() abort "{{{2
 
     let mod = lg#window#get_modifier()
 
-    let how_to_open = mod..' terminal'
+    let how_to_open = mod .. ' terminal'
 
     let resize = mod =~# '^vert'
-             \ ?     ' | vert resize 30 | resize 30'
-             \ :     ''
+        \ ?     ' | vert resize 30 | resize 30'
+        \ :     ''
 
     exe printf('exe %s %s', string(how_to_open), resize)
 endfu
@@ -159,8 +161,8 @@ endfu
 "}}}1
 " Utilities {{{1
 fu s:get_terminal_buffer() abort "{{{2
-    let buflist = tabpagebuflist(tabpagenr())
-    call filter(buflist, {_,v -> getbufvar(v, '&bt', '') is# 'terminal'})
+    let buflist = tabpagenr()->tabpagebuflist()
+    call filter(buflist, {_, v -> getbufvar(v, '&bt', '') is# 'terminal'})
     return get(buflist, 0 , 0)
 endfu
 

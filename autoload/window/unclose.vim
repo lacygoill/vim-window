@@ -30,7 +30,7 @@ fu window#unclose#save() abort "{{{2
 endfu
 
 fu window#unclose#restore(cnt) abort "{{{2
-    if empty(get(s:, 'undo_layouts', []))
+    if get(s:, 'undo_layouts', [])->empty()
         return
     endif
 
@@ -38,10 +38,10 @@ fu window#unclose#restore(cnt) abort "{{{2
 
     " recreate a closed tab page
     if layout.was_onlywindow
-        exe (layout.tabpagenr-1)..'tabnew'
+        exe (layout.tabpagenr-1) .. 'tabnew'
     endif
     " make sure we're in the right tab page
-    exe layout.tabpagenr..'tabnext'
+    exe layout.tabpagenr .. 'tabnext'
     " start from a single empty window
     new | only
     let newbuf = bufnr('%')
@@ -49,7 +49,7 @@ fu window#unclose#restore(cnt) abort "{{{2
     " restore windows (with correct buffers in them)
     call s:apply_layout(layout.windows)
     " restore active window
-    exe layout.activewindow..'wincmd w'
+    exe layout.activewindow .. 'wincmd w'
     " restore view
     call winrestview(layout.view)
     " restore windows geometry
@@ -59,7 +59,7 @@ fu window#unclose#restore(cnt) abort "{{{2
     let s:undo_layouts = s:undo_layouts[:-2]
 
     if bufexists(newbuf)
-        exe 'bw! '..newbuf
+        exe 'bw! ' .. newbuf
     endif
 endfu
 " }}}1
@@ -84,14 +84,14 @@ fu s:apply_layout(layout) abort "{{{2
     if a:layout[0] is# 'leaf'
         let bufnr = a:layout[1]
         if bufexists(bufnr)
-            exe 'b '..bufnr
+            exe 'b ' .. bufnr
         endif
     else
         let split_method = {'col': 'sp', 'row': 'vs'}[a:layout[0]]
         if split_method is# 'sp' && &spr || split_method is# 'vs' && &sb
-            let split_method = 'rightb '..split_method
+            let split_method = 'rightb ' .. split_method
         elseif split_method is# 'sp' && &nospr || split_method is# 'vs' && &nosb
-            let split_method = 'lefta '..split_method
+            let split_method = 'lefta ' .. split_method
         endif
 
         " recreate windows for a row or column of the original layout, and save their ids
@@ -105,11 +105,13 @@ fu s:apply_layout(layout) abort "{{{2
         endfor
 
         " recurse on child windows
-        call map(range(len(winids)), 'win_gotoid(winids[v:key]) + s:apply_layout(a:layout[1][v:key])')
-        "                             │                           │
-        "                             │                           └ and load the buffer it displayed,
-        "                             │                             or split it again if it contained child windows
-        "                             └ focus a recreated window
+        call len(winids)
+            \ ->range()
+            \ ->map('win_gotoid(winids[v:key]) + s:apply_layout(a:layout[1][v:key])')
+        "            │                           │
+        "            │                           └ and load the buffer it displayed,
+        "            │                             or split it again if it contained child windows
+        "            └ focus a recreated window
     endif
 endfu
 

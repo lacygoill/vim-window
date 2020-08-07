@@ -1,11 +1,13 @@
+import Catch from 'lg.vim'
+
 fu window#quit#main() abort "{{{1
     " If we are in the command-line window, we want to close the latter,
     " and return without doing anything else (no session save).
     "
-    "         ┌ return ':' in a command-line window,
-    "         │ nothing in a regular buffer
-    "         │
-    if !empty(getcmdwintype()) | q | return | endif
+    "   ┌ return ':' in a command-line window,
+    "   │ nothing in a regular buffer
+    "   │
+    if !getcmdwintype()->empty() | q | return | endif
 
     " pressing `q` in a help/man window which  is alone in a tab page causes the
     " latter to be  closed; maybe we want to  keep the tab page open;  give us a
@@ -22,7 +24,7 @@ fu window#quit#main() abort "{{{1
     endif
 
     " If we're recording a macro, don't close the window; stop the recording.
-    if reg_recording() isnot# '' | return feedkeys('q', 'in')[-1] | endif
+    if reg_recording() != '' | return feedkeys('q', 'in')[-1] | endif
 
     let winnr_max = winnr('$')
 
@@ -37,8 +39,8 @@ fu window#quit#main() abort "{{{1
        \         winnr_max == 1
        \      || winnr_max == 2
        \         && (
-       \                index(map(getwininfo(), {_,v -> v.loclist}), 1) >= 0
-       \             || getwinvar(winnr() == 1 ? 2 : 1, '&diff')
+       \                getwininfo()->map({_, v -> v.loclist})->index(1) >= 0
+       \             || (winnr() == 1 ? 2 : 1)->getwinvar('&diff')
        \            )
        \    )
         qall!
@@ -49,7 +51,7 @@ fu window#quit#main() abort "{{{1
         " We don't want to wipe the buffer; just close the window.
         "}}}
         if window#util#is_popup()
-            call popup_close(win_getid())
+            call win_getid()->popup_close()
         else
             bw!
         endif
@@ -83,8 +85,8 @@ fu window#quit#main() abort "{{{1
         try
             if tabpagenr('$') == 1
                 let wininfo = getwininfo()
-                call filter(wininfo, {_,v -> v.winid != win_getid()})
-                call filter(map(wininfo, {_,v -> getbufvar(v.bufnr, '&ft')}), {_,v -> v !=# 'help'})
+                call filter(wininfo, {_, v -> v.winid != win_getid()})
+                call map(wininfo, {_, v -> getbufvar(v.bufnr, '&ft')})->filter({_, v -> v !=# 'help'})
                 if empty(wininfo)
                     " Why `:close` instead of `:quit`?{{{
                     "
@@ -106,7 +108,7 @@ fu window#quit#main() abort "{{{1
                     " important buffer (ex: the one opened by `:DebugVimrc`).
                     " So, I don't want to be bothered by an error.
                     "}}}
-                    exe 'close'..(&l:bh is# 'wipe' ? '!' : '')
+                    exe 'close' .. (&l:bh is# 'wipe' ? '!' : '')
                     return
                 endif
             endif
@@ -120,7 +122,7 @@ fu window#quit#main() abort "{{{1
             "}}}
             quit
         catch
-            return lg#catch()
+            return s:Catch()
         endtry
     endif
 endfu
