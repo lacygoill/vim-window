@@ -4,6 +4,7 @@ endif
 let g:autoloaded_window = 1
 
 import Catch from 'lg.vim'
+import GetWinMod from 'lg/window.vim'
 
 " Interface {{{1
 fu window#disable_wrap_when_moving_to_vert_split(dir) abort "{{{2
@@ -134,7 +135,7 @@ fu window#terminal_open() abort "{{{2
         return
     endif
 
-    let mod = lg#window#get_modifier()
+    let mod = s:GetWinMod()
 
     let how_to_open = mod .. ' terminal'
 

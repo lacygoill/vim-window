@@ -13,6 +13,7 @@ let g:loaded_window = 1
 " Init {{{1
 
 import MapMeta from 'lg/map.vim'
+import QfOpenOrFocus from 'lg/window.vim'
 
 " Default height
 const s:D_HEIGHT = 10
@@ -668,10 +669,10 @@ nno <silent><unique> z> :<c-u>call window#terminal_close()<bar>do <nomodeline> W
 
 "z ()  z []                         qf/ll    window {{{3
 
-nno <silent><unique> z( :<c-u>call lg#window#qf_open_or_focus('qf')<cr>
+nno <silent><unique> z( :<c-u>call <sid>QfOpenOrFocus('qf')<cr>
 nno <silent><unique> z) :<c-u>cclose<bar>do <nomodeline> WinEnter<cr>
 
-nno <silent><unique> z[ :<c-u>call lg#window#qf_open_or_focus('loc')<cr>
+nno <silent><unique> z[ :<c-u>call <sid>QfOpenOrFocus('loc')<cr>
 nno <silent><unique> z] :<c-u>lclose<bar>do <nomodeline> WinEnter<cr>
 
 " z {}                               preview  window {{{3
