@@ -275,7 +275,7 @@ fu s:set_window_height() abort "{{{2
     "    - &pvh for the preview window
     "    - 10 for a qf/terminal window
     "}}}
-    " Issue:{{{
+    " Problem:{{{
     " Create a tab page with a qf window + a terminal.
     " The terminal is  big when we switch  to the qf window, then  small when we
     " switch back to the terminal.

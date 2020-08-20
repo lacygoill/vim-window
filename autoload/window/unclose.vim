@@ -25,7 +25,7 @@ fu window#unclose#save() abort "{{{2
 
     " make sure `s:undo_layouts` doesn't grow too much
     if len(s:undo_layouts) > s:MAX_UNDO
-        let s:undo_layouts = s:undo_layouts[len(s:undo_layouts)-s:MAX_UNDO:]
+        let s:undo_layouts = s:undo_layouts[len(s:undo_layouts) - s:MAX_UNDO :]
     endif
 endfu
 
