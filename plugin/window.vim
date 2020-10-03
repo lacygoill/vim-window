@@ -75,7 +75,7 @@ augroup window_height | au!
 augroup END
 
 augroup unclose_window | au!
-    au QuitPre * call window#unclose#save()
+    au QuitPre,TabClosed * call window#unclose#save()
 augroup END
 
 augroup customize_preview_popup | au!
@@ -509,7 +509,7 @@ fu s:restore_view() abort "{{{2
         if !&l:diff
             call winrestview(w:saved_views[n])
         endif
-        unlet w:saved_views[n]
+        unlet! w:saved_views[n]
     else
         " `:h last-position-jump`
         if line("'\"") >= 1 && line("'\"") <= line('$') && &ft !~# 'commit'

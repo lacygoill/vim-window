@@ -151,7 +151,7 @@ fu window#zoom_toggle() abort "{{{2
 
     if exists('t:zoom_restore') && win_getid() == t:zoom_restore.winid
         exe get(t:zoom_restore, 'cmd', '')
-        unlet t:zoom_restore
+        unlet! t:zoom_restore
     else
         let t:zoom_restore = {'cmd': winrestcmd(), 'winid': win_getid()}
         wincmd |

@@ -38,7 +38,7 @@ fu window#unclose#restore(cnt) abort "{{{2
 
     " recreate a closed tab page
     if layout.was_onlywindow
-        exe (layout.tabpagenr-1) .. 'tabnew'
+        exe (layout.tabpagenr - 1) .. 'tabnew'
     endif
     " make sure we're in the right tab page
     exe layout.tabpagenr .. 'tabnext'
@@ -87,7 +87,7 @@ fu s:apply_layout(layout) abort "{{{2
             exe 'b ' .. bufnr
         endif
     else
-        let split_method = {'col': 'sp', 'row': 'vs'}[a:layout[0]]
+        let split_method = #{col: 'sp', row: 'vs'}[a:layout[0]]
         if split_method is# 'sp' && &spr || split_method is# 'vs' && &sb
             let split_method = 'rightb ' .. split_method
         elseif split_method is# 'sp' && &nospr || split_method is# 'vs' && &nosb
