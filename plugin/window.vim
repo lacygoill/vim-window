@@ -75,7 +75,7 @@ augroup window_height | au!
 augroup END
 
 augroup unclose_window | au!
-    au QuitPre,TabClosed * call window#unclose#save()
+    au QuitPre * call window#unclose#save()
 augroup END
 
 augroup customize_preview_popup | au!
@@ -248,11 +248,7 @@ fu s:make_window_small() abort "{{{2
 endfu
 
 fu s:save_change_position() abort "{{{2
-    let changelist = getchangelist('%')->get(0, [])
-    let b:_change_position = getchangelist('%')->get(1, -1)
-    if b:_change_position == -1
-        let b:_change_position = 100
-    endif
+    let b:_last_change_position = getchangelist('%')->get(1, 100)
 endfu
 
 fu s:save_view() abort "{{{2
@@ -477,29 +473,23 @@ fu s:set_terminal_height() abort "{{{2
 endfu
 
 fu s:restore_change_position() abort "{{{2
-    if !exists('b:_change_position')
-        " Why this guard `!empty(...)`?{{{
-        "
-        " Without, it creates a little noise when we debug Vim with `:set vbs=2 vfile=/tmp/log`:
-        "
-        "     E664: changelist is empty
-        "     Error detected while processing function <SNR>103_restore_change_position:
-        "}}}
-        if !getchangelist(0)->get(0, [])->empty()
-            sil! norm! 99g,
-        endif
+    let changelist = getchangelist('%')
+    if empty(changelist)
         return
     endif
-    "  ┌ from `:h :sil`:
-    "  │                 When [!] is added, […], commands and mappings will
-    "  │                 not be aborted when an error is detected.
-    "  │
-    "  │  If our position in the list is somewhere in the middle, `99g;` will
-    "  │  raise an error.
-    "  │  Without `sil!`, `norm!` would stop typing the key sequence.
-    "  │
-    sil! exe 'norm! 99g;'
-        \ .. (b:_change_position == 1 ? 'g,' : (b:_change_position - 1) .. 'g,')
+    let [changes, curpos] = changelist
+    if empty(changes)
+        return
+    endif
+    if exists('b:_last_change_position')
+        let cnt = b:_last_change_position - curpos
+    else
+        let cnt = len(changes) - curpos - 1
+    endif
+    if cnt == 0
+        return
+    endif
+    exe 'sil! norm! ' .. abs(cnt) .. (cnt > 0 ? 'g,' : 'g;')
 endfu
 
 fu s:restore_view() abort "{{{2

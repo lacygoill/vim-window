@@ -40,8 +40,77 @@ fu window#unclose#restore(cnt) abort "{{{2
     if layout.was_onlywindow
         exe (layout.tabpagenr - 1) .. 'tabnew'
     endif
+
     " make sure we're in the right tab page
-    exe layout.tabpagenr .. 'tabnext'
+    try
+        exe layout.tabpagenr .. 'tabnext'
+    " Sometimes, `E16` is raised.{{{
+    "
+    " Because `layout.tabpagenr` might not match an existing tab page.
+    "
+    " MWE:
+    "
+    "     $ vim -S <(cat <<'EOF'
+    "         tabe /tmp/file
+    "         sp
+    "         q
+    "         tabclose
+    "         call feedkeys(' U')
+    "     EOF
+    "     )
+    "
+    " The issue is  that if you close a  tab page with a command  which does not
+    " fire `QuitPre` (like `:tabclose`), then  the last saved layout pertains to
+    " a window which was not alone in a tab page; as a result, the previous `if`
+    " block does not restore the tab page.
+    "
+    " We should save the layout right before a tab page is closed, but we cannot
+    " listen to `TabClosed`, because it's fired too late:
+    "
+    "     $ vim -S <(cat <<'EOF'
+    "         e ~/.shrc
+    "         tabe ~/.bashrc
+    "         call feedkeys(' q U')
+    "     EOF
+    "     )
+    "
+    " The second tab displays `~/.shrc`; it should display `~/.bashrc`.
+    "}}}
+    " FIXME: There are still cases where `:tabclose` prevents us from getting back the right layout.{{{
+    "
+    "     $ vim -S <(cat <<'EOF'
+    "         e /tmp/file1
+    "         sp /tmp/file2
+    "         let id = win_getid()
+    "         tabe /tmp/file3
+    "         call win_gotoid(id)
+    "         q
+    "         tabclose
+    "     EOF
+    "     )
+    "
+    "     " press:  SPC u
+    "     " expected:  we get back 2 tab pages
+    "     " actual:  we only have 1 tab page
+    "
+    " Maybe we  need to save the  layout when a tab  page is closed as  a whole.
+    " But `TabClosed` seems to be fired too late (in the context of the tab page
+    " where the focus switches to).
+    " When a  tab page is  closed, Vim fires `TabLeave`  (in the context  of the
+    " closed tab page), `TabClosed`, then `TabEnter`.
+    "
+    " I've tried to  install autocmds listening to all these  events and come up
+    " with a mechanism  to save the layout  when a tab is really  closed, and in
+    " the right context,  but it doesn't work  well.  One of the  reason is that
+    " even when  `TabLeave` is fired the  layout is already incorrect  (we're in
+    " the right tab page, but `winnr('$')` returns 1 even if the closed tab page
+    " contains more than 1 window).
+    "}}}
+    catch /^Vim\%((\a\+)\)\=:E16:/
+        exe (layout.tabpagenr - 1) .. 'tabnew'
+        exe layout.tabpagenr .. 'tabnext'
+    endtry
+
     " start from a single empty window
     new | only
     let newbuf = bufnr('%')
