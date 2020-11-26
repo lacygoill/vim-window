@@ -511,10 +511,10 @@ endfu
 " Mappings {{{1
 " C-[hjkl]             move across windows {{{2
 
-nno <silent><unique> <c-h> :<c-u>call window#navigate('h')<cr>
-nno <silent><unique> <c-j> :<c-u>call window#navigate('j')<cr>
-nno <silent><unique> <c-k> :<c-u>call window#navigate('k')<cr>
-nno <silent><unique> <c-l> :<c-u>call window#navigate('l')<cr>
+nno <unique> <c-h> <cmd>call window#navigate('h')<cr>
+nno <unique> <c-j> <cmd>call window#navigate('j')<cr>
+nno <unique> <c-k> <cmd>call window#navigate('k')<cr>
+nno <unique> <c-l> <cmd>call window#navigate('l')<cr>
 
 " M-[hjkl] du gg G     scroll popup (or preview) window {{{2
 
@@ -546,7 +546,7 @@ sil! call s:MapMeta('G', ':<c-u>call window#popup#scroll("G")<cr>', 'n', 'su')
 "
 " Yes, we did this in the past:
 "
-"     :nno <buffer> q :norm 1 q<cr>
+"     :nno <buffer> q <cmd>norm 1 q<cr>
 "
 " But it seems to cause too many issues.
 " We  had  one  in  the  past  involving  an  interaction  between  `:norm`  and
@@ -559,11 +559,11 @@ sil! call s:MapMeta('G', ':<c-u>call window#popup#scroll("G")<cr>', 'n', 'su')
 " And the mapping in itself can  be confusing to understand/debug; I much prefer
 " a mapping where the lhs is not repeated in the rhs.
 "}}}
-nmap <silent><unique> <space>q <plug>(my_quit)
-nno <silent><unique> <plug>(my_quit) :<c-u>call window#quit#main()<cr>
-xno <silent><unique> <space>q :<c-u>call window#quit#main()<cr>
-nno <silent><unique> <space>Q :<c-u>qa!<cr>
-xno <silent><unique> <space>Q :<c-u>qa!<cr>
+nmap <unique> <space>q <plug>(my_quit)
+nno <unique> <plug>(my_quit) <cmd>call window#quit#main()<cr>
+xno <unique> <space>q <c-\><c-n><cmd>call window#quit#main()<cr>
+nno <unique> <space>Q <cmd>qa!<cr>
+xno <unique> <space>Q <cmd>qa!<cr>
 " Why not `SPC u`?{{{
 "
 " We often type it by accident.
@@ -572,16 +572,16 @@ xno <silent><unique> <space>Q :<c-u>qa!<cr>
 "
 " Let's try `SPC U`; it should be harder to press by accident.
 "}}}
-nno <silent><unique> <space>U :<c-u>call window#unclose#restore(v:count1)<cr>
-nno <silent><unique> <space>u <nop>
+nno <unique> <space>U <cmd>call window#unclose#restore(v:count1)<cr>
+nno <unique> <space>u <nop>
 
-nno <silent><unique> <space>z :<c-u>call window#zoom_toggle()<cr>
+nno <unique> <space>z <cmd>call window#zoom_toggle()<cr>
 
 " C-w (prefix) {{{2
 
 " update window's height – with `do WinEnter` – when we move it at the very top/bottom
-nno <silent><unique> <c-w>J :<c-u>wincmd J<bar>do <nomodeline> WinEnter<cr>
-nno <silent><unique> <c-w>K :<c-u>wincmd K<bar>do <nomodeline> WinEnter<cr>
+nno <unique> <c-w>J <cmd>wincmd J<bar>do <nomodeline> WinEnter<cr>
+nno <unique> <c-w>K <cmd>wincmd K<bar>do <nomodeline> WinEnter<cr>
 
 " disable `'wrap'` when turning a split into a vertical one
 " Alternative:{{{
@@ -595,8 +595,8 @@ nno <silent><unique> <c-w>K :<c-u>wincmd K<bar>do <nomodeline> WinEnter<cr>
 "
 " Con: WinLeave/WinEnter is not fired after moving a window.
 "}}}
-nno <silent><unique> <c-w>H :<c-u>call window#disable_wrap_when_moving_to_vert_split('H')<cr>
-nno <silent><unique> <c-w>L :<c-u>call window#disable_wrap_when_moving_to_vert_split('L')<cr>
+nno <unique> <c-w>H <cmd>call window#disable_wrap_when_moving_to_vert_split('H')<cr>
+nno <unique> <c-w>L <cmd>call window#disable_wrap_when_moving_to_vert_split('L')<cr>
 
 " open path in split window/tabpage and unfold
 " `C-w f`, `C-w F`, `C-w gf`, ... I'm confused!{{{
@@ -654,25 +654,25 @@ xno <c-w>GF <c-w>GFzv
 "     :wincmd t
 "     :cclose
 "}}}
-nno <silent><unique> z< :<c-u>call window#terminal_open()<cr>
-nno <silent><unique> z> :<c-u>call window#terminal_close()<bar>do <nomodeline> WinEnter<cr>
+nno <unique> z< <cmd>call window#terminal_open()<cr>
+nno <unique> z> <cmd>call window#terminal_close()<bar>do <nomodeline> WinEnter<cr>
 
 "z ()  z []                         qf/ll    window {{{3
 
-nno <silent><unique> z( :<c-u>call <sid>QfOpenOrFocus('qf')<cr>
-nno <silent><unique> z) :<c-u>cclose<bar>do <nomodeline> WinEnter<cr>
+nno <unique> z( <cmd>call <sid>QfOpenOrFocus('qf')<cr>
+nno <unique> z) <cmd>cclose<bar>do <nomodeline> WinEnter<cr>
 
-nno <silent><unique> z[ :<c-u>call <sid>QfOpenOrFocus('loc')<cr>
-nno <silent><unique> z] :<c-u>lclose<bar>do <nomodeline> WinEnter<cr>
+nno <unique> z[ <cmd>call <sid>QfOpenOrFocus('loc')<cr>
+nno <unique> z] <cmd>lclose<bar>do <nomodeline> WinEnter<cr>
 
 " z {}                               preview  window {{{3
 
-nno <silent><unique> z{ :<c-u>call window#preview_open()<cr>
-nno <silent><unique> z} <c-w>z:do <nomodeline> WinEnter<cr>
+nno <unique> z{ <cmd>call window#preview_open()<cr>
+nno <unique> z} <c-w>z<cmd>do <nomodeline> WinEnter<cr>
 
 " zp                close all popup/foating windows {{{3
 
-nno <silent><unique> zp :<c-u>call window#popup#close_all()<cr>
+nno <unique> zp <cmd>call window#popup#close_all()<cr>
 
 " z C-[hjkl]        resize window {{{3
 
@@ -693,17 +693,17 @@ nmap <unique> z<c-j> <plug>(window-resize-j)
 nmap <unique> z<c-k> <plug>(window-resize-k)
 nmap <unique> z<c-l> <plug>(window-resize-l)
 
-nno <silent> <plug>(window-resize-h) :<c-u>call window#resize('h')<cr>
-nno <silent> <plug>(window-resize-j) :<c-u>call window#resize('j')<cr>
-nno <silent> <plug>(window-resize-k) :<c-u>call window#resize('k')<cr>
-nno <silent> <plug>(window-resize-l) :<c-u>call window#resize('l')<cr>
+nno <plug>(window-resize-h) <cmd>call window#resize('h')<cr>
+nno <plug>(window-resize-j) <cmd>call window#resize('j')<cr>
+nno <plug>(window-resize-k) <cmd>call window#resize('k')<cr>
+nno <plug>(window-resize-l) <cmd>call window#resize('l')<cr>
 
 " z[hjkl]           split in any direction {{{3
 
-nno <silent><unique> zh :<c-u>setl nowrap <bar> leftabove vsplit  <bar> setl nowrap<cr>
-nno <silent><unique> zl :<c-u>setl nowrap <bar> rightbelow vsplit <bar> setl nowrap<cr>
-nno <silent><unique> zj :<c-u>belowright split<cr>
-nno <silent><unique> zk :<c-u>aboveleft split<cr>
+nno <unique> zh <cmd>setl nowrap <bar> leftabove vsplit  <bar> setl nowrap<cr>
+nno <unique> zl <cmd>setl nowrap <bar> rightbelow vsplit <bar> setl nowrap<cr>
+nno <unique> zj <cmd>belowright split<cr>
+nno <unique> zk <cmd>aboveleft split<cr>
 "}}}2
 " Z (prefix) {{{2
 " Z                 simpler window prefix {{{3
@@ -715,11 +715,11 @@ nno <silent><unique> zk :<c-u>aboveleft split<cr>
 "
 " MWE:
 "
-"     nno <c-w><cr> :echo 'hello'<cr>
+"     nno <c-w><cr> <cmd>echo 'hello'<cr>
 "     nno Z <c-w>
 "     " press 'Z cr': doesn't work ✘
 "
-"     nno <c-w><cr> :echo 'hello'<cr>
+"     nno <c-w><cr> <cmd>echo 'hello'<cr>
 "     nmap Z <c-w>
 "     " press 'Z cr': works ✔
 "
@@ -746,8 +746,8 @@ nmap <unique> ZQ <space>q
 
 " If we press `ZZ`, Vim will remap the keys into `C-w Z`, which doesn't do anything.
 " We need to restore `ZZ` original behavior.
-nmap <silent> ZZ <plug>(my_ZZ_update)<plug>(my_quit)
-nno <plug>(my_ZZ_update) :<c-u>update<cr>
+nmap ZZ <plug>(my_ZZ_update)<plug>(my_quit)
+nno <plug>(my_ZZ_update) <cmd>update<cr>
 " }}}1
 " Options {{{1
 
@@ -860,7 +860,7 @@ fu s:set_preview_popup_heights() abort
     let &previewheight = &lines/3
     " make commands which by default would open a preview window, use a popup instead
     "
-    "     let &previewpopup = 'height:' .. &pvh .. ',width:' .. (&columns * 2 / 3)
+    "     let &previewpopup = printf('highlight:Normal,height:%d,width:%d', &pvh, (&columns * 2 / 3))
 
     " TODO: It causes an issue with some of our commands/mappings; like `!m` for example.
     "
