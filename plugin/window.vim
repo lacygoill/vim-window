@@ -518,12 +518,12 @@ nno <unique> <c-l> <cmd>call window#navigate('l')<cr>
 
 " M-[hjkl] du gg G     scroll popup (or preview) window {{{2
 
-sil! call s:MapMeta('h', ':<c-u>call window#popup#scroll("h")<cr>', 'n', 'su')
-sil! call s:MapMeta('j', ':<c-u>call window#popup#scroll("j")<cr>', 'n', 'su')
-sil! call s:MapMeta('k', ':<c-u>call window#popup#scroll("k")<cr>', 'n', 'su')
-sil! call s:MapMeta('l', ':<c-u>call window#popup#scroll("l")<cr>', 'n', 'su')
+sil! call s:MapMeta('h', '<cmd>call window#popup#scroll("h")<cr>', 'n', 'u')
+sil! call s:MapMeta('j', '<cmd>call window#popup#scroll("j")<cr>', 'n', 'u')
+sil! call s:MapMeta('k', '<cmd>call window#popup#scroll("k")<cr>', 'n', 'u')
+sil! call s:MapMeta('l', '<cmd>call window#popup#scroll("l")<cr>', 'n', 'u')
 
-sil! call s:MapMeta('d', ':<c-u>call window#popup#scroll("c-d")<cr>', 'n', 'su')
+sil! call s:MapMeta('d', '<cmd>call window#popup#scroll("c-d")<cr>', 'n', 'u')
 " Why don't you install a mapping for `M-u`?{{{
 "
 " It would conflict with the `M-u` mapping from `vim-readline`.
@@ -535,8 +535,8 @@ sil! call s:MapMeta('d', ':<c-u>call window#popup#scroll("c-d")<cr>', 'n', 'su')
 "    - otherwise, it upcases the text up to the end of the next/current word
 "}}}
 
-sil! call s:MapMeta('g', ':<c-u>call window#popup#scroll("gg")<cr>', 'n', 'su')
-sil! call s:MapMeta('G', ':<c-u>call window#popup#scroll("G")<cr>', 'n', 'su')
+sil! call s:MapMeta('g', '<cmd>call window#popup#scroll("gg")<cr>', 'n', 'u')
+sil! call s:MapMeta('G', '<cmd>call window#popup#scroll("G")<cr>', 'n', 'u')
 
 " SPC (prefix) {{{2
 
