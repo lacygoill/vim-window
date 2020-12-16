@@ -36,14 +36,14 @@ const s:R_FT = ['tmuxprompt', 'websearch']
 " The position in the changelist is local  to the window.  It should be local to
 " the buffer.  We want it to be also preserved when switching buffers.
 
-augroup preserve_view_and_pos_in_changelist | au!
+augroup PreserveViewAndPosInChangelist | au!
     au BufWinLeave * if !s:is_special() | call s:save_view() | call s:save_change_position() | endif
     au BufWinEnter * if !s:is_special() | call s:restore_change_position() | call s:restore_view() | endif
     " You must restore the view *after* the position in the change list.
     " Otherwise it wouldn't be restored correctly.
 augroup END
 
-augroup window_height | au!
+augroup WindowHeight | au!
     " Why `BufWinEnter`?{{{
     "
     " This is useful when splitting a window to open a "websearch" file.
@@ -74,11 +74,11 @@ augroup window_height | au!
     au User Fugitive call s:set_window_height()
 augroup END
 
-augroup unclose_window | au!
+augroup UncloseWindow | au!
     au QuitPre * call window#unclose#save()
 augroup END
 
-augroup customize_preview_popup | au!
+augroup CustomizePreviewPopup | au!
     au BufWinEnter * call s:customize_preview_popup()
 augroup END
 
@@ -586,7 +586,7 @@ nno <unique> <c-w>K <cmd>wincmd K<bar>do <nomodeline> WinEnter<cr>
 " disable `'wrap'` when turning a split into a vertical one
 " Alternative:{{{
 "
-"     augroup nowrap_in_vert_splits | au!
+"     augroup NowrapInVertSplits | au!
 "         au WinLeave * if winwidth(0) != &columns | setl nowrap | endif
 "         au WinEnter * if winwidth(0) != &columns | setl nowrap | endif
 "     augroup END
@@ -852,7 +852,7 @@ set winminheight=0
 " let us squash an unfocused window to 0 columns (useful when we zoom a window with `SPC z`)
 set winminwidth=0
 
-augroup set_preview_popup_heights | au!
+augroup SetPreviewPopupHeights | au!
     au VimEnter,VimResized * call s:set_preview_popup_heights()
 augroup END
 
