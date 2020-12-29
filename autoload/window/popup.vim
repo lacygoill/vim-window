@@ -1,109 +1,110 @@
-if exists('g:autoloaded_window#popup')
-    finish
-endif
-let g:autoloaded_window#popup = 1
+vim9script noclear
 
-" Init {{{1
+if exists('loaded') | finish | endif
+var loaded = true
 
-const s:AOF_KEY2NORM = {
-    \ 'j': 'j',
-    \ 'k': 'k',
-    \ 'h': '5zh',
-    \ 'l': '5zl',
-    \ 'c-d': "\<c-d>",
-    \ 'c-u': "\<c-u>",
-    \ 'gg': 'gg',
-    \ 'G': 'G',
-    \ }
+# Init {{{1
 
-" Interface {{{1
-fu window#popup#close_all() abort "{{{2
-    " If we're in a popup window, it will be closed; we want to preserve the view in the *previous* window.{{{
-    "
-    " Not the view in the *current* window.
-    "
-    " Unfortunately, we  can't get the  last line address  of the cursor  in the
-    " previous window; we could save it via a `WinLeave` autocmd, but it doesn't
-    " seem worth the hassle.
-    "
-    " OTOH, we can get the topline, which for the moment is good enough.
-    "}}}
-    if window#util#is_popup()
-        let wininfo = winnr('#')->win_getid()->getwininfo()
+const AOF_KEY2NORM = {
+    j: 'j',
+    k: 'k',
+    h: '5zh',
+    l: '5zl',
+    c-d: "\<c-d>",
+    c-u: "\<c-u>",
+    gg: 'gg',
+    G: 'G',
+    }
+
+# Interface {{{1
+def window#popup#closeAll() #{{{2
+    var view: dict<number>
+    var topline: number
+    # If we're in a popup window, it will be closed; we want to preserve the view in the *previous* window.{{{
+    #
+    # Not the view in the *current* window.
+    #
+    # Unfortunately, we  can't get the  last line address  of the cursor  in the
+    # previous window; we could save it via a `WinLeave` autocmd, but it doesn't
+    # seem worth the hassle.
+    #
+    # OTOH, we can get the topline, which for the moment is good enough.
+    #}}}
+    if window#util#isPopup()
+        var wininfo = winnr('#')->win_getid()->getwininfo()
         if !empty(wininfo)
-            let topline = wininfo[0].topline
+            topline = wininfo[0].topline
         endif
     else
-        let view = winsaveview()
+        view = winsaveview()
     endif
 
-    " `v:true` to close a popup terminal and avoid `E994`
-    call popup_clear(v:true)
+    # `true` to close a popup terminal and avoid `E994`
+    popup_clear(true)
 
-    if exists('topline')
-        let so_save = &l:so
+    if topline != 0
+        var so_save = &l:so
         setl so=0
         exe 'norm! ' .. topline .. 'GztM'
-        "                              ^
-        "                              middle of the window to minimize the distance from the original cursor position
-        let &l:so = so_save
-    elseif exists('view')
-        call winrestview(view)
+        #                              ^
+        # middle of the window to minimize the distance from the original cursor position
+        &l:so = so_save
+    elseif !empty('view')
+        winrestview(view)
     endif
-endfu
+enddef
 
-fu window#popup#scroll(lhs) abort "{{{2
-    if window#util#has_preview()
-        call s:scroll_preview(a:lhs)
+def window#popup#scroll(lhs: string) #{{{2
+    if window#util#hasPreview()
+        ScrollPreview(lhs)
     else
-        let popup = window#util#latest_popup()
+        var popup = window#util#latestPopup()
         if popup != 0
-            call s:scroll_popup(a:lhs, popup)
+            ScrollPopup(lhs, popup)
         endif
     endif
-endfu
-"}}}1
-" Core {{{1
-fu s:scroll_preview(lhs) abort "{{{2
-    let curwin = win_getid()
-    " go to preview window
+enddef
+#}}}1
+# Core {{{1
+def ScrollPreview(lhs: string) #{{{2
+    var curwin = win_getid()
+    # go to preview window
     noa wincmd P
 
-    " Useful to see where we are.{{{
-    "
-    " Would not be necessary if we *scrolled* with `C-e`/`C-y`.
-    " But it is necessary because we *move* with `j`/`k`.
-    "
-    " We can't use `C-e`/`C-y`; it wouldn't work as expected because of `zMzv`.
-    "}}}
+    # Useful to see where we are.{{{
+    #
+    # Would not be necessary if we *scrolled* with `C-e`/`C-y`.
+    # But it is necessary because we *move* with `j`/`k`.
+    #
+    # We can't use `C-e`/`C-y`; it wouldn't work as expected because of `zMzv`.
+    #}}}
     if !&l:cul | setl cul | endif
 
-    " move/scroll
-    exe s:get_scrolling_cmd(a:lhs)
+    # move/scroll
+    exe GetScrollingCmd(lhs)
 
-    " get back to previous window
-    noa call win_gotoid(curwin)
-endfu
+    # get back to previous window
+    noa win_gotoid(curwin)
+enddef
 
-fu s:scroll_popup(lhs, winid) abort "{{{2
-    " let us see the current line in the popup
-    call setwinvar(a:winid, '&cursorline', 1)
-    let cmd = s:get_scrolling_cmd(a:lhs)
-    call win_execute(a:winid, cmd)
-endfu
+def ScrollPopup(lhs: string, winid: number) #{{{2
+    # let us see the current line in the popup
+    setwinvar(winid, '&cursorline', 1)
+    GetScrollingCmd(lhs)->win_execute(winid)
+enddef
 
-fu s:get_scrolling_cmd(lhs) abort "{{{2
+def GetScrollingCmd(lhs: string): string #{{{2
     return 'sil! norm! zR'
-        "\ make `M-j` and `M-k` scroll through *screen* lines, not buffer lines
-        \ .. (index(['j', 'k'], a:lhs) >= 0 ? 'g' : '')
-        \ .. s:AOF_KEY2NORM[a:lhs]
-        \ .. 'zMzv'
-    " `zMzv` may cause the distance between the current line and the first line of the window to change unexpectedly.{{{
-    "
-    " If that bothers you, you could improve the function.
-    " See how we handled the issue in `s:move_and_open_fold()` from:
-    "
-    "     ~/.vim/plugged/vim-toggle-settings/autoload/toggle_settings.vim
-    "}}}
-endfu
-"}}}1
+        # make `M-j` and `M-k` scroll through *screen* lines, not buffer lines
+        .. (index(['j', 'k'], lhs) >= 0 ? 'g' : '')
+        .. AOF_KEY2NORM[lhs]
+        .. 'zMzv'
+    # `zMzv` may cause the distance between the current line and the first line of the window to change unexpectedly.{{{
+    #
+    # If that bothers you, you could improve the function.
+    # See how we handled the issue in `s:move_and_open_fold()` from:
+    #
+    #     ~/.vim/plugged/vim-toggle-settings/autoload/toggle_settings.vim
+    #}}}
+enddef
+#}}}1
