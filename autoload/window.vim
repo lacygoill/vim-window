@@ -156,7 +156,7 @@ def window#zoomToggle() #{{{2
         exe get(t:zoom_restore, 'cmd', '')
         unlet! t:zoom_restore
     else
-        var cmd = winrestcmd()->substitute('\ze\d\+resize', ':', 'g')
+        var cmd = winrestcmd()
         t:zoom_restore = {cmd: cmd, winid: win_getid()}
         wincmd |
         wincmd _

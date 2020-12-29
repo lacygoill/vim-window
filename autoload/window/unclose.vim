@@ -15,7 +15,7 @@ def window#unclose#save() #{{{2
     layout.windows = winlayout()
     Winid2bufnr(layout.windows)
 
-    layout.resizecmd = winrestcmd()->substitute('\ze\d\+resize', ':', 'g')
+    layout.resizecmd = winrestcmd()
     layout.tabpagenr = tabpagenr()
     layout.activewindow = winnr()
     layout.was_onlywindow = winnr('$') == 1

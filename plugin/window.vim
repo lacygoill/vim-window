@@ -500,21 +500,21 @@ def RestoreChangePosition() #{{{2
     exe 'sil! norm! ' .. abs(cnt) .. (cnt > 0 ? 'g,' : 'g;')
 enddef
 
-fu RestoreView() abort "{{{2
-" Restore current view settings.
-    let n = bufnr('%')
+def RestoreView() #{{{2
+# Restore current view settings.
+    var n = bufnr('%')
     if exists('w:saved_views') && has_key(w:saved_views, n)
         if !&l:diff
-            call winrestview(w:saved_views[n])
+            winrestview(w:saved_views[n])
         endif
-        unlet! w:saved_views[n]
+        remove(w:saved_views, n)
     else
-        " `:h last-position-jump`
-        if line("'\"") >= 1 && line("'\"") <= line('$') && &ft !~# 'commit'
+        # `:h last-position-jump`
+        if line("'\"") >= 1 && line("'\"") <= line('$') && &ft !~ 'commit'
             norm! g`"
         endif
     endif
-endfu
+enddef
 # }}}1
 # Mappings {{{1
 # C-[hjkl]             move across windows {{{2
