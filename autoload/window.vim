@@ -13,25 +13,27 @@ def window#disableWrapWhenMovingToVertSplit(dir: string) #{{{2
     setl nowrap
 enddef
 
-fu window#navigate(dir) abort "{{{2
-    " Purpose:{{{
-    "
-    "     $ vim -Nu NONE +'sp|vs|vs|wincmd l'
-    "     :wincmd j
-    "     :wincmd k
-    "
-    "     $ vim -Nu NONE +'vs|sp|sp|wincmd j'
-    "     :wincmd l
-    "     :wincmd h
-    "
-    " In both cases, you don't focus back the middle window; that's jarring.
-    "}}}
-    if s:PreviousWindowIsInSameDirection(a:dir)
-        try | wincmd p | catch | return s:Catch() | endtry
+def window#navigate(dir: string) #{{{2
+    # Purpose:{{{
+    #
+    #     $ vim -Nu NONE +'sp|vs|vs|wincmd l'
+    #     :wincmd j
+    #     :wincmd k
+    #
+    #     $ vim -Nu NONE +'vs|sp|sp|wincmd j'
+    #     :wincmd l
+    #     :wincmd h
+    #
+    # In both cases, you don't focus back the middle window; that's jarring.
+    #}}}
+    if PreviousWindowIsInSameDirection(dir)
+        try | wincmd p
+        catch | Catch() | return | endtry
     else
-        try | exe 'wincmd ' .. a:dir | catch | return s:Catch() | endtry
+        try | exe 'wincmd ' .. dir
+        catch | Catch() | return | endtry
     endif
-endfu
+enddef
 
 def PreviousWindowIsInSameDirection(dir: string): bool
     var cnr = winnr()

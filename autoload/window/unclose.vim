@@ -39,7 +39,7 @@ def window#unclose#restore(cnt: number) #{{{2
 
     # recreate a closed tab page
     if layout.was_onlywindow
-        exe (layout.tabpagenr - 1) .. 'tabnew'
+        exe ':' .. (layout.tabpagenr - 1) .. 'tabnew'
     endif
 
     # make sure we're in the right tab page
@@ -78,8 +78,8 @@ def window#unclose#restore(cnt: number) #{{{2
     # The second tab displays `~/.shrc`; it should display `~/.bashrc`.
     #}}}
     catch /^Vim\%((\a\+)\)\=:E16:/
-        exe (layout.tabpagenr - 1) .. 'tabnew'
-        exe layout.tabpagenr .. 'tabnext'
+        exe ':' .. (layout.tabpagenr - 1) .. 'tabnew'
+        exe ':' .. layout.tabpagenr .. 'tabnext'
     endtry
 
     # start from a single empty window
@@ -96,7 +96,7 @@ def window#unclose#restore(cnt: number) #{{{2
     exe layout.resizecmd
 
     # remove used layout
-    undo_layouts = undo_layouts[:-2]
+    undo_layouts = undo_layouts[: -2]
 
     if bufexists(newbuf)
         exe 'bw! ' .. newbuf
@@ -136,8 +136,8 @@ def ApplyLayout(layout: list<any>) #{{{2
 
         # recreate windows for a row or column of the original layout, and save their ids
         var winids = [win_getid()]
-        for child_layout in layout[1][1:]
-        #                            ├──┘{{{
+        for child_layout in layout[1][1 :]
+        #                            ├───┘{{{
         #                            └ split n-1 times
         #}}}
             exe split_method
