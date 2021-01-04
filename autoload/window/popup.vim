@@ -89,7 +89,7 @@ enddef
 
 def ScrollPopup(lhs: string, winid: number) #{{{2
     # let us see the current line in the popup
-    setwinvar(winid, '&cursorline', 1)
+    setwinvar(winid, '&cursorline', true)
     GetScrollingCmd(lhs)->win_execute(winid)
 enddef
 

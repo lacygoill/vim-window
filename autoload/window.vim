@@ -8,7 +8,7 @@ import GetWinMod from 'lg/window.vim'
 
 # Interface {{{1
 def window#disableWrapWhenMovingToVertSplit(dir: string) #{{{2
-    setwinvar(winnr('#'), '&wrap', 0)
+    setwinvar(winnr('#'), '&wrap', false)
     exe 'wincmd ' .. dir
     setl nowrap
 enddef
