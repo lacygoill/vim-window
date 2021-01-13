@@ -10,7 +10,7 @@ const MAX_UNDO = 30
 
 # Interface {{{1
 def window#unclose#save() #{{{2
-    var layout = {}
+    var layout: dict<any> = {}
 
     layout.windows = winlayout()
     Winid2bufnr(layout.windows)
@@ -147,11 +147,11 @@ def ApplyLayout(layout: list<any>) #{{{2
         # recurse on child windows
         len(winids)
             ->range()
-            ->map((i, v) => [win_gotoid(winids[i]), ApplyLayout(layout[1][i])])
-            #               │                       │
-            #               │                       └ and load the buffer it displayed,
-            #               │                         or split it again if it contained child windows
-            #               └ focus a recreated window
+            ->mapnew((i, v) => [win_gotoid(winids[i]), ApplyLayout(layout[1][i])])
+            #                   │                      │
+            #                   │                      └ and load the buffer it displayed,
+            #                   │                        or split it again if it contained child windows
+            #                   └ focus a recreated window
     endif
 enddef
 

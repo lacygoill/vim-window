@@ -100,7 +100,7 @@ def CustomizePreviewPopup() #{{{2
     # For some reason, the title would not be cleared without the delay.
     # I guess Vim sets it slightly later.
     #}}}
-    exe printf('au WinLeave * ++once call popup_setoptions(%d, %s)', winid, opts)
+    exe printf('au WinLeave * ++once popup_setoptions(%d, %s)', winid, opts)
 enddef
 
 def GetDiffHeight(n = winnr()): number #{{{2
@@ -361,8 +361,8 @@ def SetWindowHeight() #{{{2
     #
     #     && !HeightShouldBeReset(v[0])
     #}}}
-    var special_windows = range(1, winnr('$'))
-        ->map((_, v) => IfSpecialGetNrHeightTopline(v))
+    var special_windows: list<list<number>> = range(1, winnr('$'))
+        ->mapnew((_, v) => IfSpecialGetNrHeightTopline(v))
         ->filter((_, v) => v != []
               && v[0] != curwinnr
               && HeightShouldBeReset(v[0]))
@@ -444,7 +444,11 @@ def SetWindowHeight() #{{{2
     #
     #     10wincmd _
     #}}}
-    map(special_windows, (_, v) => [HasNeighborAboveOrBelow(v[0]), FixSpecialWindow(v)])
+    # TODO(Vim9): When a lambda can contain statements, remove this ugly `&&`.{{{
+    #
+    #     mapnew(special_windows, (_, v) => {if HasNeighborAboveOrBelow(v[0]) | FixSpecialWindow(v) | endif})
+#}}}
+    mapnew(special_windows, (_, v) => HasNeighborAboveOrBelow(v[0]) && FixSpecialWindow(v))
     noa &so = so_save
 enddef
 
@@ -456,7 +460,7 @@ enddef
 var has_above: bool
 var has_below: bool
 
-def FixSpecialWindow(v: list<number>)
+def FixSpecialWindow(v: list<number>): bool
     var winnr: number
     var height: number
     var orig_topline: number
@@ -469,6 +473,7 @@ def FixSpecialWindow(v: list<number>)
     if offset != 0
         win_execute(id, 'noa norm! ' .. abs(offset) .. (offset > 0 ? "\<c-y>" : "\<c-e>"))
     endif
+    return false
 enddef
 
 def SetTerminalHeight() #{{{2
@@ -526,12 +531,12 @@ nno <unique> <c-l> <cmd>call window#navigate('l')<cr>
 
 # M-[hjkl] du gg G     scroll popup (or preview) window {{{2
 
-sil! call s:MapMeta('h', '<cmd>call window#popup#scroll("h")<cr>', 'n', 'u')
-sil! call s:MapMeta('j', '<cmd>call window#popup#scroll("j")<cr>', 'n', 'u')
-sil! call s:MapMeta('k', '<cmd>call window#popup#scroll("k")<cr>', 'n', 'u')
-sil! call s:MapMeta('l', '<cmd>call window#popup#scroll("l")<cr>', 'n', 'u')
+sil! MapMeta('h', '<cmd>call window#popup#scroll("h")<cr>', 'n', 'u')
+sil! MapMeta('j', '<cmd>call window#popup#scroll("j")<cr>', 'n', 'u')
+sil! MapMeta('k', '<cmd>call window#popup#scroll("k")<cr>', 'n', 'u')
+sil! MapMeta('l', '<cmd>call window#popup#scroll("l")<cr>', 'n', 'u')
 
-sil! call s:MapMeta('d', '<cmd>call window#popup#scroll("c-d")<cr>', 'n', 'u')
+sil! MapMeta('d', '<cmd>call window#popup#scroll("c-d")<cr>', 'n', 'u')
 # Why don't you install a mapping for `M-u`?{{{
 #
 # It would conflict with the `M-u` mapping from `vim-readline`.
@@ -543,8 +548,8 @@ sil! call s:MapMeta('d', '<cmd>call window#popup#scroll("c-d")<cr>', 'n', 'u')
 #    - otherwise, it upcases the text up to the end of the next/current word
 #}}}
 
-sil! call s:MapMeta('g', '<cmd>call window#popup#scroll("gg")<cr>', 'n', 'u')
-sil! call s:MapMeta('G', '<cmd>call window#popup#scroll("G")<cr>', 'n', 'u')
+sil! MapMeta('g', '<cmd>call window#popup#scroll("gg")<cr>', 'n', 'u')
+sil! MapMeta('G', '<cmd>call window#popup#scroll("G")<cr>', 'n', 'u')
 
 # SPC (prefix) {{{2
 

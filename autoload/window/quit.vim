@@ -34,7 +34,7 @@ def window#quit#main() #{{{1
     if tabpagenr('$') == 1
         && (winnr_max == 1
             || winnr_max == 2
-            && (getwininfo()->map((_, v) => v.loclist)->index(1) >= 0
+            && (getwininfo()->mapnew((_, v) => v.loclist)->index(1) >= 0
                 || (winnr() == 1 ? 2 : 1)->getwinvar('&diff')))
         qall!
 
@@ -79,7 +79,7 @@ def window#quit#main() #{{{1
             if tabpagenr('$') == 1
                 var wininfo = getwininfo()
                 filter(wininfo, (_, v) => v.winid != win_getid())
-                map(wininfo, (_, v) => getbufvar(v.bufnr, '&ft'))
+                mapnew(wininfo, (_, v) => getbufvar(v.bufnr, '&ft'))
                     ->filter((_, v) => v != 'help')
                 if empty(wininfo)
                     # Why `:close` instead of `:quit`?{{{

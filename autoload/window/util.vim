@@ -32,7 +32,7 @@ def window#util#hasPreview(): bool #{{{1
     # popup; all is good.
     #}}}
     return range(1, winnr('$'))
-        ->map((_, v) => getwinvar(v, '&pvw'))
+        ->mapnew((_, v) => getwinvar(v, '&pvw'))
         ->index(1) >= 0
 enddef
 
