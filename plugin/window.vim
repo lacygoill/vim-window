@@ -16,14 +16,14 @@ import MapMeta from 'lg/map.vim'
 import QfOpenOrFocus from 'lg/window.vim'
 
 # Default height
-const D_HEIGHT = 10
+const D_HEIGHT: number = 10
 # Terminal window
-const T_HEIGHT = 10
+const T_HEIGHT: number = 10
 # Quickfix window
-const Q_HEIGHT = 10
+const Q_HEIGHT: number = 10
 # file “Running” current line (tmuxprompt, websearch)
-const R_HEIGHT = 5
-const R_FT = ['tmuxprompt', 'websearch']
+const R_HEIGHT: number = 5
+const R_FT: list<string> = ['tmuxprompt', 'websearch']
 
 # Autocmds {{{1
 
@@ -84,11 +84,13 @@ augroup END
 
 # Functions {{{1
 def CustomizePreviewPopup() #{{{2
-    var winid = win_getid()
-    if win_gettype(winid) != 'popup' | return | endif
+    var winid: number = win_getid()
+    if win_gettype(winid) != 'popup'
+        return
+    endif
     setwinvar(winid, '&wincolor', 'Normal')
     # less noise
-    var opts = {
+    var opts: dict<any> = {
         borderchars: ['─', '│', '─', '│', '┌', '┐', '┘', '└'],
         close: 'none',
         resize: false,
@@ -116,12 +118,12 @@ def GetDiffHeight(n = winnr()): number #{{{2
     # heights would constantly change ([15, 14] ↔ [14, 15]), which is jarring.
     #}}}
 
-    #                          ┌ the two statuslines of the two diff'ed windows{{{
-    #                          │
-    #                          │    ┌ if there're several tabpages, there's a tabline;
-    #                          │    │ we must take its height into account
-    #                          │    │}}}
-    var lines = &lines - &ch - 2 - (tabpagenr('$') > 1 ? 1 : 0)
+    #                                  ┌ the two statuslines of the two diff'ed windows{{{
+    #                                  │
+    #                                  │    ┌ if there're several tabpages, there's a tabline;
+    #                                  │    │ we must take its height into account
+    #                                  │    │}}}
+    var lines: number = &lines - &ch - 2 - (tabpagenr('$') > 1 ? 1 : 0)
     return fmod(lines, 2) == 0 || n != 1
         ?     lines / 2
         :     lines / 2 + 1
@@ -191,7 +193,7 @@ def IfSpecialGetNrHeightTopline(v: number): list<number> #{{{2
 #   │
 #   └ if it's a special window, get me its number, its desired height, and its current topline
 
-    var info = getwinvar(v, '&pvw', 0)
+    var info: list<any> = getwinvar(v, '&pvw', false)
         ?     [v, &pvh]
         : index(R_FT, winbufnr(v)->getbufvar('&ft', '')) >= 0
         ?     [v, R_HEIGHT]
@@ -323,9 +325,12 @@ def SetWindowHeight() #{{{2
         return
     endif
 
-    if getcmdwintype() != '' | exe 'noa res ' .. &cwh | return | endif
+    if getcmdwintype() != ''
+        exe 'noa res ' .. &cwh
+        return
+    endif
 
-    var curwinnr = winnr()
+    var curwinnr: number = winnr()
     if IsSpecial() && IsWide() && !IsAloneInTabpage()
         if winnr('j') != curwinnr || winnr('k') != curwinnr
             MakeWindowSmall()
@@ -434,7 +439,7 @@ def SetWindowHeight() #{{{2
     # It's not an issue at the moment, because we only set the global value, but
     # keep that in mind.
     #}}}
-    var so_save = &so | noa set so=0
+    var so_save: number = &so | noa set so=0
     # Why the `HasNeighborAboveOrBelow()` guard?{{{
     #
     # If there's no  window above nor below  the current window, and  we set its
@@ -468,8 +473,8 @@ def FixSpecialWindow(v: list<number>): bool
     # restore the height
     exe 'noa :' .. winnr .. 'res ' .. height
     # restore the original topline
-    var id = win_getid(winnr)
-    var offset = getwininfo(id)[0].topline - orig_topline
+    var id: number = win_getid(winnr)
+    var offset: number = getwininfo(id)[0].topline - orig_topline
     if offset != 0
         win_execute(id, 'noa norm! ' .. abs(offset) .. (offset > 0 ? "\<c-y>" : "\<c-e>"))
     endif
@@ -483,7 +488,7 @@ def SetTerminalHeight() #{{{2
 enddef
 
 def RestoreChangePosition() #{{{2
-    var changelist = getchangelist('%')
+    var changelist: list<any> = getchangelist('%')
     if empty(changelist)
         return
     endif
@@ -507,7 +512,7 @@ enddef
 
 def RestoreView() #{{{2
 # Restore current view settings.
-    var n = bufnr('%')
+    var n: number = bufnr('%')
     if exists('w:saved_views') && has_key(w:saved_views, n)
         if !&l:diff
             winrestview(w:saved_views[n])

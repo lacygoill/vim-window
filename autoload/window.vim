@@ -27,32 +27,40 @@ def window#navigate(dir: string) #{{{2
     # In both cases, you don't focus back the middle window; that's jarring.
     #}}}
     if PreviousWindowIsInSameDirection(dir)
-        try | wincmd p
-        catch | Catch() | return | endtry
+        try
+            wincmd p
+        catch
+            Catch()
+            return
+        endtry
     else
-        try | exe 'wincmd ' .. dir
-        catch | Catch() | return | endtry
+        try
+            exe 'wincmd ' .. dir
+        catch
+            Catch()
+            return
+        endtry
     endif
 enddef
 
 def PreviousWindowIsInSameDirection(dir: string): bool
-    var cnr = winnr()
-    var pnr = winnr('#')
+    var cnr: number = winnr()
+    var pnr: number = winnr('#')
     if dir == 'h'
-        var leftedge_current_window = win_screenpos(cnr)[1]
-        var rightedge_previous_window = win_screenpos(pnr)[1] + winwidth(pnr) - 1
+        var leftedge_current_window: number = win_screenpos(cnr)[1]
+        var rightedge_previous_window: number = win_screenpos(pnr)[1] + winwidth(pnr) - 1
         return leftedge_current_window - 1 == rightedge_previous_window + 1
     elseif dir == 'l'
-        var rightedge_current_window = win_screenpos(cnr)[1] + winwidth(cnr) - 1
-        var leftedge_previous_window = win_screenpos(pnr)[1]
+        var rightedge_current_window: number = win_screenpos(cnr)[1] + winwidth(cnr) - 1
+        var leftedge_previous_window: number = win_screenpos(pnr)[1]
         return rightedge_current_window + 1 == leftedge_previous_window - 1
     elseif dir == 'j'
-        var bottomedge_current_window = win_screenpos(cnr)[0] + winheight(cnr) - 1
-        var topedge_previous_window = win_screenpos(pnr)[0]
+        var bottomedge_current_window: number = win_screenpos(cnr)[0] + winheight(cnr) - 1
+        var topedge_previous_window: number = win_screenpos(pnr)[0]
         return bottomedge_current_window + 1 == topedge_previous_window - 1
     elseif dir == 'k'
-        var topedge_current_window = win_screenpos(cnr)[0]
-        var bottomedge_previous_window = win_screenpos(pnr)[0] + winheight(pnr) - 1
+        var topedge_current_window: number = win_screenpos(cnr)[0]
+        var bottomedge_previous_window: number = win_screenpos(pnr)[0] + winheight(pnr) - 1
         return topedge_current_window - 1 == bottomedge_previous_window + 1
     endif
     return false
@@ -78,7 +86,7 @@ def window#previewOpen() #{{{2
 enddef
 
 def window#resize(key: string) #{{{2
-    var curwin = winnr()
+    var curwin: number = winnr()
     var keys: string
     if key =~ '[hl]'
         # Why returning different keys depending on the position of the window?{{{
@@ -124,27 +132,29 @@ def window#resize(key: string) #{{{2
 enddef
 
 def window#terminalClose() #{{{2
-    var term_buffer = GetTerminalBuffer()
-    if term_buffer == 0 | return | endif
-    var curwin = win_getid()
+    var term_buffer: number = GetTerminalBuffer()
+    if term_buffer == 0
+        return
+    endif
+    var curwin: number = win_getid()
     noa bufwinid(term_buffer)->win_gotoid()
     noa window#quit#main()
     noa win_gotoid(curwin)
 enddef
 
 def window#terminalOpen() #{{{2
-    var term_buffer = GetTerminalBuffer()
+    var term_buffer: number = GetTerminalBuffer()
     if term_buffer != 0
-        var id = bufwinid(term_buffer)
+        var id: number = bufwinid(term_buffer)
         win_gotoid(id)
         return
     endif
 
-    var mod = GetWinMod()
+    var mod: string = GetWinMod()
 
-    var how_to_open = mod .. ' terminal'
+    var how_to_open: string = mod .. ' terminal'
 
-    var resize = mod =~ '^vert'
+    var resize: string = mod =~ '^vert'
         ?     ' | vert resize 30 | resize 30'
         :     ''
 
@@ -152,13 +162,15 @@ def window#terminalOpen() #{{{2
 enddef
 
 def window#zoomToggle() #{{{2
-    if winnr('$') == 1 | return | endif
+    if winnr('$') == 1
+        return
+    endif
 
     if exists('t:zoom_restore') && win_getid() == t:zoom_restore.winid
         exe get(t:zoom_restore, 'cmd', '')
         unlet! t:zoom_restore
     else
-        var cmd = winrestcmd()
+        var cmd: string = winrestcmd()
         t:zoom_restore = {cmd: cmd, winid: win_getid()}
         wincmd |
         wincmd _
@@ -167,7 +179,7 @@ enddef
 #}}}1
 # Utilities {{{1
 def GetTerminalBuffer(): number #{{{2
-    var buflist = tabpagenr()->tabpagebuflist()
+    var buflist: list<number> = tabpagenr()->tabpagebuflist()
     filter(buflist, (_, v) => getbufvar(v, '&bt', '') == 'terminal')
     return get(buflist, 0, 0)
 enddef

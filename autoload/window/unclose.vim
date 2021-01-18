@@ -6,7 +6,7 @@ var loaded = true
 # Init {{{1
 
 # maximum numbers of windows which can be unclosed
-const MAX_UNDO = 30
+const MAX_UNDO: number = 30
 
 # Interface {{{1
 def window#unclose#save() #{{{2
@@ -35,7 +35,7 @@ def window#unclose#restore(cnt: number) #{{{2
         return
     endif
 
-    var layout = undo_layouts[-1]
+    var layout: dict<any> = undo_layouts[-1]
 
     # recreate a closed tab page
     if layout.was_onlywindow
@@ -84,7 +84,7 @@ def window#unclose#restore(cnt: number) #{{{2
 
     # start from a single empty window
     new | only
-    var newbuf = bufnr('%')
+    var newbuf: number = bufnr('%')
 
     # restore windows (with correct buffers in them)
     ApplyLayout(layout.windows)
@@ -122,12 +122,12 @@ enddef
 
 def ApplyLayout(layout: list<any>) #{{{2
     if layout[0] == 'leaf'
-        var bufnr = layout[1]
+        var bufnr: dict<any> = layout[1]
         if bufexists(bufnr)
             exe 'b ' .. bufnr
         endif
     else
-        var split_method = {col: 'sp', row: 'vs'}[layout[0]]
+        var split_method: string = {col: 'sp', row: 'vs'}[layout[0]]
         if split_method == 'sp' && &spr || split_method == 'vs' && &sb
             split_method = 'rightb ' .. split_method
         elseif split_method == 'sp' && !&spr || split_method == 'vs' && !&sb
@@ -135,7 +135,7 @@ def ApplyLayout(layout: list<any>) #{{{2
         endif
 
         # recreate windows for a row or column of the original layout, and save their ids
-        var winids = [win_getid()]
+        var winids: list<number> = [win_getid()]
         for child_layout in layout[1][1 :]
         #                            ├───┘{{{
         #                            └ split n-1 times

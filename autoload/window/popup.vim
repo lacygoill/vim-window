@@ -5,7 +5,7 @@ var loaded = true
 
 # Init {{{1
 
-const AOF_KEY2NORM = {
+const AOF_KEY2NORM: dict<string> = {
     j: 'j',
     k: 'k',
     h: '5zh',
@@ -31,7 +31,7 @@ def window#popup#closeAll() #{{{2
     # OTOH, we can get the topline, which for the moment is good enough.
     #}}}
     if window#util#isPopup()
-        var wininfo = winnr('#')->win_getid()->getwininfo()
+        var wininfo: dict<any> = winnr('#')->win_getid()->getwininfo()
         if !empty(wininfo)
             topline = wininfo[0].topline
         endif
@@ -43,7 +43,7 @@ def window#popup#closeAll() #{{{2
     popup_clear(true)
 
     if topline != 0
-        var so_save = &l:so
+        var so_save: number = &l:so
         setl so=0
         exe 'norm! ' .. topline .. 'GztM'
         #                              ^
@@ -58,7 +58,7 @@ def window#popup#scroll(lhs: string) #{{{2
     if window#util#hasPreview()
         ScrollPreview(lhs)
     else
-        var popup = window#util#latestPopup()
+        var popup: number = window#util#latestPopup()
         if popup != 0
             ScrollPopup(lhs, popup)
         endif
@@ -67,7 +67,7 @@ enddef
 #}}}1
 # Core {{{1
 def ScrollPreview(lhs: string) #{{{2
-    var curwin = win_getid()
+    var curwin: number = win_getid()
     # go to preview window
     noa wincmd P
 
@@ -78,7 +78,9 @@ def ScrollPreview(lhs: string) #{{{2
     #
     # We can't use `C-e`/`C-y`; it wouldn't work as expected because of `zMzv`.
     #}}}
-    if !&l:cul | setl cul | endif
+    if !&l:cul
+        setl cul
+    endif
 
     # move/scroll
     exe GetScrollingCmd(lhs)

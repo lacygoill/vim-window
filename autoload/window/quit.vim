@@ -12,7 +12,10 @@ def window#quit#main() #{{{1
     #   ┌ return ':' in a command-line window,
     #   │ nothing in a regular buffer
     #   │
-    if !getcmdwintype()->empty() | q | return | endif
+    if !getcmdwintype()->empty()
+        q
+        return
+    endif
 
     # a sign may be left in the sign column if you close an undotree diff panel with `:q` or `:close`
     if bufname('%') =~ '^diffpanel_\d\+$'
@@ -21,9 +24,12 @@ def window#quit#main() #{{{1
     endif
 
     # If we're recording a macro, don't close the window; stop the recording.
-    if reg_recording() != '' | feedkeys('q', 'in') | return | endif
+    if reg_recording() != ''
+        feedkeys('q', 'in')
+        return
+    endif
 
-    var winnr_max = winnr('$')
+    var winnr_max: number = winnr('$')
 
     # Quit everything if:{{{
     #
@@ -50,7 +56,7 @@ def window#quit#main() #{{{1
         endif
 
     else
-        var was_loclist = get(b:, 'qf_is_loclist', 0)
+        var was_loclist: bool = get(b:, 'qf_is_loclist', false)
         # if the window we're closing is associated to a ll window, close the latter too
         # We could also install an autocmd in our vimrc:{{{
         #
@@ -69,15 +75,19 @@ def window#quit#main() #{{{1
 
         # if we were already in a loclist window, then `:lclose` has closed it,
         # and there's nothing left to close
-        if was_loclist | return | endif
+        if was_loclist
+            return
+        endif
 
         # same thing for preview window, but only in a help buffer outside of
         # preview winwow
-        if &bt == 'help' && !&previewwindow | pclose | endif
+        if &bt == 'help' && !&previewwindow
+            pclose
+        endif
 
         try
             if tabpagenr('$') == 1
-                var wininfo = getwininfo()
+                var wininfo: list<dict<any>> = getwininfo()
                 filter(wininfo, (_, v) => v.winid != win_getid())
                 mapnew(wininfo, (_, v) => getbufvar(v.bufnr, '&ft'))
                     ->filter((_, v) => v != 'help')
