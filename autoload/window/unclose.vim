@@ -122,7 +122,7 @@ enddef
 
 def ApplyLayout(layout: list<any>) #{{{2
     if layout[0] == 'leaf'
-        var bufnr: dict<any> = layout[1]
+        var bufnr: number = layout[1]
         if bufexists(bufnr)
             exe 'b ' .. bufnr
         endif

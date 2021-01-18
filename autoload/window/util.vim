@@ -3,7 +3,7 @@ vim9 noclear
 if exists('loaded') | finish | endif
 var loaded = true
 
-def window#util#isPopup(n = win_getid()): bool #{{{1
+def window#util#isPopup(n: number = win_getid()): bool #{{{1
     return win_gettype(n) == 'popup'
 enddef
 

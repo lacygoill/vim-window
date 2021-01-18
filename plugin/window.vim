@@ -105,7 +105,7 @@ def CustomizePreviewPopup() #{{{2
     exe printf('au WinLeave * ++once popup_setoptions(%d, %s)', winid, opts)
 enddef
 
-def GetDiffHeight(n = winnr()): number #{{{2
+def GetDiffHeight(n: number = winnr()): number #{{{2
     # Purpose:{{{
     # Return the height of a horizontal window whose 'diff' option is enabled.
     #
