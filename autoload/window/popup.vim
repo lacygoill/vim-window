@@ -31,7 +31,7 @@ def window#popup#closeAll() #{{{2
     # OTOH, we can get the topline, which for the moment is good enough.
     #}}}
     if window#util#isPopup()
-        var wininfo: dict<any> = winnr('#')->win_getid()->getwininfo()
+        var wininfo: list<dict<any>> = winnr('#')->win_getid()->getwininfo()
         if !empty(wininfo)
             topline = wininfo[0].topline
         endif
