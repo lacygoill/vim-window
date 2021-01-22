@@ -513,6 +513,15 @@ enddef
 def RestoreView() #{{{2
 # Restore current view settings.
     var n: number = bufnr('%')
+    # Bail out if the buffer is already displayed in another window.{{{
+    #
+    # Otherwise, if it was displayed in an  old window, you might think that the
+    # cursor jumps in  an unexpected position, which is  jarring.  That happened
+    # when we pressed `C-^` to hide and re-display a file.
+    #}}}
+    if win_findbuf(n)->len() >= 2
+        return
+    endif
     if exists('w:saved_views') && has_key(w:saved_views, n)
         if !&l:diff
             winrestview(w:saved_views[n])
