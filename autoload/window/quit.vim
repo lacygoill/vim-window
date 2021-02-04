@@ -40,7 +40,7 @@ def window#quit#main() #{{{1
     if tabpagenr('$') == 1
         && (winnr_max == 1
             || winnr_max == 2
-            && (getwininfo()->mapnew((_, v) => v.loclist)->index(1) >= 0
+            && (getwininfo()->mapnew((_, v) => v.loclist)->index(true) >= 0
                 || (winnr() == 1 ? 2 : 1)->getwinvar('&diff')))
         qall!
 

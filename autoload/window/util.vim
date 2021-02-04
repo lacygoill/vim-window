@@ -33,6 +33,6 @@ def window#util#hasPreview(): bool #{{{1
     #}}}
     return range(1, winnr('$'))
         ->mapnew((_, v) => getwinvar(v, '&pvw'))
-        ->index(1) >= 0
+        ->index(true) >= 0
 enddef
 

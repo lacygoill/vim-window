@@ -193,7 +193,7 @@ def IfSpecialGetNrHeightTopline(v: number): list<number> #{{{2
 #   │
 #   └ if it's a special window, get me its number, its desired height, and its current topline
 
-    var info: list<any> = getwinvar(v, '&pvw', false)
+    var info: list<number> = getwinvar(v, '&pvw', false)
         ?     [v, &pvh]
         : index(R_FT, winbufnr(v)->getbufvar('&ft', '')) >= 0
         ?     [v, R_HEIGHT]
@@ -373,7 +373,24 @@ def SetWindowHeight() #{{{2
               && HeightShouldBeReset(v[0]))
 
     # if we enter a regular window, maximize it
-    noa wincmd _
+    # If 'wmh' is 0, we need to maximize in two steps:{{{
+    #
+    # This is  to avoid possible  popup windows  attached to text  properties to
+    # wrongly remain visible: https://github.com/vim/vim/issues/7736
+    #}}}
+    if &wmh == 0
+        try
+            set wmh=1
+            noa wincmd _
+        # E593: Need at least 12 lines: wmh=1
+        catch /^Vim\%((\a\+)\)\=:E593:/
+        finally
+            set wmh=0
+        endtry
+        noa wincmd _
+    else
+        noa wincmd _
+    endif
 
     # Why does `'so'` need to be temporarily reset?{{{
     #

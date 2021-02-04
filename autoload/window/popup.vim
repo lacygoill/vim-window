@@ -104,7 +104,7 @@ def GetScrollingCmd(lhs: string): string #{{{2
     # `zMzv` may cause the distance between the current line and the first line of the window to change unexpectedly.{{{
     #
     # If that bothers you, you could improve the function.
-    # See how we handled the issue in `s:move_and_open_fold()` from:
+    # See how we handled the issue in `MoveAndOpenFold()` from:
     #
     #     ~/.vim/plugged/vim-toggle-settings/autoload/toggle_settings.vim
     #}}}
