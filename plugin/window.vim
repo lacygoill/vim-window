@@ -61,7 +61,7 @@ augroup WindowHeight | au!
     #}}}
     au BufWinEnter,WinEnter,VimResized * SetWindowHeight()
 
-    au TerminalWinOpen * SetTerminalHeight()
+    # au TerminalWinOpen * SetTerminalHeight()
 
     # necessary since 8.2.0911
     au CmdWinEnter * exe 'res ' .. &cwh
@@ -123,7 +123,7 @@ def GetDiffHeight(n: number = winnr()): number #{{{2
     #                                  │    ┌ if there're several tabpages, there's a tabline;
     #                                  │    │ we must take its height into account
     #                                  │    │}}}
-    var lines: number = &lines - &ch - 2 - (tabpagenr('$') > 1 ? 1 : 0)
+    var lines: number = &lines - &ch - 2 - ((&stal == 2 || &stal == 1 && tabpagenr('$') >= 2) ? 1 : 0)
     return fmod(lines, 2) == 0 || n != 1
         ?     lines / 2
         :     lines / 2 + 1
@@ -227,8 +227,8 @@ def IsMaximizedVertically(): bool #{{{2
     # Every time you open a  window above/below, the difference between `&lines`
     # and `winheight(0)` increases by 2:
     # 1 for the new stl + 1 for the visible line in the other window
-    return (&lines - winheight(0)) <= (&ch + 1 + (tabpagenr('$') > 1 ? 1 : 0))
-    #                                  ├─┘   │   ├─────────────────────────┘
+    return (&lines - winheight(0)) <= (&ch + 1 + (&stal == 2 || &stal == 1 && tabpagenr('$') >= 2) ? 1 : 0)
+    #                                  ├─┘   │   ├───────────────────────────────────────────────────────┘
     #                                  │     │   └ tabline
     #                                  │     │
     #                                  │     └ status line
