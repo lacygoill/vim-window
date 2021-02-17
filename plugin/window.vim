@@ -215,7 +215,7 @@ enddef
 def IsSpecial(): bool #{{{2
     return &l:pvw
         || &l:diff
-        || &ft == 'gitcommit' || index(R_FT, &ft) >= 0
+        || index(R_FT + ['gitcommit', 'fugitive'], &ft) >= 0
         || &bt =~ '^\%(quickfix\|terminal\)$'
 enddef
 
