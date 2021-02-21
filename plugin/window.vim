@@ -61,7 +61,7 @@ augroup WindowHeight | au!
     #}}}
     au BufWinEnter,WinEnter,VimResized * SetWindowHeight()
 
-    # au TerminalWinOpen * SetTerminalHeight()
+    au TerminalWinOpen * SetTerminalHeight()
 
     # necessary since 8.2.0911
     au CmdWinEnter * exe 'res ' .. &cwh
@@ -184,7 +184,7 @@ def HeightShouldBeReset(n: number): bool #{{{2
     # The same issue happens with a vim-plug window.
     #}}}
     return winwidth(n) >= &columns / 2
-      ||  (getwinvar(n, '&pvw', 0) && winwidth(0) <= &columns / 2)
+      ||  (getwinvar(n, '&pvw') && winwidth(0) <= &columns / 2)
 enddef
 
 def IfSpecialGetNrHeightTopline(v: number): list<number> #{{{2
@@ -193,7 +193,7 @@ def IfSpecialGetNrHeightTopline(v: number): list<number> #{{{2
 #   │
 #   └ if it's a special window, get me its number, its desired height, and its current topline
 
-    var info: list<number> = getwinvar(v, '&pvw', false)
+    var info: list<number> = getwinvar(v, '&pvw')
         ?     [v, &pvh]
         : index(R_FT, winbufnr(v)->getbufvar('&ft', '')) >= 0
         ?     [v, R_HEIGHT]
@@ -227,10 +227,9 @@ def IsMaximizedVertically(): bool #{{{2
     # Every time you open a  window above/below, the difference between `&lines`
     # and `winheight(0)` increases by 2:
     # 1 for the new stl + 1 for the visible line in the other window
-    return (&lines - winheight(0)) <= (&ch + 1 + (&stal == 2 || &stal == 1 && tabpagenr('$') >= 2) ? 1 : 0)
-    #                                  ├─┘   │   ├───────────────────────────────────────────────────────┘
-    #                                  │     │   └ tabline
-    #                                  │     │
+    var tabline: number = (&stal == 2 || &stal == 1 && tabpagenr('$') >= 2 ? 1 : 0)
+    return (&lines - winheight(0)) <= (&ch + 1 + tabline)
+    #                                  ├─┘   │
     #                                  │     └ status line
     #                                  │
     #                                  └ command-line
@@ -367,30 +366,68 @@ def SetWindowHeight() #{{{2
     #     && !HeightShouldBeReset(v[0])
     #}}}
     var special_windows: list<list<number>> = range(1, winnr('$'))
-        ->mapnew((_, v) => IfSpecialGetNrHeightTopline(v))
-        ->filter((_, v) => v != []
+        ->mapnew((_, v: number): list<number> => IfSpecialGetNrHeightTopline(v))
+        ->filter((_, v: list<number>): bool => v != []
               && v[0] != curwinnr
               && HeightShouldBeReset(v[0]))
 
     # if we enter a regular window, maximize it
-    # If 'wmh' is 0, we need to maximize in two steps:{{{
-    #
-    # This is  to avoid possible  popup windows  attached to text  properties to
+    noa wincmd _
+    # This is to  avoid a bug where  a popup window attached to  a text property
     # wrongly remain visible: https://github.com/vim/vim/issues/7736
+    res -1
+    res +1
+    # Alternative:{{{
+    #
+    #     var curheight: number
+    #     for i in range(&lines)
+    #         curheight = winheight(0)
+    #         res +1
+    #         if winheight(0) == curheight
+    #            break
+    #         endif
+    #     endfor
     #}}}
-    if &wmh == 0
-        try
-            set wmh=1
-            noa wincmd _
-        # E593: Need at least 12 lines: wmh=1
-        catch /^Vim\%((\a\+)\)\=:E593:/
-        finally
-            set wmh=0
-        endtry
-        noa wincmd _
-    else
-        noa wincmd _
-    endif
+    # In any case, do *not* reset `'wmh'`!{{{
+    #
+    # It could trigger an unexpected issue when Vim is run inside tmux.
+    #
+    #     $ vim -Nu NONE +'set lines=12 | q'
+    #     $ tmux -Lx -f/dev/null
+    #     $ vim -Nu NONE -S <(cat <<'EOF'
+    #         vim9script
+    #         set wmh=0 stal=2
+    #         bel sp | wincmd _
+    #         bel sp | wincmd _
+    #         bel sp | wincmd _
+    #         bel sp
+    #     EOF
+    #     )
+    #
+    #     :set wmh=1
+    #
+    # Notice that the command-line is not  drawn below the statusline.  And when
+    # you  start  typing  an Ex  command,  the  text  is  drawn on  top  of  the
+    # statusline.  That's because  – when executing `set wmh=1` –  Vim has asked
+    # the  terminal to  increase its  height by  1 line,  but it  fails in  tmux
+    # without Vim being aware of it:
+    #
+    #     :echo &lines
+    #     11~
+    #     # this is correct; the terminal has indeed 11 lines
+    #     :set wmh=1
+    #     :echo &lines
+    #     12~
+    #     # this is NOT correct; the terminal has still 11 lines
+    #
+    # Note that in tmux,  we can not make the terminal  resize its height simply
+    # by setting `'lines'`:
+    #
+    #     # works outside tmux, but not inside
+    #     :set lines=12
+    #
+    # Maybe that's the same issue.
+    #}}}
 
     # Why does `'so'` need to be temporarily reset?{{{
     #
@@ -466,11 +503,12 @@ def SetWindowHeight() #{{{2
     #
     #     10wincmd _
     #}}}
-    # TODO(Vim9): When a lambda can contain statements, remove this ugly `&&`.{{{
+    # TODO(Vim9): When a lambda can contain statements, remove these ugly `&&` and `!!`.{{{
     #
-    #     mapnew(special_windows, (_, v) => {if HasNeighborAboveOrBelow(v[0]) | FixSpecialWindow(v) | endif})
+    #     ->mapnew((_, v: list<number>) => { if HasNeighborAboveOrBelow(v[0]) | FixSpecialWindow(v) | endif })
 #}}}
-    mapnew(special_windows, (_, v) => HasNeighborAboveOrBelow(v[0]) && FixSpecialWindow(v))
+    special_windows
+        ->mapnew((_, v: list<number>) => HasNeighborAboveOrBelow(v[0]) && !!FixSpecialWindow(v))
     noa &so = so_save
 enddef
 
@@ -482,7 +520,7 @@ enddef
 var has_above: bool
 var has_below: bool
 
-def FixSpecialWindow(v: list<number>): bool
+def FixSpecialWindow(v: list<number>)
     var winnr: number
     var height: number
     var orig_topline: number
@@ -495,7 +533,6 @@ def FixSpecialWindow(v: list<number>): bool
     if offset != 0
         win_execute(id, 'noa norm! ' .. abs(offset) .. (offset > 0 ? "\<c-y>" : "\<c-e>"))
     endif
-    return false
 enddef
 
 def SetTerminalHeight() #{{{2

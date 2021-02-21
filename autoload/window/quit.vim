@@ -40,7 +40,9 @@ def window#quit#main() #{{{1
     if tabpagenr('$') == 1
         && (winnr_max == 1
             || winnr_max == 2
-            && (getwininfo()->mapnew((_, v) => v.loclist)->index(true) >= 0
+            && (getwininfo()
+                    ->mapnew((_, v: dict<any>): number => v.loclist)
+                    ->index(1) >= 0
                 || (winnr() == 1 ? 2 : 1)->getwinvar('&diff')))
         qall!
 
@@ -88,9 +90,9 @@ def window#quit#main() #{{{1
         try
             if tabpagenr('$') == 1
                 var wininfo: list<dict<any>> = getwininfo()
-                filter(wininfo, (_, v) => v.winid != win_getid())
-                mapnew(wininfo, (_, v) => getbufvar(v.bufnr, '&ft'))
-                    ->filter((_, v) => v != 'help')
+                    ->filter((_, v: dict<any>): bool => v.winid != win_getid())
+                    ->mapnew((_, v: dict<any>): string => getbufvar(v.bufnr, '&ft'))
+                    ->filter((_, v: string): bool => v != 'help')
                 if empty(wininfo)
                     # Why `:close` instead of `:quit`?{{{
                     #
