@@ -89,11 +89,11 @@ def window#quit#main() #{{{1
 
         try
             if tabpagenr('$') == 1
-                var wininfo: list<dict<any>> = getwininfo()
+                if getwininfo()
                     ->filter((_, v: dict<any>): bool => v.winid != win_getid())
                     ->mapnew((_, v: dict<any>): string => getbufvar(v.bufnr, '&ft'))
                     ->filter((_, v: string): bool => v != 'help')
-                if empty(wininfo)
+                    ->empty()
                     # Why `:close` instead of `:quit`?{{{
                     #
                     #     $ vim
