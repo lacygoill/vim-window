@@ -14,7 +14,7 @@ enddef
 def window#util#hasPreview(): bool #{{{1
     # Why is this a public function?{{{
     #
-    # To be able to invoke it from the readline plugin (`readline#m_u#main()`).
+    # To be able to invoke it from the readline plugin (`readline#mU#main()`).
     #}}}
     # What if we have a preview *popup*?{{{
     #
