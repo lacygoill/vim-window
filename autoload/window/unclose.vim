@@ -10,7 +10,7 @@ const MAX_UNDO: number = 30
 
 # Interface {{{1
 def window#unclose#save() #{{{2
-    var layout: dict<any> = {}
+    var layout: dict<any>
 
     layout.windows = winlayout()
     Winid2bufnr(layout.windows)

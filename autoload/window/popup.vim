@@ -33,7 +33,7 @@ def window#popup#closeAll() #{{{2
     if window#util#isPopup()
         var wininfo: list<dict<any>> = winnr('#')->win_getid()->getwininfo()
         if !empty(wininfo)
-            topline = wininfo[0].topline
+            topline = wininfo[0]['topline']
         endif
     else
         view = winsaveview()
@@ -83,7 +83,7 @@ def ScrollPreview(lhs: string) #{{{2
     endif
 
     # move/scroll
-    exe GetScrollingCmd(lhs)
+    exe GetScrollingCmd(lhs, curwin)
 
     # get back to previous window
     noa win_gotoid(curwin)
@@ -92,15 +92,31 @@ enddef
 def ScrollPopup(lhs: string, winid: number) #{{{2
     # let us see the current line in the popup
     setwinvar(winid, '&cursorline', true)
-    GetScrollingCmd(lhs)->win_execute(winid)
+    GetScrollingCmd(lhs, winid)->win_execute(winid)
 enddef
 
-def GetScrollingCmd(lhs: string): string #{{{2
-    return 'sil! norm! zR'
+def GetScrollingCmd(lhs: string, winid: number): string #{{{2
+    # FIXME: `zRj` sometimes fails to move the cursor.{{{
+    #
+    # It only happens when the height of the popup is not limited.
+    #
+    # MWE:
+    #
+    #     let winid = ['some text']->repeat(&lines * 2)->popup_create({})
+    #     call setwinvar(winid, '&cursorline', v:true)
+    #     call setwinvar(winid, '&number', v:true)
+    #     call win_execute(winid, 'norm! ' .. &lines .. 'G')
+    #     call win_execute(winid, 'norm! zRj')
+    #
+    # That's why here, we need to return `zR` only if really necessary.
+    # Otherwise, we can't scroll beyond the first screen of a long popup window.
+    #}}}
+    win_execute(winid, 'next_line_is_folded = foldclosed(line(".") + 1) != -1')
+    return 'sil! norm! ' .. (next_line_is_folded ? 'zR' : '')
         # make `M-j` and `M-k` scroll through *screen* lines, not buffer lines
         .. (index(['j', 'k'], lhs) >= 0 ? 'g' : '')
         .. AOF_KEY2NORM[lhs]
-        .. 'zMzv'
+        .. (next_line_is_folded ? 'zMzv' : '')
     # `zMzv` may cause the distance between the current line and the first line of the window to change unexpectedly.{{{
     #
     # If that bothers you, you could improve the function.
@@ -110,3 +126,4 @@ def GetScrollingCmd(lhs: string): string #{{{2
     #}}}
 enddef
 #}}}1
+var next_line_is_folded: bool

@@ -59,7 +59,8 @@ augroup WindowHeight | au!
     # Close the tmux pane which you've just opened.
     # Notice how the height of the current Vim window is not maximized anymore.
     #}}}
-    au BufWinEnter,WinEnter,VimResized * SetWindowHeight()
+    au BufWinEnter,WinEnter * SetWindowHeight()
+    au VimResized * SetWindowHeight(true)
 
     au TerminalWinOpen * SetTerminalHeight()
 
@@ -205,7 +206,7 @@ def IfSpecialGetNrHeightTopline(v: number): list<number> #{{{2
         ?     [v, [Q_HEIGHT, [&wmh + 2, winbufnr(v)->getbufline(1, Q_HEIGHT)->len()]->max()]->min()]
         :     []
     # to understand the purpose of `&wmh+2`, see our comments around `'set noequalalways'`
-    return empty(info) ? [] : info  + [win_getid(v)->getwininfo()[0].topline]
+    return empty(info) ? [] : info  + [win_getid(v)->getwininfo()[0]['topline']]
 enddef
 
 def IsAloneInTabpage(): bool #{{{2
@@ -260,7 +261,7 @@ def SaveView() #{{{2
     w:saved_views[bufnr('%')] = winsaveview()
 enddef
 
-def SetWindowHeight() #{{{2
+def SetWindowHeight(on_vimresized = false) #{{{2
     # Goal:{{{
     #
     # Maximize  the  height of  all  windows,  except  the  ones which  are  not
@@ -371,31 +372,15 @@ def SetWindowHeight() #{{{2
               && v[0] != curwinnr
               && HeightShouldBeReset(v[0]))
 
-    # if we enter a regular window, maximize it
-    noa wincmd _
-    # This is to  avoid a bug where  a popup window attached to  a text property
-    # wrongly remain visible: https://github.com/vim/vim/issues/7736
-    res -1
-    res +1
-    # Alternative:{{{
+    # If we enter a regular window (or Vim's terminal geometry changes), maximize it.
+    # Why `VimResized` is a special case?{{{
     #
-    #     var curheight: number
-    #     for i in range(&lines)
-    #         curheight = winheight(0)
-    #         res +1
-    #         if winheight(0) == curheight
-    #            break
-    #         endif
-    #     endfor
-    #}}}
-    # In any case, do *not* reset `'wmh'`!{{{
-    #
-    # It could trigger an unexpected issue when Vim is run inside tmux.
+    # We're going to need to temporarily reset `'wmh'` to 1.
+    # This could trigger an unexpected issue when Vim is run inside tmux:
     #
     #     $ vim -Nu NONE +'set lines=12 | q'
     #     $ tmux -Lx -f/dev/null
     #     $ vim -Nu NONE -S <(cat <<'EOF'
-    #         vim9script
     #         set wmh=0 stal=2
     #         bel sp | wincmd _
     #         bel sp | wincmd _
@@ -420,14 +405,56 @@ def SetWindowHeight() #{{{2
     #     12~
     #     # this is NOT correct; the terminal has still 11 lines
     #
-    # Note that in tmux,  we can not make the terminal  resize its height simply
-    # by setting `'lines'`:
+    # The only mitigation I can think of  for now, is to avoid resetting `'wmh'`
+    # on `VimResized`.
     #
-    #     # works outside tmux, but not inside
-    #     :set lines=12
+    # Note that the help acknowledges the fact that the display can be messed up
+    # if Vim fails to resize the terminal.  From `:h 'lines'`:
     #
-    # Maybe that's the same issue.
+    #    > When you set this option and Vim is unable to change the physical
+    #    > number of lines of the display, the display may be messed up.
+    #
+    # Relevant issue: https://github.com/vim/vim/issues/7899
     #}}}
+    if on_vimresized
+        noa wincmd _
+    else
+        # Why temporarily resetting `'wmh'` to 1?{{{
+        #
+        # `wincmd _` causes a bug where a popup window attached to a text property wrongly remains visible:
+        # https://github.com/vim/vim/issues/7736
+        #
+        # We could fix it by adding these lines:
+        #
+        #     res -1
+        #     res +1
+        #
+        # But it would  sometimes cause the status line to  flicker which is too
+        # distracting.  It would happen, for example, when navigating up/down in
+        # the filesystem hierarchy in a dirvish buffer, by pressing `h` and `l`.
+        #
+        #     set hidden ls=2
+        #     set rtp^=~/.vim/plugged/vim-dirvish
+        #     nno -- <cmd>Dirvish<cr>
+        #     au BufWinEnter,WinEnter * noa wincmd _ | res -1 | res +1
+        #     filetype plugin on
+        #
+        # It *looks* like a regression introduced in 8.2.2453, but it's not.
+        # There's nothing in the doc which says that this `res -1 | res +1` hack
+        # should not sometimes cause the statusline to flicker.
+        #}}}
+        if &wmh == 0
+            try
+                set wmh=1
+                noa wincmd _
+            # E593: Need at least 123 lines: wmh=1
+            catch /^Vim\%((\a\+)\)\=:E593:/
+            finally
+                set wmh=0
+            endtry
+        endif
+        noa wincmd _
+    endif
 
     # Why does `'so'` need to be temporarily reset?{{{
     #
@@ -529,7 +556,7 @@ def FixSpecialWindow(v: list<number>)
     exe 'noa :' .. winnr .. 'res ' .. height
     # restore the original topline
     var id: number = win_getid(winnr)
-    var offset: number = getwininfo(id)[0].topline - orig_topline
+    var offset: number = getwininfo(id)[0]['topline'] - orig_topline
     if offset != 0
         win_execute(id, 'noa norm! ' .. abs(offset) .. (offset > 0 ? "\<c-y>" : "\<c-e>"))
     endif
@@ -599,12 +626,12 @@ nno <unique> <c-l> <cmd>call window#navigate('l')<cr>
 
 # M-[hjkl] du gg G     scroll popup (or preview) window {{{2
 
-sil! MapMeta('h', '<cmd>call window#popup#scroll("h")<cr>', 'n', 'u')
-sil! MapMeta('j', '<cmd>call window#popup#scroll("j")<cr>', 'n', 'u')
-sil! MapMeta('k', '<cmd>call window#popup#scroll("k")<cr>', 'n', 'u')
-sil! MapMeta('l', '<cmd>call window#popup#scroll("l")<cr>', 'n', 'u')
+MapMeta('h', '<cmd>call window#popup#scroll("h")<cr>', 'n', 'u')
+MapMeta('j', '<cmd>call window#popup#scroll("j")<cr>', 'n', 'u')
+MapMeta('k', '<cmd>call window#popup#scroll("k")<cr>', 'n', 'u')
+MapMeta('l', '<cmd>call window#popup#scroll("l")<cr>', 'n', 'u')
 
-sil! MapMeta('d', '<cmd>call window#popup#scroll("c-d")<cr>', 'n', 'u')
+MapMeta('d', '<cmd>call window#popup#scroll("c-d")<cr>', 'n', 'u')
 # Why don't you install a mapping for `M-u`?{{{
 #
 # It would conflict with the `M-u` mapping from `vim-readline`.
@@ -616,8 +643,8 @@ sil! MapMeta('d', '<cmd>call window#popup#scroll("c-d")<cr>', 'n', 'u')
 #    - otherwise, it upcases the text up to the end of the next/current word
 #}}}
 
-sil! MapMeta('g', '<cmd>call window#popup#scroll("gg")<cr>', 'n', 'u')
-sil! MapMeta('G', '<cmd>call window#popup#scroll("G")<cr>', 'n', 'u')
+MapMeta('g', '<cmd>call window#popup#scroll("gg")<cr>', 'n', 'u')
+MapMeta('G', '<cmd>call window#popup#scroll("G")<cr>', 'n', 'u')
 
 # SPC (prefix) {{{2
 
