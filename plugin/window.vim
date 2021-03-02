@@ -59,8 +59,7 @@ augroup WindowHeight | au!
     # Close the tmux pane which you've just opened.
     # Notice how the height of the current Vim window is not maximized anymore.
     #}}}
-    au BufWinEnter,WinEnter * SetWindowHeight()
-    au VimResized * SetWindowHeight(true)
+    au BufWinEnter,WinEnter,VimResized * SetWindowHeight()
 
     au TerminalWinOpen * SetTerminalHeight()
 
@@ -261,7 +260,7 @@ def SaveView() #{{{2
     w:saved_views[bufnr('%')] = winsaveview()
 enddef
 
-def SetWindowHeight(on_vimresized = false) #{{{2
+def SetWindowHeight() #{{{2
     # Goal:{{{
     #
     # Maximize  the  height of  all  windows,  except  the  ones which  are  not
@@ -368,93 +367,48 @@ def SetWindowHeight(on_vimresized = false) #{{{2
     #}}}
     var special_windows: list<list<number>> = range(1, winnr('$'))
         ->mapnew((_, v: number): list<number> => IfSpecialGetNrHeightTopline(v))
-        ->filter((_, v: list<number>): bool => v != []
-              && v[0] != curwinnr
-              && HeightShouldBeReset(v[0]))
+        ->filter((_, v: list<number>): bool =>
+                     v != []
+                  && v[0] != curwinnr
+                  && HeightShouldBeReset(v[0]))
 
     # If we enter a regular window (or Vim's terminal geometry changes), maximize it.
-    # Why `VimResized` is a special case?{{{
+    # Why temporarily resetting `'wmh'` to 1?{{{
     #
-    # We're going to need to temporarily reset `'wmh'` to 1.
-    # This could trigger an unexpected issue when Vim is run inside tmux:
+    # `wincmd _` causes a bug where a popup window attached to a text property wrongly remains visible:
+    # https://github.com/vim/vim/issues/7736
     #
-    #     $ vim -Nu NONE +'set lines=12 | q'
-    #     $ tmux -Lx -f/dev/null
-    #     $ vim -Nu NONE -S <(cat <<'EOF'
-    #         set wmh=0 stal=2
-    #         bel sp | wincmd _
-    #         bel sp | wincmd _
-    #         bel sp | wincmd _
-    #         bel sp
-    #     EOF
-    #     )
+    # We could fix it by adding these lines:
     #
-    #     :set wmh=1
+    #     res -1
+    #     res +1
     #
-    # Notice that the command-line is not  drawn below the statusline.  And when
-    # you  start  typing  an Ex  command,  the  text  is  drawn on  top  of  the
-    # statusline.  That's because  – when executing `set wmh=1` –  Vim has asked
-    # the  terminal to  increase its  height by  1 line,  but it  fails in  tmux
-    # without Vim being aware of it:
+    # But it would  sometimes cause the status line to  flicker which is too
+    # distracting.  It would happen, for example, when navigating up/down in
+    # the filesystem hierarchy in a dirvish buffer, by pressing `h` and `l`.
     #
-    #     :echo &lines
-    #     11~
-    #     # this is correct; the terminal has indeed 11 lines
-    #     :set wmh=1
-    #     :echo &lines
-    #     12~
-    #     # this is NOT correct; the terminal has still 11 lines
+    #     set hidden ls=2
+    #     set rtp^=~/.vim/plugged/vim-dirvish
+    #     nno -- <cmd>Dirvish<cr>
+    #     au BufWinEnter,WinEnter * noa wincmd _ | res -1 | res +1
+    #     filetype plugin on
     #
-    # The only mitigation I can think of  for now, is to avoid resetting `'wmh'`
-    # on `VimResized`.
-    #
-    # Note that the help acknowledges the fact that the display can be messed up
-    # if Vim fails to resize the terminal.  From `:h 'lines'`:
-    #
-    #    > When you set this option and Vim is unable to change the physical
-    #    > number of lines of the display, the display may be messed up.
-    #
-    # Relevant issue: https://github.com/vim/vim/issues/7899
-    #}}}
-    if on_vimresized
-        noa wincmd _
-    else
-        # Why temporarily resetting `'wmh'` to 1?{{{
-        #
-        # `wincmd _` causes a bug where a popup window attached to a text property wrongly remains visible:
-        # https://github.com/vim/vim/issues/7736
-        #
-        # We could fix it by adding these lines:
-        #
-        #     res -1
-        #     res +1
-        #
-        # But it would  sometimes cause the status line to  flicker which is too
-        # distracting.  It would happen, for example, when navigating up/down in
-        # the filesystem hierarchy in a dirvish buffer, by pressing `h` and `l`.
-        #
-        #     set hidden ls=2
-        #     set rtp^=~/.vim/plugged/vim-dirvish
-        #     nno -- <cmd>Dirvish<cr>
-        #     au BufWinEnter,WinEnter * noa wincmd _ | res -1 | res +1
-        #     filetype plugin on
-        #
-        # It *looks* like a regression introduced in 8.2.2453, but it's not.
-        # There's nothing in the doc which says that this `res -1 | res +1` hack
-        # should not sometimes cause the statusline to flicker.
+    # It *looks* like a regression introduced in 8.2.2453, but it's not.
+    # There's nothing in the doc which says that this `res -1 | res +1` hack
+    # should not sometimes cause the statusline to flicker.
         #}}}
-        if &wmh == 0
-            try
-                set wmh=1
-                noa wincmd _
-            # E593: Need at least 123 lines: wmh=1
-            catch /^Vim\%((\a\+)\)\=:E593:/
-            finally
-                set wmh=0
-            endtry
-        endif
-        noa wincmd _
+    if &wmh == 0
+        try
+            set wmh=1
+            noa wincmd _
+        # E36: Not enough room
+        # E593: Need at least 123 lines: wmh=1
+        catch /^Vim\%((\a\+)\)\=:E\%(36\|593\):/
+        finally
+            set wmh=0
+        endtry
     endif
+    noa wincmd _
 
     # Why does `'so'` need to be temporarily reset?{{{
     #
@@ -535,7 +489,8 @@ def SetWindowHeight(on_vimresized = false) #{{{2
     #     ->mapnew((_, v: list<number>) => { if HasNeighborAboveOrBelow(v[0]) | FixSpecialWindow(v) | endif })
 #}}}
     special_windows
-        ->mapnew((_, v: list<number>) => HasNeighborAboveOrBelow(v[0]) && !!FixSpecialWindow(v))
+        ->mapnew((_, v: list<number>) =>
+            HasNeighborAboveOrBelow(v[0]) && !!FixSpecialWindow(v))
     noa &so = so_save
 enddef
 

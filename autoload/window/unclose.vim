@@ -147,11 +147,13 @@ def ApplyLayout(layout: list<any>) #{{{2
         # recurse on child windows
         len(winids)
             ->range()
-            ->mapnew((i: number) => [win_gotoid(winids[i]), ApplyLayout(layout[1][i])])
-            #                        │                      │
-            #                        │                      └ and load the buffer it displayed,
-            #                        │                        or split it again if it contained child windows
-            #                        └ focus a recreated window
+            ->mapnew((i: number) => [
+                # focus a recreated window
+                winids[i]->win_gotoid(),
+                # and load  the buffer  it displayed,  or split  it again  if it
+                # contained child windows
+                layout[1][i]->ApplyLayout()
+            ])
     endif
 enddef
 

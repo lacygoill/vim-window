@@ -38,12 +38,16 @@ def window#quit#main() #{{{1
     #    - there're only 2 windows in 1 tabpage, the remaining one is a diff window
     #}}}
     if tabpagenr('$') == 1
-        && (winnr_max == 1
-            || winnr_max == 2
-            && (getwininfo()
-                    ->mapnew((_, v: dict<any>): number => v.loclist)
-                    ->index(1) >= 0
-                || (winnr() == 1 ? 2 : 1)->getwinvar('&diff')))
+        && (
+             winnr_max == 1
+          || winnr_max == 2
+          && (
+               getwininfo()
+                   ->mapnew((_, v: dict<any>): number => v.loclist)
+                   ->index(1) >= 0
+               || (winnr() == 1 ? 2 : 1)->getwinvar('&diff')
+             )
+           )
         qall!
 
     elseif &bt == 'terminal'
@@ -90,9 +94,9 @@ def window#quit#main() #{{{1
         try
             if tabpagenr('$') == 1
                 if getwininfo()
-                    ->filter((_, v: dict<any>): bool => v.winid != win_getid())
-                    ->mapnew((_, v: dict<any>): string => getbufvar(v.bufnr, '&ft'))
-                    ->filter((_, v: string): bool => v != 'help')
+                    ->filter((_, v: dict<any>): bool =>
+                               v.winid != win_getid()
+                            && getbufvar(v.bufnr, '&ft') != 'help')
                     ->empty()
                     # Why `:close` instead of `:quit`?{{{
                     #

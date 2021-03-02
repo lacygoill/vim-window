@@ -179,7 +179,8 @@ enddef
 #}}}1
 # Utilities {{{1
 def GetTerminalBuffer(): number #{{{2
-    return tabpagenr()->tabpagebuflist()
+    return tabpagenr()
+        ->tabpagebuflist()
         ->filter((_, v: number): bool => getbufvar(v, '&bt', '') == 'terminal')
         ->get(0, 0)
 enddef
