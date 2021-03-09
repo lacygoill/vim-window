@@ -5,6 +5,8 @@ var loaded = true
 
 # Init {{{1
 
+var undo_layouts: list<dict<any>>
+
 # maximum numbers of windows which can be unclosed
 const MAX_UNDO: number = 30
 
@@ -28,7 +30,6 @@ def window#unclose#save() #{{{2
         undo_layouts = undo_layouts[len(undo_layouts) - MAX_UNDO : ]
     endif
 enddef
-var undo_layouts: list<dict<any>>
 
 def window#unclose#restore(cnt: number) #{{{2
     if undo_layouts->empty()

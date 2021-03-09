@@ -85,7 +85,7 @@ augroup END
 # Functions {{{1
 def CustomizePreviewPopup() #{{{2
     var winid: number = win_getid()
-    if win_gettype(winid) != 'popup'
+    if &pvp == '' || win_gettype(winid) != 'preview'
         return
     endif
     setwinvar(winid, '&wincolor', 'Normal')
