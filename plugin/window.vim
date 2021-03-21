@@ -130,62 +130,46 @@ def GetDiffHeight(n: number = winnr()): number #{{{2
 enddef
 
 def HeightShouldBeReset(n: number): bool #{{{2
-    # Tests:{{{
-    # Whatever change you perform on this  function, make sure the height of the
-    # windows are correct after executing:
-    #
-    #     :vert pedit $MYVIMRC
-    #
-    # Also, when  moving from  the preview  window to the  regular window  A, in
-    # these layouts:
-    #
-    #    ┌─────────┬───────────┐
-    #    │ preview │ regular A │
-    #    ├─────────┴───────────┤
-    #    │      regular B      │
-    #    └─────────────────────┘
-    #
-    #    ┌───────────┬───────────┐
-    #    │ regular A │           │
-    #    ├───────────┤ regular B │
-    #    │  preview  │           │
-    #    └───────────┴───────────┘
-    #}}}
-    # Interesting_PR:{{{
-    # The current code of the function should work most of the time.
-    # But not always.  It's based on a heuristic.
-    #
-    # We may be able to make it work all the time if one day this PR is merged:
-    # https://github.com/vim/vim/pull/2521
-    #
-    # It adds a few VimL functions which  would allow us to test the geometry of
-    # the neighbouring windows.
-    # We could  use them  to determine  whether we're  working with  two windows
-    # piled in a column or in a line.
-    #}}}
-
-    # Rationale:
-    # We want to reset the height of a special window when it's wide enough.{{{
-    #
-    # A window with a small width could be a  TOC, and so need a lot of space on
-    # the vertical axis to make up for it.
-    #}}}
-    # We want to reset the height of a preview window when the width of the current window is small enough. {{{
-    #
-    # If we open a nerdtree-like file  explorer, its window will probably have a
-    # small width.
-    # Thus, when we will preview a file from the latter, the preview window will
-    # have a small width too.
-    # Thus, the `winwidth(a:n) >= &columns/2` test will fail.
-    # Thus, this window's height won't be reset.
-    # Besides, when Vim  goes back from the preview window  to the original one,
-    # it will maximize  the latter (if it's a regular  one), which will minimize
-    # the preview window.
-    # The same issue happens with a vim-plug window.
-    #}}}
-    return winwidth(n) >= &columns / 2
-      ||  (getwinvar(n, '&pvw') && winwidth(0) <= &columns / 2)
+# Tests:{{{
+#
+# Whatever change  you perform  on this  function, make sure  the height  of the
+# windows are correct after executing:
+#
+#     :vert pedit $MYVIMRC
+#
+# ---
+#
+# Also, when moving  from the preview window  to the regular window  A, in these
+# layouts:
+#
+#    ┌─────────┬───────────┐
+#    │ preview │ regular A │
+#    ├─────────┴───────────┤
+#    │      regular B      │
+#    └─────────────────────┘
+#
+#    ┌───────────┬───────────┐
+#    │ regular A │           │
+#    ├───────────┤ regular B │
+#    │  preview  │           │
+#    └───────────┴───────────┘
+#
+# ---
+#
+# Also, when opening a file explorer with a small width, make sure its height is
+# correct.  Same thing with undotree window.
+# And  when previewing  a file  from the  file explorer,  make sure  the preview
+# window's height is always correct (whether it's focused or not).
+# Same thing when previewing a diff from an undotree window.
+#}}}
+    # Reset iff there's a window above or below.
+    ('should_be_reset = '
+        ..     "winnr('j') != " .. n
+        .. " || winnr('k') != " .. n
+    )->win_execute(win_getid(n))
+    return should_be_reset
 enddef
+var should_be_reset: bool
 
 def IfSpecialGetNrHeightTopline(v: number): list<number> #{{{2
 #   │                           │
@@ -204,7 +188,7 @@ def IfSpecialGetNrHeightTopline(v: number): list<number> #{{{2
         : winbufnr(v)->getbufvar('&bt', '') == 'quickfix'
         ?     [v, [Q_HEIGHT, [&wmh + 2, winbufnr(v)->getbufline(1, Q_HEIGHT)->len()]->max()]->min()]
         :     []
-    # to understand the purpose of `&wmh+2`, see our comments around `'set noequalalways'`
+    # to understand the purpose of `&wmh + 2`, see our comments around `'set noequalalways'`
     return empty(info) ? [] : info  + [win_getid(v)->getwininfo()[0]['topline']]
 enddef
 
@@ -339,8 +323,8 @@ def SetWindowHeight() #{{{2
         return
     endif
 
-    # If we're going to maximize a regular  window, we may alter the height of a
-    # special window somewhere else in the current tab page.
+    # If we're going to maximize a regular  window, we might alter the height of
+    # a special window somewhere else in the current tab page.
     # In this case, we need to reset their height.
     # What's the output of `map()`?{{{
     #
@@ -375,17 +359,17 @@ def SetWindowHeight() #{{{2
     # If we enter a regular window (or Vim's terminal geometry changes), maximize it.
     # Why temporarily resetting `'wmh'` to 1?{{{
     #
-    # `wincmd _` causes a bug where a popup window attached to a text property wrongly remains visible:
-    # https://github.com/vim/vim/issues/7736
+    # `wincmd _` causes a  bug where a popup window attached  to a text property
+    # wrongly remains visible: https://github.com/vim/vim/issues/7736
     #
     # We could fix it by adding these lines:
     #
     #     res -1
     #     res +1
     #
-    # But it would  sometimes cause the status line to  flicker which is too
-    # distracting.  It would happen, for example, when navigating up/down in
-    # the filesystem hierarchy in a dirvish buffer, by pressing `h` and `l`.
+    # But  it would  sometimes cause  the status  line to  flicker which  is too
+    # distracting.  It would happen, for example, when navigating up/down in the
+    # filesystem hierarchy in a dirvish buffer, by pressing `h` and `l`.
     #
     #     set hidden ls=2
     #     set rtp^=~/.vim/plugged/vim-dirvish
@@ -394,7 +378,7 @@ def SetWindowHeight() #{{{2
     #     filetype plugin on
     #
     # It *looks* like a regression introduced in 8.2.2453, but it's not.
-    # There's nothing in the doc which says that this `res -1 | res +1` hack
+    # There's nothing  in the doc which  says that this  `res -1 | res  +1` hack
     # should not sometimes cause the statusline to flicker.
         #}}}
     if &wmh == 0
@@ -412,11 +396,11 @@ def SetWindowHeight() #{{{2
 
     # Why does `'so'` need to be temporarily reset?{{{
     #
-    # We may need to restore the position  of the topline in a special window by
-    # scrolling with `C-e` or `C-y`.
+    # We might need to  restore the position of the topline  in a special window
+    # by scrolling with `C-e` or `C-y`.
     #
-    # When that happens, if `&so` has a  non-zero value, we may scroll more than
-    # what we expect.
+    # When that  happens, if `&so`  has a non-zero  value, we might  scroll more
+    # than what we expect.
     #
     # MWE:
     #
@@ -475,22 +459,40 @@ def SetWindowHeight() #{{{2
     # keep that in mind.
     #}}}
     var so_save: number = &so | noa set so=0
-    # Why the `HasNeighborAboveOrBelow()` guard?{{{
-    #
-    # If there's no  window above nor below  the current window, and  we set its
-    # height to a few lines only, then the command-line height becomes too big.
-    #
-    # Try this to understand:
-    #
-    #     10wincmd _
-    #}}}
-    # TODO(Vim9): When a lambda can contain statements, remove these ugly `&&` and `!!`.{{{
-    #
-    #     ->mapnew((_, v: list<number>) => { if HasNeighborAboveOrBelow(v[0]) | FixSpecialWindow(v) | endif })
-#}}}
+    # TODO(Vim9): When a lambda can contain Ex commands, remove these ugly `&&` and `!!`.
     special_windows
         ->mapnew((_, v: list<number>) =>
-            HasNeighborAboveOrBelow(v[0]) && !!FixSpecialWindow(v))
+            # Necessary to prevent the command-line's height from increasing.{{{
+            #
+            # If there's no  window above nor below  the current window, and  we set its
+            # height to a few lines only, then the command-line's height increases.
+            #
+            # Try this to understand:
+            #
+            #     10wincmd _
+            #}}}
+            HasNeighborAboveOrBelow(v[0])
+            # Necessary to prevent a regular window from being unmaximized if a special window is on the same row.{{{
+            #
+            #     $ vim -S <(cat <<'EOF'
+            #         vim9script
+            #         writefile(['#!/bin/bash', '', 'name=123'], '/tmp/sh.sh')
+            #         e /tmp/sh.sh
+            #         sp
+            #         # run shellcheck(1) on the current script,
+            #         # put the errors in the location list,
+            #         # open the location window (in a vertical split)
+            #         feedkeys('|c', 'x')
+            #         # focus the regular window on the right
+            #         wincmd l
+            #     EOF
+            #     )
+            #
+            # Without this  condition, the  regular window  in the  bottom right
+            # corner is minimized; I think we want it to be maximized.
+            #}}}
+            && !OnSameRow(v[0])
+            && !!FixSpecialWindow(v))
     noa &so = so_save
 enddef
 
@@ -501,6 +503,15 @@ def HasNeighborAboveOrBelow(winnr: number): bool
 enddef
 var has_above: bool
 var has_below: bool
+
+def OnSameRow(n: number): bool
+# I guess we can consider that the special  window `n` is on the same row as the
+# current regular window iff both have the same first screen row.
+    if win_screenpos(n)[0] == win_screenpos(0)[0]
+        return true
+    endif
+    return false
+enddef
 
 def FixSpecialWindow(v: list<number>)
     var winnr: number
@@ -558,7 +569,7 @@ def RestoreView() #{{{2
     if win_findbuf(n)->len() >= 2
         return
     endif
-    if exists('w:saved_views') && has_key(w:saved_views, n)
+    if exists('w:saved_views') && w:saved_views->has_key(n)
         if !&l:diff
             winrestview(w:saved_views[n])
         endif
@@ -786,7 +797,7 @@ nno <unique> zk <cmd>aboveleft split<cr>
 #     nmap Z <c-w>
 #     " press 'Z cr': works ✔
 #
-# Indeed,  once `Z`  has been  expanded into  `C-w`, we  may need  to expand  it
+# Indeed, once  `Z` has  been expanded into  `C-w`, we might  need to  expand it
 # *further* for custom mappings using `C-w` in their lhs.
 #}}}
 nmap <unique> Z <c-w>
@@ -892,17 +903,17 @@ set noequalalways
 #
 # ---
 #
-# However, when displaying  a buffer with short lines (ex: TOC),  I prefer to do
-# it on the  left.
+# However, when displaying a  buffer with short lines, I prefer to  do it on the
+# left.
 #
 # Rationale:
-# When you write annotations in  a page, you do it  in the left margin.
+# When you write annotations in a page, you do it in the left margin.
 #
 # ---
 #
 # Bottom Line:
 # `set splitbelow` and `set splitright`  seem to define good default directions.
-# Punctually  though, we  may  need  `:topleft` or  `:leftabove`  to change  the
+# Punctually  though, we  might need  `:topleft` or  `:leftabove` to  change the
 # direction.
 #}}}
 # when we create a new horizontal viewport, it should be displayed at the bottom of the screen
