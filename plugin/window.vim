@@ -96,7 +96,7 @@ def CustomizePreviewPopup() #{{{2
         resize: false,
         scrollbar: false,
         title: '',
-        }
+    }
     # Why to delay until the next `WinLeave`?{{{
     #
     # For some reason, the title would not be cleared without the delay.
@@ -459,9 +459,8 @@ def SetWindowHeight() #{{{2
     # keep that in mind.
     #}}}
     var so_save: number = &so | noa set so=0
-    # TODO(Vim9): When a lambda can contain Ex commands, remove these ugly `&&` and `!!`.
     special_windows
-        ->mapnew((_, v: list<number>) =>
+        ->mapnew((_, v: list<number>) => {
             # Necessary to prevent the command-line's height from increasing.{{{
             #
             # If there's no  window above nor below  the current window, and  we set its
@@ -471,7 +470,7 @@ def SetWindowHeight() #{{{2
             #
             #     10wincmd _
             #}}}
-            HasNeighborAboveOrBelow(v[0])
+            if HasNeighborAboveOrBelow(v[0])
             # Necessary to prevent a regular window from being unmaximized if a special window is on the same row.{{{
             #
             #     $ vim -S <(cat <<'EOF'
@@ -492,7 +491,9 @@ def SetWindowHeight() #{{{2
             # corner is minimized; I think we want it to be maximized.
             #}}}
             && !OnSameRow(v[0])
-            && !!FixSpecialWindow(v))
+                FixSpecialWindow(v)
+            endif
+        })
     noa &so = so_save
 enddef
 

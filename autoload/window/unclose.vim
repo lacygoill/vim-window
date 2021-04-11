@@ -23,7 +23,7 @@ def window#unclose#save() #{{{2
     layout.was_onlywindow = winnr('$') == 1
     layout.view = winsaveview()
 
-    undo_layouts = undo_layouts + [layout]
+    undo_layouts += [layout]
 
     # make sure `undo_layouts` doesn't grow too much
     if len(undo_layouts) > MAX_UNDO
@@ -148,13 +148,13 @@ def ApplyLayout(layout: list<any>) #{{{2
         # recurse on child windows
         len(winids)
             ->range()
-            ->mapnew((i: number) => [
+            ->mapnew((i: number, _) => {
                 # focus a recreated window
-                winids[i]->win_gotoid(),
+                winids[i]->win_gotoid()
                 # and load  the buffer  it displayed,  or split  it again  if it
                 # contained child windows
                 layout[1][i]->ApplyLayout()
-            ])
+            })
     endif
 enddef
 

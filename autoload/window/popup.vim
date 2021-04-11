@@ -14,7 +14,7 @@ const AOF_KEY2NORM: dict<string> = {
     c-u: "\<c-u>",
     gg: 'gg',
     G: 'G',
-    }
+}
 
 # Interface {{{1
 def window#popup#closeAll() #{{{2
@@ -80,6 +80,9 @@ def ScrollPreview(lhs: string) #{{{2
     #}}}
     if !&l:cul
         setl cul
+        # If we  re-display the previewed buffer  later in a regular  window, we
+        # don't want Vim to automatically set `'cursorline'`.
+        au BufWinEnter <buffer> ++once setl nocul
     endif
 
     # move/scroll
