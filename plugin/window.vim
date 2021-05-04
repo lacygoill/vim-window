@@ -179,13 +179,13 @@ def IfSpecialGetNrHeightTopline(v: number): list<number> #{{{2
 
     var info: list<number> = getwinvar(v, '&pvw')
         ?     [v, &pvh]
-        : index(R_FT, winbufnr(v)->getbufvar('&ft', '')) >= 0
+        : index(R_FT, winbufnr(v)->getbufvar('&filetype', '')) >= 0
         ?     [v, R_HEIGHT]
         : &l:diff
         ?     [v, GetDiffHeight(v)]
-        : winbufnr(v)->getbufvar('&bt', '') == 'terminal' && !window#util#isPopup(v)
+        : winbufnr(v)->getbufvar('&buftype', '') == 'terminal' && !window#util#isPopup(v)
         ?     [v, T_HEIGHT]
-        : winbufnr(v)->getbufvar('&bt', '') == 'quickfix'
+        : winbufnr(v)->getbufvar('&buftype', '') == 'quickfix'
         ?     [v, [Q_HEIGHT, [&wmh + 2, winbufnr(v)->getbufline(1, Q_HEIGHT)->len()]->max()]->min()]
         :     []
     # to understand the purpose of `&wmh + 2`, see our comments around `'set noequalalways'`
@@ -197,10 +197,11 @@ def IsAloneInTabpage(): bool #{{{2
 enddef
 
 def IsSpecial(): bool #{{{2
+    var buf: number = expand('<abuf>')->str2nr()
     return &l:pvw
         || &l:diff
-        || index(R_FT + ['gitcommit', 'fugitive'], &ft) >= 0
-        || &bt =~ '^\%(quickfix\|terminal\)$'
+        || index(R_FT + ['gitcommit', 'fugitive'], getbufvar(buf, '&filetype')) >= 0
+        || getbufvar(buf, '&buftype') =~ '^\%(quickfix\|terminal\)$'
 enddef
 
 def IsWide(): bool #{{{2
@@ -221,19 +222,20 @@ enddef
 
 def MakeWindowSmall() #{{{2
     # to understand the purpose of `&wmh+2`, see our comments around `'set noequalalways'`
-    noa exe 'res ' .. (&l:pvw
+    exe 'res ' .. (&l:pvw
         ?              &l:pvh
-        :          &bt == 'quickfix'
+        :          &buftype == 'quickfix'
         ?              min([Q_HEIGHT, max([line('$'), &wmh + 2])])
         :          &l:diff
         ?              GetDiffHeight()
-        :          index(R_FT, &ft) >= 0
+        :          index(R_FT, &filetype) >= 0
         ?              R_HEIGHT
         :          D_HEIGHT)
 enddef
 
 def SaveChangePosition() #{{{2
-    b:_last_change_position = getchangelist('%')->get(1, 100)
+    var buf: number = expand('<abuf>')->str2nr()
+    setbufvar(buf, '_last_change_position', getchangelist(buf)->get(1, 100))
 enddef
 
 def SaveView() #{{{2
@@ -241,7 +243,7 @@ def SaveView() #{{{2
     if !exists('w:saved_views')
         w:saved_views = {}
     endif
-    w:saved_views[bufnr('%')] = winsaveview()
+    w:saved_views[expand('<abuf>')->str2nr()] = winsaveview()
 enddef
 
 def SetWindowHeight() #{{{2
@@ -372,7 +374,7 @@ def SetWindowHeight() #{{{2
     # filesystem hierarchy in a dirvish buffer, by pressing `h` and `l`.
     #
     #     set hidden ls=2
-    #     set rtp^=~/.vim/plugged/vim-dirvish
+    #     set rtp^=~/.vim/pack/minpac/opt/vim-dirvish
     #     nno -- <cmd>Dirvish<cr>
     #     au BufWinEnter,WinEnter * noa wincmd _ | res -1 | res +1
     #     filetype plugin on
@@ -577,7 +579,7 @@ def RestoreView() #{{{2
         remove(w:saved_views, n)
     else
         # `:h last-position-jump`
-        if line("'\"") >= 1 && line("'\"") <= line('$') && &ft !~ 'commit'
+        if line("'\"") >= 1 && line("'\"") <= line('$') && &filetype !~ 'commit'
             norm! g`"
         endif
     endif
@@ -808,7 +810,7 @@ nmap <unique> Z <c-w>
 #
 #     xmap Z <Plug>Sneak_S
 #
-# See: `~/.vim/plugged/vim-sneak/plugin/sneak.vim`
+# See: `~/.vim/pack/minpac/opt/vim-sneak/plugin/sneak.vim`
 #}}}
 xmap          Z <c-w>
 

@@ -50,7 +50,7 @@ def window#quit#main() #{{{1
            )
         qall!
 
-    elseif &bt == 'terminal'
+    elseif &buftype == 'terminal'
         # A popup terminal is a special case.{{{
         #
         # We don't want to wipe the buffer; just close the window.
@@ -66,7 +66,7 @@ def window#quit#main() #{{{1
         # if the window we're closing is associated to a ll window, close the latter too
         # We could also install an autocmd in our vimrc:{{{
         #
-        #     au QuitPre * ++nested if &bt != 'quickfix' | lclose | endif
+        #     au QuitPre * ++nested if &buftype != 'quickfix' | lclose | endif
         #
         # Inspiration:
         # https://github.com/romainl/vim-qf/blob/5f971f3ed7f59ff11610c00b8a1e343e2dbae510/plugin/qf.vim#L64-L65
@@ -87,7 +87,7 @@ def window#quit#main() #{{{1
 
         # same thing for preview window, but only in a help buffer outside of
         # preview winwow
-        if &bt == 'help' && !&previewwindow
+        if &buftype == 'help' && !&previewwindow
             pclose
         endif
 
@@ -96,7 +96,7 @@ def window#quit#main() #{{{1
                 if getwininfo()
                     ->filter((_, v: dict<any>): bool =>
                                v.winid != win_getid()
-                            && getbufvar(v.bufnr, '&ft') != 'help')
+                            && getbufvar(v.bufnr, '&filetype') != 'help')
                     ->empty()
                     # Why `:close` instead of `:quit`?{{{
                     #

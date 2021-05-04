@@ -90,7 +90,7 @@ def window#unclose#restore(cnt: number) #{{{2
     # restore windows (with correct buffers in them)
     ApplyLayout(layout.windows)
     # restore active window
-    exe ':' .. layout.activewindow .. 'wincmd w'
+    win_getid(layout.activewindow)->win_gotoid()
     # restore view
     winrestview(layout.view)
     # restore windows geometry

@@ -125,7 +125,7 @@ def GetScrollingCmd(lhs: string, winid: number): string #{{{2
     # If that bothers you, you could improve the function.
     # See how we handled the issue in `MoveAndOpenFold()` from:
     #
-    #     ~/.vim/plugged/vim-toggle-settings/autoload/toggleSettings.vim
+    #     ~/.vim/pack/mine/opt/toggleSettings/plugin/toggleSettings.vim
     #}}}
 enddef
 #}}}1
