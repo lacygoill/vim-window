@@ -1,8 +1,5 @@
 vim9script noclear
 
-if exists('loaded') | finish | endif
-var loaded = true
-
 def window#util#isPopup(n: number = win_getid()): bool #{{{1
     return win_gettype(n) == 'popup'
 enddef
@@ -14,7 +11,7 @@ enddef
 def window#util#hasPreview(): bool #{{{1
     # Why is this a public function?{{{
     #
-    # To be able to invoke it from the readline plugin (`readline#mU#main()`).
+    # To be able to invoke it from the readline plugin (`window#popup#scroll()`).
     #}}}
     # What if we have a preview *popup*?{{{
     #

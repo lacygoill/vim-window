@@ -601,16 +601,7 @@ MapMeta('k', '<cmd>call window#popup#scroll("k")<cr>', 'n', 'u')
 MapMeta('l', '<cmd>call window#popup#scroll("l")<cr>', 'n', 'u')
 
 MapMeta('d', '<cmd>call window#popup#scroll("c-d")<cr>', 'n', 'u')
-# Why don't you install a mapping for `M-u`?{{{
-#
-# It would conflict with the `M-u` mapping from `vim-readline`.
-# As a workaround, we've overloaded the latter.
-# We make it  check whether a preview  or popup window is opened  in the current
-# tab page:
-#
-#    - if there is one, it scrolls half a page up in the latter
-#    - otherwise, it upcases the text up to the end of the next/current word
-#}}}
+MapMeta('u', '<cmd>call window#popup#scroll("c-u")<cr>', 'n', 'u')
 
 MapMeta('g', '<cmd>call window#popup#scroll("gg")<cr>', 'n', 'u')
 MapMeta('G', '<cmd>call window#popup#scroll("G")<cr>', 'n', 'u')

@@ -5,6 +5,11 @@ var loaded = true
 
 # Init {{{1
 
+var next_line_is_folded: bool
+var should_scroll_tmux_previous_pane: bool
+
+const INVALIDATE_CACHE: number = 500
+
 const AOF_KEY2NORM: dict<string> = {
     j: 'j',
     k: 'k',
@@ -57,11 +62,27 @@ enddef
 def window#popup#scroll(lhs: string) #{{{2
     if window#util#hasPreview()
         ScrollPreview(lhs)
-    else
-        var popup: number = window#util#latestPopup()
-        if popup != 0
-            ScrollPopup(lhs, popup)
+        return
+    endif
+
+    var popup: number = window#util#latestPopup()
+    if popup != 0
+        ScrollPopup(lhs, popup)
+        return
+    endif
+
+    if exists('$TMUX')
+        if ScrollTmuxPreviousPane(lhs)
+            return
         endif
+    endif
+
+    if lhs == 'c-u'
+        # We've pressed `M-u`, but there is nothing to scroll:
+        # upcase the text up to the end of the current/next word.
+        readline#changeCaseSetup(true)
+        set opfunc=readline#changeCaseWord
+        norm! g@l
     endif
 enddef
 #}}}1
@@ -98,6 +119,44 @@ def ScrollPopup(lhs: string, winid: number) #{{{2
     GetScrollingCmd(lhs, winid)->win_execute(winid)
 enddef
 
+def ScrollTmuxPreviousPane(lhs: string): bool #{{{2
+# Ask tmux to scroll the previous pane if:{{{
+#
+#    - it runs a shell
+#    - it's in copy-mode
+#    - the current pane is not maximized
+#    - the scrolling is vertical
+#}}}
+    if index(['j', 'k', 'gg', 'G', 'c-d', 'c-u'], lhs) < 0
+        return false
+    endif
+    if !should_scroll_tmux_previous_pane
+        var tmux_cmd: string =
+             'tmux display -p -t "{last}" "#{pane_current_command}"'
+            .. '\; display -p             "#{window_zoomed_flag}"'
+        # `system()` is too slow when we keep pressing a key; so we cache its output.
+        sil should_scroll_tmux_previous_pane =
+            system(tmux_cmd)
+                ->trim("\<NL>") =~ '^\%(ba\|z\)\=sh\n0$'
+        # Invalidate the cache after an arbitrary short time.
+        timer_start(INVALIDATE_CACHE, (_) => {
+            should_scroll_tmux_previous_pane = false
+        })
+    endif
+    if should_scroll_tmux_previous_pane
+        printf('tmux lastp ; copy-mode ; send -X %s ; lastp', {
+            k: 'scroll-up',
+            j: 'scroll-down-and-cancel',
+            gg: 'history-top',
+            G: 'history-bottom',
+            c-d: 'halfpage-down',
+            c-u: 'halfpage-up',
+        }[lhs])->job_start()
+        return true
+    endif
+    return false
+enddef
+
 def GetScrollingCmd(lhs: string, winid: number): string #{{{2
     # FIXME: `zRj` sometimes fails to move the cursor.{{{
     #
@@ -129,4 +188,3 @@ def GetScrollingCmd(lhs: string, winid: number): string #{{{2
     #}}}
 enddef
 #}}}1
-var next_line_is_folded: bool
