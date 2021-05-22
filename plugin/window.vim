@@ -863,10 +863,10 @@ set noequalalways
 # MWE:
 #
 #     $ vim -Nu NONE +'set noea' +'au QuickFixCmdPost * bo cwindow2' +'helpg readnews'
-#     E36: Not enough room~
+#     E36: Not enough room˜
 #
 #     $ vim -Nu NONE +'set noea' +2sp +sp
-#     E36: Not enough room~
+#     E36: Not enough room˜
 #
 # In the last example, the final `:sp` raises `E36`, because:
 #
