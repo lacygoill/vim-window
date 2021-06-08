@@ -48,12 +48,12 @@ def window#popup#closeAll() #{{{2
     popup_clear(true)
 
     if topline != 0
-        var so_save: number = &l:so
-        setl so=0
+        var scrolloff_save: number = &l:scrolloff
+        &l:scrolloff = 0
         exe 'norm! ' .. topline .. 'GztM'
         #                              ^
         # middle of the window to minimize the distance from the original cursor position
-        &l:so = so_save
+        &l:scrolloff = scrolloff_save
     elseif !empty('view')
         winrestview(view)
     endif
@@ -81,7 +81,7 @@ def window#popup#scroll(lhs: string) #{{{2
         # We've pressed `M-u`, but there is nothing to scroll:
         # upcase the text up to the end of the current/next word.
         readline#changeCaseSetup(true)
-        set opfunc=readline#changeCaseWord
+        &operatorfunc = 'readline#changeCaseWord'
         norm! g@l
     endif
 enddef
@@ -99,11 +99,11 @@ def ScrollPreview(lhs: string) #{{{2
     #
     # We can't use `C-e`/`C-y`; it wouldn't work as expected because of `zMzv`.
     #}}}
-    if !&l:cul
-        setl cul
+    if !&l:cursorline
+        &l:cursorline = true
         # If we  re-display the previewed buffer  later in a regular  window, we
         # don't want Vim to automatically set `'cursorline'`.
-        au BufWinEnter <buffer> ++once setl nocul
+        au BufWinEnter <buffer> ++once &l:cursorline = false
     endif
 
     # move/scroll

@@ -64,7 +64,7 @@ augroup WindowHeight | au!
     au TerminalWinOpen * SetTerminalHeight()
 
     # necessary since 8.2.0911
-    au CmdWinEnter * exe 'res ' .. &cwh
+    au CmdWinEnter * exe 'res ' .. &cmdwinheight
 
     # Why ?{{{
     #
@@ -85,7 +85,7 @@ augroup END
 # Functions {{{1
 def CustomizePreviewPopup() #{{{2
     var winid: number = win_getid()
-    if &pvp == '' || win_gettype(winid) != 'preview'
+    if &previewpopup == '' || win_gettype(winid) != 'preview'
         return
     endif
     setwinvar(winid, '&wincolor', 'Normal')
@@ -118,12 +118,11 @@ def GetDiffHeight(n: number = winnr()): number #{{{2
     # heights would constantly change ([15, 14] ↔ [14, 15]), which is jarring.
     #}}}
 
-    #                                  ┌ the two statuslines of the two diff'ed windows{{{
-    #                                  │
-    #                                  │    ┌ if there're several tabpages, there's a tabline;
-    #                                  │    │ we must take its height into account
-    #                                  │    │}}}
-    var lines: number = &lines - &ch - 2 - ((&stal == 2 || &stal == 1 && tabpagenr('$') >= 2) ? 1 : 0)
+    var lines: number = &lines - &cmdheight
+        # the two statuslines of the two diff'ed windows
+        - 2
+        # if there're several tabpages, there's a tabline; we must take its height into account
+        - ((&showtabline == 2 || &showtabline == 1 && tabpagenr('$') >= 2) ? 1 : 0)
     return fmod(lines, 2) == 0 || n != 1
         ?     lines / 2
         :     lines / 2 + 1
@@ -177,8 +176,8 @@ def IfSpecialGetNrHeightTopline(v: number): list<number> #{{{2
 #   │
 #   └ if it's a special window, get me its number, its desired height, and its current topline
 
-    var info: list<number> = getwinvar(v, '&pvw')
-        ?     [v, &pvh]
+    var info: list<number> = getwinvar(v, '&previewwindow')
+        ?     [v, &previewheight]
         : index(R_FT, winbufnr(v)->getbufvar('&filetype', '')) >= 0
         ?     [v, R_HEIGHT]
         : &l:diff
@@ -186,9 +185,9 @@ def IfSpecialGetNrHeightTopline(v: number): list<number> #{{{2
         : winbufnr(v)->getbufvar('&buftype', '') == 'terminal' && !window#util#isPopup(v)
         ?     [v, T_HEIGHT]
         : winbufnr(v)->getbufvar('&buftype', '') == 'quickfix'
-        ?     [v, [Q_HEIGHT, [&wmh + 2, winbufnr(v)->getbufline(1, Q_HEIGHT)->len()]->max()]->min()]
+        ?     [v, [Q_HEIGHT, [&winminheight + 2, winbufnr(v)->getbufline(1, Q_HEIGHT)->len()]->max()]->min()]
         :     []
-    # to understand the purpose of `&wmh + 2`, see our comments around `'set noequalalways'`
+    # to understand the purpose of `&winminheight + 2`, see our comments around `&equalalways = false`
     return empty(info) ? [] : info  + [win_getid(v)->getwininfo()[0]['topline']]
 enddef
 
@@ -198,7 +197,7 @@ enddef
 
 def IsSpecial(): bool #{{{2
     var buf: number = expand('<abuf>')->str2nr()
-    return &l:pvw
+    return &l:previewwindow
         || &l:diff
         || index(R_FT + ['gitcommit', 'fugitive'], getbufvar(buf, '&filetype')) >= 0
         || getbufvar(buf, '&buftype') =~ '^\%(quickfix\|terminal\)$'
@@ -211,21 +210,18 @@ enddef
 def IsMaximizedVertically(): bool #{{{2
     # Every time you open a  window above/below, the difference between `&lines`
     # and `winheight(0)` increases by 2:
-    # 1 for the new stl + 1 for the visible line in the other window
-    var tabline: number = (&stal == 2 || &stal == 1 && tabpagenr('$') >= 2 ? 1 : 0)
-    return (&lines - winheight(0)) <= (&ch + 1 + tabline)
-    #                                  ├─┘   │
-    #                                  │     └ status line
-    #                                  │
-    #                                  └ command-line
+    # 1 for the new statusline + 1 for the visible line in the other window
+    var statusline: number = 1
+    var tabline: number = (&showtabline == 2 || &showtabline == 1 && tabpagenr('$') >= 2 ? 1 : 0)
+    return (&lines - winheight(0)) <= (&cmdheight + statusline + tabline)
 enddef
 
 def MakeWindowSmall() #{{{2
-    # to understand the purpose of `&wmh+2`, see our comments around `'set noequalalways'`
-    exe 'res ' .. (&l:pvw
-        ?              &l:pvh
+    # to understand the purpose of `&winminheight + 2`, see our comments around `&equalalways = false`
+    exe 'res ' .. (&l:previewwindow
+        ?              &l:previewheight
         :          &buftype == 'quickfix'
-        ?              min([Q_HEIGHT, max([line('$'), &wmh + 2])])
+        ?              min([Q_HEIGHT, max([line('$'), &winminheight + 2])])
         :          &l:diff
         ?              GetDiffHeight()
         :          index(R_FT, &filetype) >= 0
@@ -255,7 +251,7 @@ def SetWindowHeight() #{{{2
     # Preview/qf/terminal windows  which are horizontally maximized  should have
     # their height fixed to:
     #
-    #    - &pvh for the preview window
+    #    - &previewheight for the preview window
     #    - 10 for a qf/terminal window
     #}}}
     # Problem:{{{
@@ -276,7 +272,7 @@ def SetWindowHeight() #{{{2
     # Note: Not when the  current tab page would contain only  1 window, because
     # in that case `!IsAloneInTabpage()` would be false.
     #}}}
-    # Why the `&l:pvw` guard?{{{
+    # Why the `&l:previewwindow` guard?{{{
     #
     # Suppose we preview a file from a file explorer.
     # Chances are  the file explorer, and  thus the preview window,  are not
@@ -292,10 +288,10 @@ def SetWindowHeight() #{{{2
     # The preview window is a special case.
     # When you open one, 2 WinEnter are fired; when Vim:
     #
-    #    1. enters the preview window (&l:pvw is *not* yet set)
-    #    2. goes back to the original window (now, &l:pvw *is* set in the preview window)
+    #    1. enters the preview window (`&l:previewwindow` is *not* yet set)
+    #    2. goes back to the original window (now, `&l:previewwindow` *is* set in the preview window)
     #
-    # When the first WinEnter is fired, `&l:pvw` is not set.
+    # When the first WinEnter is fired, `&l:previewwindow` is not set.
     # Thus, the function should maximize it.
     #
     # When the second WinEnter is fired, we'll get back to the original window.
@@ -306,12 +302,12 @@ def SetWindowHeight() #{{{2
     #
     # So, in the end, the height of the preview window is correctly set.
     #}}}
-    if &l:pvw || window#util#isPopup()
+    if &l:previewwindow || window#util#isPopup()
         return
     endif
 
     if getcmdwintype() != ''
-        exe 'noa res ' .. &cwh
+        exe 'noa res ' .. &cmdwinheight
         return
     endif
 
@@ -359,7 +355,7 @@ def SetWindowHeight() #{{{2
                   && HeightShouldBeReset(v[0]))
 
     # If we enter a regular window (or Vim's terminal geometry changes), maximize it.
-    # Why temporarily resetting `'wmh'` to 1?{{{
+    # Why temporarily resetting `'winminheight'` to 1?{{{
     #
     # `wincmd _` causes a  bug where a popup window attached  to a text property
     # wrongly remains visible: https://github.com/vim/vim/issues/7736
@@ -373,8 +369,8 @@ def SetWindowHeight() #{{{2
     # distracting.  It would happen, for example, when navigating up/down in the
     # filesystem hierarchy in a dirvish buffer, by pressing `h` and `l`.
     #
-    #     set hidden ls=2
-    #     set rtp^=~/.vim/pack/minpac/opt/vim-dirvish
+    #     set hidden laststatus=2
+    #     set runtimepath^=~/.vim/pack/minpac/opt/vim-dirvish
     #     nno -- <cmd>Dirvish<cr>
     #     au BufWinEnter,WinEnter * noa wincmd _ | res -1 | res +1
     #     filetype plugin on
@@ -383,36 +379,36 @@ def SetWindowHeight() #{{{2
     # There's nothing  in the doc which  says that this  `res -1 | res  +1` hack
     # should not sometimes cause the statusline to flicker.
         #}}}
-    if &wmh == 0
+    if &winminheight == 0
         try
-            set wmh=1
+            &winminheight = 1
             noa wincmd _
         # E36: Not enough room
-        # E593: Need at least 123 lines: wmh=1
+        # E593: Need at least 123 lines: winminheight=1
         catch /^Vim\%((\a\+)\)\=:E\%(36\|593\):/
         finally
-            set wmh=0
+            &winminheight = 0
         endtry
     endif
     noa wincmd _
 
-    # Why does `'so'` need to be temporarily reset?{{{
+    # Why does `'scrolloff'` need to be temporarily reset?{{{
     #
     # We might need to  restore the position of the topline  in a special window
     # by scrolling with `C-e` or `C-y`.
     #
-    # When that  happens, if `&so`  has a non-zero  value, we might  scroll more
-    # than what we expect.
+    # When that happens,  if `&scrolloff` has a non-zero value,  we might scroll
+    # more than what we expect.
     #
     # MWE:
     #
-    #     $ vim -Nu NONE +'set so=3|helpg foobar' +'cw|2q'
+    #     $ vim -Nu NONE +'set scrolloff=3 | helpg foobar' +'cw | 2q'
     #     :clast | wincmd _ | 2res 10
     #     :call win_execute(win_getid(2), "norm! \<c-y>")
     #
     # After the first Ex command, the last line of the qf buffer is the topline.
     # The second Ex  command should scroll one line upward;  but in practice, it
-    # scrolls 4 lines upward (`1 + &so`).
+    # scrolls 4 lines upward (`1 + &scrolloff`).
     #
     # It could be a bug, because I can't always reproduce.
     # For example, if you scroll back so that the last line is again the topline:
@@ -430,7 +426,7 @@ def SetWindowHeight() #{{{2
     #
     # Sth else is weird:
     #
-    #     $ vim -Nu NONE +'set so=3|helpg foobar' +'cw|2q'
+    #     $ vim -Nu NONE +'set scrolloff=3 | helpg foobar' +'cw | 2q'
     #     :clast
     #
     # The last line of the qf buffer is the *last* line of the window.
@@ -454,13 +450,13 @@ def SetWindowHeight() #{{{2
     #}}}
     # Warning:{{{
     #
-    # `'so'` is global-local.
+    # `'scrolloff'` is global-local.
     # So, to be  completely reliable, we would probably need  to reset the local
     # value of the option.
     # It's not an issue at the moment, because we only set the global value, but
     # keep that in mind.
     #}}}
-    var so_save: number = &so | noa set so=0
+    var scrolloff_save: number = &scrolloff | noa &scrolloff = 0
     special_windows
         ->mapnew((_, v: list<number>) => {
             # Necessary to prevent the command-line's height from increasing.{{{
@@ -496,7 +492,7 @@ def SetWindowHeight() #{{{2
                 FixSpecialWindow(v)
             endif
         })
-    noa &so = so_save
+    noa &scrolloff = scrolloff_save
 enddef
 
 def HasNeighborAboveOrBelow(winnr: number): bool
@@ -655,8 +651,8 @@ nno <unique> <c-w>K <cmd>wincmd K<bar>do <nomodeline> WinEnter<cr>
 # Alternative:{{{
 #
 #     augroup NowrapInVertSplits | au!
-#         au WinLeave * if winwidth(0) != &columns | setl nowrap | endif
-#         au WinEnter * if winwidth(0) != &columns | setl nowrap | endif
+#         au WinLeave * if winwidth(0) != &columns | &l:wrap = false | endif
+#         au WinEnter * if winwidth(0) != &columns | &l:wrap = false | endif
 #     augroup END
 #
 # Pro: Will probably cover more cases.
@@ -842,10 +838,10 @@ nno <plug>(my_ZZ_update) <cmd>update<cr>
 # All of this  shows that it's a general issue which can  affect you in too many
 # circumstances.
 # Trying to handle  each of them is a  waste of time; let's fix  the root cause;
-# let's disable `'ea'`.
+# let's disable `'equalalways'`.
 #}}}
-set noequalalways
-# Which pitfall should I be aware of when resetting `'ea'`?{{{
+&equalalways = false
+# Which pitfall should I be aware of when resetting `'equalalways'`?{{{
 #
 # It can  cause `E36`  to be  raised whenever  you try  to visit  a qf  entry by
 # pressing Enter in the qf window, while the latter is only 1 line high.
@@ -862,26 +858,26 @@ set noequalalways
 #
 # MWE:
 #
-#     $ vim -Nu NONE +'set noea' +'au QuickFixCmdPost * bo cwindow2' +'helpg readnews'
+#     $ vim -Nu NONE +'set noequalalways' +'au QuickFixCmdPost * botright cwindow2' +'helpg readnews'
 #     E36: Not enough room˜
 #
-#     $ vim -Nu NONE +'set noea' +2sp +sp
+#     $ vim -Nu NONE +'set noequalalways' +2sp +sp
 #     E36: Not enough room˜
 #
 # In the last example, the final `:sp` raises `E36`, because:
 #
 #    - creating a second window would require 2 lines
-#      (one for the text – because `'wmh'` is 1 – and one for the status line)
+#      (one for the text – because `'winminheight'` is 1 – and one for the status line)
 #
 #    - the top window would still need 2 lines (one for the text, and one for its status line)
 #
 #    - the top window occupies 3 lines, which is not enough for 2 + 2 lines;
-#      it needs to be resized, but Vim can't because `'ea'` is reset
+#      it needs to be resized, but Vim can't because `'equalalways'` is reset
 #
 # ---
 #
-# That's why we make sure – here and  in `vim-qf` – that the qf window is always
-# at least `&wmh+2` lines high.
+# That's why  we make sure –  here and in `vim-qf`  – that the qf  window is
+# always at least `&winminheight + 2` lines high.
 #}}}
 
 # Why setting `'splitbelow'` and `'splitright'`?{{{
@@ -911,14 +907,14 @@ set noequalalways
 # direction.
 #}}}
 # when we create a new horizontal viewport, it should be displayed at the bottom of the screen
-set splitbelow
+&splitbelow = true
 # and a new vertical one should be displayed on the right
-set splitright
+&splitright = true
 
 # let us squash an unfocused window to 0 lines
-set winminheight=0
+&winminheight = 0
 # let us squash an unfocused window to 0 columns (useful when we zoom a window with `SPC z`)
-set winminwidth=0
+&winminwidth = 0
 
 augroup SetPreviewPopupHeights | au!
     au VimEnter,VimResized * SetPreviewPopupHeights()
@@ -928,7 +924,7 @@ def SetPreviewPopupHeights()
     &previewheight = &lines / 3
     # make commands which by default would open a preview window, use a popup instead
     #
-    #     &previewpopup = printf('highlight:Normal,height:%d,width:%d', &pvh, (&columns * 2 / 3))
+    #     &previewpopup = printf('highlight:Normal,height:%d,width:%d', &previewheight, (&columns * 2 / 3))
 
     # TODO: It causes an issue with some of our commands/mappings; like `!m` for example.
     #

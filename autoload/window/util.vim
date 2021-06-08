@@ -18,7 +18,7 @@ def window#util#hasPreview(): bool #{{{1
     # Then we want this function to return false, because when it's true, we use
     # `wincmd P`  to focus the  window, which fails  (`E441`) when the  tab page
     # only  contains a  preview popup.   For  Vim, a  preview popup  is *not*  a
-    # preview window, even though it has the 'pvw' flag set.
+    # preview window, even though it has the 'previewwindow' flag set.
     #
     # It turns out that `#has_preview()` *does* return false in that case.
     # That's because  – to find  the preview window –  it iterates over  all the
@@ -29,7 +29,7 @@ def window#util#hasPreview(): bool #{{{1
     # popup; all is good.
     #}}}
     return range(1, winnr('$'))
-        ->mapnew((_, v: number): bool => getwinvar(v, '&pvw'))
+        ->mapnew((_, v: number): bool => getwinvar(v, '&previewwindow'))
         ->index(true) >= 0
 enddef
 

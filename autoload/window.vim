@@ -10,7 +10,7 @@ import GetWinMod from 'lg/window.vim'
 def window#disableWrapWhenMovingToVertSplit(dir: string) #{{{2
     setwinvar(winnr('#'), '&wrap', false)
     exe 'wincmd ' .. dir
-    setl nowrap
+    &l:wrap = false
 enddef
 
 def window#navigate(dir: string) #{{{2
@@ -68,7 +68,7 @@ enddef
 
 def window#previewOpen() #{{{2
     # if we're already in the preview window, get back to previous window
-    if &l:pvw
+    if &l:previewwindow
         wincmd p
         return
     endif

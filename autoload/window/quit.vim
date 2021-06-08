@@ -110,15 +110,15 @@ def window#quit#main() #{{{1
                     #
                     # `:close` doesn't close a window if it's the last one.
                     #}}}
-                    # Why adding a bang if `&l:bh == 'wipe'`?{{{
+                    # Why adding a bang if `&l:bufhidden == 'wipe'`?{{{
                     #
                     # To avoid E37.
                     # Vim refuses to wipe a modified buffer without a bang.
-                    # But  if I've  set 'bh'  to  'wipe', it's  probably not  an
-                    # important buffer (ex: the one opened by `:DebugVimrc`).
+                    # But if I've set `'bufhidden'` to `wipe`, it's probably not
+                    # an important buffer (e.g.: the one opened by `:DebugVimrc`).
                     # So, I don't want to be bothered by an error.
                     #}}}
-                    exe 'close' .. (&l:bh == 'wipe' ? '!' : '')
+                    exe 'close' .. (&l:bufhidden == 'wipe' ? '!' : '')
                     return
                 endif
             endif

@@ -129,9 +129,12 @@ def ApplyLayout(layout: list<any>) #{{{2
         endif
     else
         var split_method: string = {col: 'sp', row: 'vs'}[layout[0]]
-        if split_method == 'sp' && &spr || split_method == 'vs' && &sb
+        if split_method == 'sp' && &splitright
+        || split_method == 'vs' && &splitbelow
             split_method = 'rightb ' .. split_method
-        elseif split_method == 'sp' && !&spr || split_method == 'vs' && !&sb
+
+        elseif split_method == 'sp' && !&splitright
+        || split_method == 'vs' && !&splitbelow
             split_method = 'lefta ' .. split_method
         endif
 
