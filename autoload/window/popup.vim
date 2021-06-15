@@ -137,7 +137,7 @@ def ScrollTmuxPreviousPane(lhs: string): bool #{{{2
         # `system()` is too slow when we keep pressing a key; so we cache its output.
         sil should_scroll_tmux_previous_pane =
             system(tmux_cmd)
-                ->trim("\<NL>") =~ '^\%(ba\|z\)\=sh\n0$'
+                ->trim("\n") =~ '^\%(ba\|z\)\=sh\n0$'
         # Invalidate the cache after an arbitrary short time.
         timer_start(INVALIDATE_CACHE, (_) => {
             should_scroll_tmux_previous_pane = false

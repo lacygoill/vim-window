@@ -64,7 +64,7 @@ augroup WindowHeight | au!
     au TerminalWinOpen * SetTerminalHeight()
 
     # necessary since 8.2.0911
-    au CmdWinEnter * exe 'res ' .. &cmdwinheight
+    au CmdwinEnter * exe 'res ' .. &cmdwinheight
 
     # Why ?{{{
     #
@@ -518,7 +518,7 @@ def FixSpecialWindow(v: list<number>)
     var orig_topline: number
     [winnr, height, orig_topline] = v
     # restore the height
-    exe 'noa :' .. winnr .. 'res ' .. height
+    exe 'noa :' .. winnr .. ' res ' .. height
     # restore the original topline
     var id: number = win_getid(winnr)
     var offset: number = getwininfo(id)[0]['topline'] - orig_topline
