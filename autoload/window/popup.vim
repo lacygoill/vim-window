@@ -15,8 +15,8 @@ const AOF_KEY2NORM: dict<string> = {
     k: 'k',
     h: '5zh',
     l: '5zl',
-    c-d: "\<c-d>",
-    c-u: "\<c-u>",
+    C-d: "\<C-D>",
+    C-u: "\<C-U>",
     gg: 'gg',
     G: 'G',
 }
@@ -50,8 +50,8 @@ def window#popup#closeAll() #{{{2
     if topline != 0
         var scrolloff_save: number = &l:scrolloff
         &l:scrolloff = 0
-        exe 'norm! ' .. topline .. 'GztM'
-        #                              ^
+        execute 'normal! ' .. topline .. 'GztM'
+        #                                    ^
         # middle of the window to minimize the distance from the original cursor position
         &l:scrolloff = scrolloff_save
     elseif !empty('view')
@@ -77,12 +77,12 @@ def window#popup#scroll(lhs: string) #{{{2
         endif
     endif
 
-    if lhs == 'c-u'
+    if lhs == 'C-u'
         # We've pressed `M-u`, but there is nothing to scroll:
         # upcase the text up to the end of the current/next word.
         readline#changeCaseSetup(true)
         &operatorfunc = 'readline#changeCaseWord'
-        norm! g@l
+        normal! g@l
     endif
 enddef
 #}}}1
@@ -90,7 +90,7 @@ enddef
 def ScrollPreview(lhs: string) #{{{2
     var curwin: number = win_getid()
     # go to preview window
-    noa wincmd P
+    noautocmd wincmd P
 
     # Useful to see where we are.{{{
     #
@@ -103,14 +103,14 @@ def ScrollPreview(lhs: string) #{{{2
         &l:cursorline = true
         # If we  re-display the previewed buffer  later in a regular  window, we
         # don't want Vim to automatically set `'cursorline'`.
-        au BufWinEnter <buffer> ++once &l:cursorline = false
+        autocmd BufWinEnter <buffer> ++once &l:cursorline = false
     endif
 
     # move/scroll
-    exe GetScrollingCmd(lhs, curwin)
+    execute GetScrollingCmd(lhs, curwin)
 
     # get back to previous window
-    noa win_gotoid(curwin)
+    noautocmd win_gotoid(curwin)
 enddef
 
 def ScrollPopup(lhs: string, winid: number) #{{{2
@@ -127,7 +127,7 @@ def ScrollTmuxPreviousPane(lhs: string): bool #{{{2
 #    - the current pane is not maximized
 #    - the scrolling is vertical
 #}}}
-    if index(['j', 'k', 'gg', 'G', 'c-d', 'c-u'], lhs) < 0
+    if index(['j', 'k', 'gg', 'G', 'C-d', 'C-u'], lhs) < 0
         return false
     endif
     if !should_scroll_tmux_previous_pane
@@ -135,7 +135,7 @@ def ScrollTmuxPreviousPane(lhs: string): bool #{{{2
              'tmux display -p -t "{last}" "#{pane_current_command}"'
             .. '\; display -p             "#{window_zoomed_flag}"'
         # `system()` is too slow when we keep pressing a key; so we cache its output.
-        sil should_scroll_tmux_previous_pane =
+        silent should_scroll_tmux_previous_pane =
             system(tmux_cmd)
                 ->trim("\n") =~ '^\%(ba\|z\)\=sh\n0$'
         # Invalidate the cache after an arbitrary short time.
@@ -149,8 +149,8 @@ def ScrollTmuxPreviousPane(lhs: string): bool #{{{2
             j: 'scroll-down-and-cancel',
             gg: 'history-top',
             G: 'history-bottom',
-            c-d: 'halfpage-down',
-            c-u: 'halfpage-up',
+            C-d: 'halfpage-down',
+            C-u: 'halfpage-up',
         }[lhs])->job_start()
         return true
     endif
@@ -167,14 +167,14 @@ def GetScrollingCmd(lhs: string, winid: number): string #{{{2
     #     let winid = ['some text']->repeat(&lines * 2)->popup_create({})
     #     call setwinvar(winid, '&cursorline', v:true)
     #     call setwinvar(winid, '&number', v:true)
-    #     call win_execute(winid, 'norm! ' .. &lines .. 'G')
-    #     call win_execute(winid, 'norm! zRj')
+    #     call win_execute(winid, 'normal! ' .. &lines .. 'G')
+    #     call win_execute(winid, 'normal! zRj')
     #
     # That's why here, we need to return `zR` only if really necessary.
     # Otherwise, we can't scroll beyond the first screen of a long popup window.
     #}}}
     win_execute(winid, 'next_line_is_folded = foldclosed(line(".") + 1) != -1')
-    return 'sil! norm! ' .. (next_line_is_folded ? 'zR' : '')
+    return 'silent! normal! ' .. (next_line_is_folded ? 'zR' : '')
         # make `M-j` and `M-k` scroll through *screen* lines, not buffer lines
         .. (index(['j', 'k'], lhs) >= 0 ? 'g' : '')
         .. AOF_KEY2NORM[lhs]

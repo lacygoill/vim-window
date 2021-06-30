@@ -36,14 +36,14 @@ const R_FT: list<string> = ['tmuxprompt', 'websearch']
 # The position in the changelist is local  to the window.  It should be local to
 # the buffer.  We want it to be also preserved when switching buffers.
 
-augroup PreserveViewAndPosInChangelist | au!
-    au BufWinLeave * if !IsSpecial() | SaveView() | SaveChangePosition() | endif
-    au BufWinEnter * if !IsSpecial() | RestoreChangePosition() | RestoreView() | endif
+augroup PreserveViewAndPosInChangelist | autocmd!
+    autocmd BufWinLeave * if !IsSpecial() | SaveView() | SaveChangePosition() | endif
+    autocmd BufWinEnter * if !IsSpecial() | RestoreChangePosition() | RestoreView() | endif
     # You must restore the view *after* the position in the change list.
     # Otherwise it wouldn't be restored correctly.
 augroup END
 
-augroup WindowHeight | au!
+augroup WindowHeight | autocmd!
     # Why `BufWinEnter`?{{{
     #
     # This is useful when splitting a window to open a "websearch" file.
@@ -59,27 +59,27 @@ augroup WindowHeight | au!
     # Close the tmux pane which you've just opened.
     # Notice how the height of the current Vim window is not maximized anymore.
     #}}}
-    au BufWinEnter,WinEnter,VimResized * SetWindowHeight()
+    autocmd BufWinEnter,WinEnter,VimResized * SetWindowHeight()
 
-    au TerminalWinOpen * SetTerminalHeight()
+    autocmd TerminalWinOpen * SetTerminalHeight()
 
     # necessary since 8.2.0911
-    au CmdwinEnter * exe 'res ' .. &cmdwinheight
+    autocmd CmdwinEnter * execute 'resize ' .. &cmdwinheight
 
     # Why ?{{{
     #
     # After running  `:PluginsToCommit` and  pushing a  commit by  pressing `Up`
     # from a fugitive buffer, the current window is not maximized anymore.
     #}}}
-    au User Fugitive SetWindowHeight()
+    autocmd User Fugitive SetWindowHeight()
 augroup END
 
-augroup UncloseWindow | au!
-    au QuitPre * window#unclose#save()
+augroup UncloseWindow | autocmd!
+    autocmd QuitPre * window#unclose#save()
 augroup END
 
-augroup CustomizePreviewPopup | au!
-    au BufWinEnter * CustomizePreviewPopup()
+augroup CustomizePreviewPopup | autocmd!
+    autocmd BufWinEnter * CustomizePreviewPopup()
 augroup END
 
 # Functions {{{1
@@ -102,7 +102,7 @@ def CustomizePreviewPopup() #{{{2
     # For some reason, the title would not be cleared without the delay.
     # I guess Vim sets it slightly later.
     #}}}
-    exe printf('au WinLeave * ++once popup_setoptions(%d, %s)', winid, opts)
+    execute printf('autocmd WinLeave * ++once popup_setoptions(%d, %s)', winid, opts)
 enddef
 
 def GetDiffHeight(n: number = winnr()): number #{{{2
@@ -134,7 +134,7 @@ def HeightShouldBeReset(n: number): bool #{{{2
 # Whatever change  you perform  on this  function, make sure  the height  of the
 # windows are correct after executing:
 #
-#     :vert pedit $MYVIMRC
+#     :vertical pedit $MYVIMRC
 #
 # ---
 #
@@ -218,7 +218,7 @@ enddef
 
 def MakeWindowSmall() #{{{2
     # to understand the purpose of `&winminheight + 2`, see our comments around `&equalalways = false`
-    exe 'res ' .. (&l:previewwindow
+    execute 'resize ' .. (&l:previewwindow
         ?              &l:previewheight
         :          &buftype == 'quickfix'
         ?              min([Q_HEIGHT, max([line('$'), &winminheight + 2])])
@@ -307,7 +307,7 @@ def SetWindowHeight() #{{{2
     endif
 
     if getcmdwintype() != ''
-        exe 'noa res ' .. &cmdwinheight
+        execute 'noautocmd resize ' .. &cmdwinheight
         return
     endif
 
@@ -362,8 +362,8 @@ def SetWindowHeight() #{{{2
     #
     # We could fix it by adding these lines:
     #
-    #     res -1
-    #     res +1
+    #     resize -1
+    #     resize +1
     #
     # But  it would  sometimes cause  the status  line to  flicker which  is too
     # distracting.  It would happen, for example, when navigating up/down in the
@@ -371,18 +371,18 @@ def SetWindowHeight() #{{{2
     #
     #     set hidden laststatus=2
     #     set runtimepath^=~/.vim/pack/minpac/opt/vim-dirvish
-    #     nno -- <cmd>Dirvish<cr>
-    #     au BufWinEnter,WinEnter * noa wincmd _ | res -1 | res +1
+    #     nnoremap -- <Cmd>Dirvish<CR>
+    #     autocmd BufWinEnter,WinEnter * noautocmd wincmd _ | resize -1 | resize +1
     #     filetype plugin on
     #
     # It *looks* like a regression introduced in 8.2.2453, but it's not.
-    # There's nothing  in the doc which  says that this  `res -1 | res  +1` hack
-    # should not sometimes cause the statusline to flicker.
+    # There's nothing in  the doc which says  that this `resize -1  | resize +1`
+    # hack should not sometimes cause the statusline to flicker.
         #}}}
     if &winminheight == 0
         try
             &winminheight = 1
-            noa wincmd _
+            noautocmd wincmd _
         # E36: Not enough room
         # E593: Need at least 123 lines: winminheight=1
         catch /^Vim\%((\a\+)\)\=:E\%(36\|593\):/
@@ -390,7 +390,7 @@ def SetWindowHeight() #{{{2
             &winminheight = 0
         endtry
     endif
-    noa wincmd _
+    noautocmd wincmd _
 
     # Why does `'scrolloff'` need to be temporarily reset?{{{
     #
@@ -402,9 +402,9 @@ def SetWindowHeight() #{{{2
     #
     # MWE:
     #
-    #     $ vim -Nu NONE +'set scrolloff=3 | helpg foobar' +'cw | 2q'
-    #     :clast | wincmd _ | 2res 10
-    #     :call win_execute(win_getid(2), "norm! \<c-y>")
+    #     $ vim -Nu NONE +'set scrolloff=3 | helpgrep foobar' +'cwindow | :2 quit'
+    #     :clast | wincmd _ | :2 resize 10
+    #     :call win_execute(win_getid(2), "normal! \<C-Y>")
     #
     # After the first Ex command, the last line of the qf buffer is the topline.
     # The second Ex  command should scroll one line upward;  but in practice, it
@@ -413,12 +413,12 @@ def SetWindowHeight() #{{{2
     # It could be a bug, because I can't always reproduce.
     # For example, if you scroll back so that the last line is again the topline:
     #
-    #     :call win_execute(win_getid(2), "norm! 4\<c-e>")
+    #     :call win_execute(win_getid(2), "normal! 4\<C-E>")
     #
     # Then, invoke `win_execute()` exactly as  when you triggered the unexpected
     # scrolling earlier:
     #
-    #     :call win_execute(win_getid(2), "norm! \<c-y>")
+    #     :call win_execute(win_getid(2), "normal! \<C-Y>")
     #
     # This time, Vim scrolls only 1 line upward.
     #
@@ -426,24 +426,24 @@ def SetWindowHeight() #{{{2
     #
     # Sth else is weird:
     #
-    #     $ vim -Nu NONE +'set scrolloff=3 | helpg foobar' +'cw | 2q'
+    #     $ vim -Nu NONE +'set scrolloff=3 | helpgrep foobar' +'cwindow | :2 quit'
     #     :clast
     #
     # The last line of the qf buffer is the *last* line of the window.
     #
-    #     :wincmd _ | 2res 10
+    #     :wincmd _ | :2 resize 10
     #
     # The last line of the qf buffer is the *first* line of the window.
     #
-    #     :wincmd w | exe "norm! 6\<c-y>" | wincmd w
+    #     :wincmd w | execute "normal! 6\<C-Y>" | wincmd w
     #
     # The last line of the qf buffer is the last line of the window.
     #
-    #     :wincmd _ | 2res 10
+    #     :wincmd _ | :2 resize 10
     #
     # The last line of the qf buffer is *still* the last line of the window.
     #
-    # So, we  have a unique  command (`:wincmd  _ | 2res  10`) which can  have a
+    # So, we have a unique command (`:wincmd _ | :2 resize 10`) which can have a
     # different effect on  the qf window; and  the difference is not  due to the
     # view in the latter, because it's always  the same (the last line of the qf
     # buffer is the last line of the window).
@@ -456,7 +456,7 @@ def SetWindowHeight() #{{{2
     # It's not an issue at the moment, because we only set the global value, but
     # keep that in mind.
     #}}}
-    var scrolloff_save: number = &scrolloff | noa &scrolloff = 0
+    var scrolloff_save: number = &scrolloff | noautocmd &scrolloff = 0
     special_windows
         ->mapnew((_, v: list<number>) => {
             # Necessary to prevent the command-line's height from increasing.{{{
@@ -474,8 +474,8 @@ def SetWindowHeight() #{{{2
             #     $ vim -S <(cat <<'EOF'
             #         vim9script
             #         writefile(['#!/bin/bash', '', 'name=123'], '/tmp/sh.sh')
-            #         e /tmp/sh.sh
-            #         sp
+            #         edit /tmp/sh.sh
+            #         split
             #         # run shellcheck(1) on the current script,
             #         # put the errors in the location list,
             #         # open the location window (in a vertical split)
@@ -492,7 +492,7 @@ def SetWindowHeight() #{{{2
                 FixSpecialWindow(v)
             endif
         })
-    noa &scrolloff = scrolloff_save
+    noautocmd &scrolloff = scrolloff_save
 enddef
 
 def HasNeighborAboveOrBelow(winnr: number): bool
@@ -518,18 +518,18 @@ def FixSpecialWindow(v: list<number>)
     var orig_topline: number
     [winnr, height, orig_topline] = v
     # restore the height
-    exe 'noa :' .. winnr .. ' res ' .. height
+    execute 'noautocmd :' .. winnr .. ' resize ' .. height
     # restore the original topline
     var id: number = win_getid(winnr)
     var offset: number = getwininfo(id)[0]['topline'] - orig_topline
     if offset != 0
-        win_execute(id, 'noa norm! ' .. abs(offset) .. (offset > 0 ? "\<c-y>" : "\<c-e>"))
+        win_execute(id, 'noautocmd normal! ' .. abs(offset) .. (offset > 0 ? "\<C-Y>" : "\<C-E>"))
     endif
 enddef
 
 def SetTerminalHeight() #{{{2
     if !IsAloneInTabpage() && !IsMaximizedVertically() && !window#util#isPopup()
-        exe 'noa res ' .. T_HEIGHT
+        execute 'noautocmd resize ' .. T_HEIGHT
     endif
 enddef
 
@@ -553,7 +553,7 @@ def RestoreChangePosition() #{{{2
     if cnt == 0
         return
     endif
-    exe 'sil! norm! ' .. abs(cnt) .. (cnt > 0 ? 'g,' : 'g;')
+    execute 'silent! normal! ' .. abs(cnt) .. (cnt > 0 ? 'g,' : 'g;')
 enddef
 
 def RestoreView() #{{{2
@@ -574,9 +574,9 @@ def RestoreView() #{{{2
         endif
         remove(w:saved_views, n)
     else
-        # `:h last-position-jump`
+        # `:help last-position-jump`
         if line("'\"") >= 1 && line("'\"") <= line('$') && &filetype !~ 'commit'
-            norm! g`"
+            normal! g`"
         endif
     endif
 enddef
@@ -584,50 +584,50 @@ enddef
 # Mappings {{{1
 # C-[hjkl]             move across windows {{{2
 
-nno <unique> <c-h> <cmd>call window#navigate('h')<cr>
-nno <unique> <c-j> <cmd>call window#navigate('j')<cr>
-nno <unique> <c-k> <cmd>call window#navigate('k')<cr>
-nno <unique> <c-l> <cmd>call window#navigate('l')<cr>
+nnoremap <unique> <C-H> <Cmd>call window#navigate('h')<CR>
+nnoremap <unique> <C-J> <Cmd>call window#navigate('j')<CR>
+nnoremap <unique> <C-K> <Cmd>call window#navigate('k')<CR>
+nnoremap <unique> <C-L> <Cmd>call window#navigate('l')<CR>
 
 # M-[hjkl] du gg G     scroll popup (or preview) window {{{2
 
-MapMeta('h', '<cmd>call window#popup#scroll("h")<cr>', 'n', 'u')
-MapMeta('j', '<cmd>call window#popup#scroll("j")<cr>', 'n', 'u')
-MapMeta('k', '<cmd>call window#popup#scroll("k")<cr>', 'n', 'u')
-MapMeta('l', '<cmd>call window#popup#scroll("l")<cr>', 'n', 'u')
+MapMeta('h', '<Cmd>call window#popup#scroll("h")<CR>', 'n', 'u')
+MapMeta('j', '<Cmd>call window#popup#scroll("j")<CR>', 'n', 'u')
+MapMeta('k', '<Cmd>call window#popup#scroll("k")<CR>', 'n', 'u')
+MapMeta('l', '<Cmd>call window#popup#scroll("l")<CR>', 'n', 'u')
 
-MapMeta('d', '<cmd>call window#popup#scroll("c-d")<cr>', 'n', 'u')
-MapMeta('u', '<cmd>call window#popup#scroll("c-u")<cr>', 'n', 'u')
+MapMeta('d', '<Cmd>call window#popup#scroll("C-d")<CR>', 'n', 'u')
+MapMeta('u', '<Cmd>call window#popup#scroll("C-u")<CR>', 'n', 'u')
 
-MapMeta('g', '<cmd>call window#popup#scroll("gg")<cr>', 'n', 'u')
-MapMeta('G', '<cmd>call window#popup#scroll("G")<cr>', 'n', 'u')
+MapMeta('g', '<Cmd>call window#popup#scroll("gg")<CR>', 'n', 'u')
+MapMeta('G', '<Cmd>call window#popup#scroll("G")<CR>', 'n', 'u')
 
 # SPC (prefix) {{{2
 
-# Provide a  `<plug>` mapping  to access  our `window#quit#main()`  function, so
+# Provide a  `<Plug>` mapping  to access  our `window#quit#main()`  function, so
 # that we can call it more easily from other plugins.
-# Why don't you use `:norm 1 q` to quit in your plugins?{{{
+# Why don't you use `:normal 1 q` to quit in your plugins?{{{
 #
 # Yes, we did this in the past:
 #
-#     :nno <buffer> q <cmd>norm 1 q<cr>
+#     :nnoremap <buffer> q <Cmd>normal 1 q<CR>
 #
 # But it seems to cause too many issues.
-# We  had  one  in  the  past  involving  an  interaction  between  `:norm`  and
+# We  had  one in  the  past  involving  an  interaction between  `:normal`  and
 # `feedkeys()` with the `t` flag.
 #
 # I also had a `E169: Command too recursive` error, but I can't reproduce anymore.
-# I suspect the issue was somewhere else (maybe the `<space>q` was not installed
+# I suspect the issue was somewhere else (maybe the `<Space>q` was not installed
 # while we  were debugging  sth); nevertheless, the  error message  is confusing.
 #
 # And the mapping in itself can  be confusing to understand/debug; I much prefer
 # a mapping where the lhs is not repeated in the rhs.
 #}}}
-nmap <unique> <space>q <plug>(my_quit)
-nno <unique> <plug>(my_quit) <cmd>call window#quit#main()<cr>
-xno <unique> <space>q <c-\><c-n><cmd>call window#quit#main()<cr>
-nno <unique> <space>Q <cmd>qa!<cr>
-xno <unique> <space>Q <cmd>qa!<cr>
+nmap <unique> <Space>q <Plug>(my_quit)
+nnoremap <unique> <Plug>(my_quit) <Cmd>call window#quit#main()<CR>
+xnoremap <unique> <Space>q <C-\><C-N><Cmd>call window#quit#main()<CR>
+nnoremap <unique> <Space>Q <Cmd>quitall!<CR>
+xnoremap <unique> <Space>Q <Cmd>quitall!<CR>
 # Why not `SPC u`?{{{
 #
 # We often type it by accident.
@@ -636,31 +636,31 @@ xno <unique> <space>Q <cmd>qa!<cr>
 #
 # Let's try `SPC U`; it should be harder to press by accident.
 #}}}
-nno <unique> <space>U <cmd>call window#unclose#restore(v:count1)<cr>
-nno <unique> <space>u <nop>
+nnoremap <unique> <Space>U <Cmd>call window#unclose#restore(v:count1)<CR>
+nnoremap <unique> <Space>u <Nop>
 
-nno <unique> <space>z <cmd>call window#zoomToggle()<cr>
+nnoremap <unique> <Space>z <Cmd>call window#zoomToggle()<CR>
 
 # C-w (prefix) {{{2
 
-# update window's height – with `do WinEnter` – when we move it at the very top/bottom
-nno <unique> <c-w>J <cmd>wincmd J<bar>do <nomodeline> WinEnter<cr>
-nno <unique> <c-w>K <cmd>wincmd K<bar>do <nomodeline> WinEnter<cr>
+# update window's height – with `doautocmd WinEnter` – when we move it at the very top/bottom
+nnoremap <unique> <C-W>J <Cmd>wincmd J <Bar> do <nomodeline> WinEnter<CR>
+nnoremap <unique> <C-W>K <Cmd>wincmd K <Bar> do <nomodeline> WinEnter<CR>
 
 # disable `'wrap'` when turning a split into a vertical one
 # Alternative:{{{
 #
-#     augroup NowrapInVertSplits | au!
-#         au WinLeave * if winwidth(0) != &columns | &l:wrap = false | endif
-#         au WinEnter * if winwidth(0) != &columns | &l:wrap = false | endif
+#     augroup NowrapInVertSplits | autocmd!
+#         autocmd WinLeave * if winwidth(0) != &columns | &l:wrap = false | endif
+#         autocmd WinEnter * if winwidth(0) != &columns | &l:wrap = false | endif
 #     augroup END
 #
 # Pro: Will probably cover more cases.
 #
 # Con: WinLeave/WinEnter is not fired after moving a window.
 #}}}
-nno <unique> <c-w>H <cmd>call window#disableWrapWhenMovingToVertSplit('H')<cr>
-nno <unique> <c-w>L <cmd>call window#disableWrapWhenMovingToVertSplit('L')<cr>
+nnoremap <unique> <C-W>H <Cmd>call window#disableWrapWhenMovingToVertSplit('H')<CR>
+nnoremap <unique> <C-W>L <Cmd>call window#disableWrapWhenMovingToVertSplit('L')<CR>
 
 # open path in split window/tabpage and unfold
 # `C-w f`, `C-w F`, `C-w gf`, ... I'm confused!{{{
@@ -680,20 +680,20 @@ nno <unique> <c-w>L <cmd>call window#disableWrapWhenMovingToVertSplit('L')<cr>
 #    │ gF │ tabpage, taking into account line indicator like `:123`      │
 #    └────┴──────────────────────────────────────────────────────────────┘
 #}}}
-nno <c-w>f <c-w>fzv
-nno <c-w>F <c-w>Fzv
+nnoremap <C-W>f <C-W>fzv
+nnoremap <C-W>F <C-W>Fzv
 
-nno <c-w>gf <c-w>gfzv
-nno <c-w>gF <c-w>gFzv
-nno <c-w>GF <c-w>GFzv
+nnoremap <C-W>gf <C-W>gfzv
+nnoremap <C-W>gF <C-W>gFzv
+nnoremap <C-W>GF <C-W>GFzv
 # easier to press `ZGF` than `ZgF`
 
-xno <c-w>f <c-w>fzv
-xno <c-w>F <c-w>Fzv
+xnoremap <C-W>f <C-W>fzv
+xnoremap <C-W>F <C-W>Fzv
 
-xno <c-w>gf <c-w>gfzv
-xno <c-w>gF <c-w>gFzv
-xno <c-w>GF <c-w>GFzv
+xnoremap <C-W>gf <C-W>gfzv
+xnoremap <C-W>gF <C-W>gFzv
+xnoremap <C-W>GF <C-W>GFzv
 
 # TODO:
 # Implement a `<C-w>F` visual mapping which would take into account a line address.
@@ -704,7 +704,7 @@ xno <c-w>GF <c-w>GFzv
 # z (prefix) {{{2
 # z <>              open/focus/close terminal window {{{3
 #
-# Why `do WinEnter`?{{{
+# Why `doautocmd WinEnter`?{{{
 #
 # To update the height of the focused window.
 # Atm, we have an autocmd listening  to `WinEnter` which maximizes the height of
@@ -712,31 +712,31 @@ xno <c-w>GF <c-w>GFzv
 #
 # So, if  we are in such  a window, we expect  its height to still  be maximized
 # after closing a terminal/qf/preview window.
-# But that's not what happens without `do WinEnter`:
+# But that's not what happens without `doautocmd WinEnter`:
 #
-#     $ vim +'sp|helpg foobar'
+#     $ vim +'split | helpgrep foobar'
 #     :wincmd t
 #     :cclose
 #}}}
-nno <unique> z< <cmd>call window#terminalOpen()<cr>
-nno <unique> z> <cmd>call window#terminalClose()<bar>do <nomodeline> WinEnter<cr>
+nnoremap <unique> z< <Cmd>call window#terminalOpen()<CR>
+nnoremap <unique> z> <Cmd>call window#terminalClose() <Bar> doautocmd <nomodeline> WinEnter<CR>
 
 # z ()  z []                         qf/ll    window {{{3
 
-nno <unique> z( <cmd>call <sid>QfOpenOrFocus('qf')<cr>
-nno <unique> z) <cmd>cclose<bar>do <nomodeline> WinEnter<cr>
+nnoremap <unique> z( <Cmd>call <SID>QfOpenOrFocus('qf')<CR>
+nnoremap <unique> z) <Cmd>cclose <Bar> doautocmd <nomodeline> WinEnter<CR>
 
-nno <unique> z[ <cmd>call <sid>QfOpenOrFocus('loc')<cr>
-nno <unique> z] <cmd>lclose<bar>do <nomodeline> WinEnter<cr>
+nnoremap <unique> z[ <Cmd>call <SID>QfOpenOrFocus('loc')<CR>
+nnoremap <unique> z] <Cmd>lclose <Bar> doautocmd <nomodeline> WinEnter<CR>
 
 # z {}                               preview  window {{{3
 
-nno <unique> z{ <cmd>call window#previewOpen()<cr>
-nno <unique> z} <c-w>z<cmd>do <nomodeline> WinEnter<cr>
+nnoremap <unique> z{ <Cmd>call window#previewOpen()<CR>
+nnoremap <unique> z} <C-W>z<Cmd>doautocmd <nomodeline> WinEnter<CR>
 
 # zp                close all popup/foating windows {{{3
 
-nno <unique> zp <cmd>call window#popup#closeAll()<cr>
+nnoremap <unique> zp <Cmd>call window#popup#closeAll()<CR>
 
 # z C-[hjkl]        resize window {{{3
 
@@ -748,49 +748,49 @@ nno <unique> zp <cmd>call window#popup#closeAll()<cr>
 # left control with our left pinky.
 # That's 2 pinkys, on different hands; too awkward.
 #}}}
-# Why `<plug>` mappings?{{{
+# Why `<Plug>` mappings?{{{
 #
 # Useful to make them repeatable from another script, via functions provided by `vim-submode`.
 #}}}
-nmap <unique> z<c-h> <plug>(window-resize-h)
-nmap <unique> z<c-j> <plug>(window-resize-j)
-nmap <unique> z<c-k> <plug>(window-resize-k)
-nmap <unique> z<c-l> <plug>(window-resize-l)
+nmap <unique> z<C-H> <Plug>(window-resize-h)
+nmap <unique> z<C-J> <Plug>(window-resize-j)
+nmap <unique> z<C-K> <Plug>(window-resize-k)
+nmap <unique> z<C-L> <Plug>(window-resize-l)
 
-nno <plug>(window-resize-h) <cmd>call window#resize('h')<cr>
-nno <plug>(window-resize-j) <cmd>call window#resize('j')<cr>
-nno <plug>(window-resize-k) <cmd>call window#resize('k')<cr>
-nno <plug>(window-resize-l) <cmd>call window#resize('l')<cr>
+nnoremap <Plug>(window-resize-h) <Cmd>call window#resize('h')<CR>
+nnoremap <Plug>(window-resize-j) <Cmd>call window#resize('j')<CR>
+nnoremap <Plug>(window-resize-k) <Cmd>call window#resize('k')<CR>
+nnoremap <Plug>(window-resize-l) <Cmd>call window#resize('l')<CR>
 
 # z[hjkl]           split in any direction {{{3
 
-nno <unique> zh <cmd>setl nowrap <bar> leftabove vsplit  <bar> setl nowrap<cr>
-nno <unique> zl <cmd>setl nowrap <bar> rightbelow vsplit <bar> setl nowrap<cr>
-nno <unique> zj <cmd>belowright split<cr>
-nno <unique> zk <cmd>aboveleft split<cr>
+nnoremap <unique> zh <Cmd>setlocal nowrap <Bar> leftabove  vsplit <Bar> setlocal nowrap<CR>
+nnoremap <unique> zl <Cmd>setlocal nowrap <Bar> rightbelow vsplit <Bar> setlocal nowrap<CR>
+nnoremap <unique> zj <Cmd>belowright split<CR>
+nnoremap <unique> zk <Cmd>aboveleft split<CR>
 #}}}2
 # Z (prefix) {{{2
 # Z                 simpler window prefix {{{3
 
 # Why a *recursive* mapping?{{{
 #
-# We need the recursiveness, so that, when we type, we can replace <c-w>
+# We need the recursiveness, so that, when we type, we can replace <C-W>
 # with Z in custom mappings (own+third party).
 #
 # MWE:
 #
-#     nno <c-w><cr> <cmd>echo 'hello'<cr>
-#     nno Z <c-w>
+#     nnoremap <C-W><CR> <Cmd>echo 'hello'<CR>
+#     nnoremap Z <C-W>
 #     " press 'Z cr': doesn't work ✘
 #
-#     nno <c-w><cr> <cmd>echo 'hello'<cr>
-#     nmap Z <c-w>
+#     nnoremap <C-W><CR> <Cmd>echo 'hello'<CR>
+#     nmap Z <C-W>
 #     " press 'Z cr': works ✔
 #
 # Indeed, once  `Z` has  been expanded into  `C-w`, we might  need to  expand it
 # *further* for custom mappings using `C-w` in their lhs.
 #}}}
-nmap <unique> Z <c-w>
+nmap <unique> Z <C-W>
 # Why no `<unique>`?{{{
 #
 # `vim-sneak` installs a `Z` mapping:
@@ -799,19 +799,19 @@ nmap <unique> Z <c-w>
 #
 # See: `~/.vim/pack/minpac/opt/vim-sneak/plugin/sneak.vim`
 #}}}
-xmap          Z <c-w>
+xmap          Z <C-W>
 
 # ZQ  ZZ {{{3
 
 # Our `SPC q` mapping is special, it creates a session file so that we can undo
 # the closing of the window. `ZQ` should behave in the same way.
 
-nmap <unique> ZQ <space>q
+nmap <unique> ZQ <Space>q
 
 # If we press `ZZ`, Vim will remap the keys into `C-w Z`, which doesn't do anything.
 # We need to restore `ZZ` original behavior.
-nmap ZZ <plug>(my_ZZ_update)<plug>(my_quit)
-nno <plug>(my_ZZ_update) <cmd>update<cr>
+nmap ZZ <Plug>(my_ZZ_update)<Plug>(my_quit)
+nnoremap <Plug>(my_ZZ_update) <Cmd>update<CR>
 # }}}1
 # Options {{{1
 
@@ -831,7 +831,7 @@ nno <plug>(my_ZZ_update) <cmd>update<cr>
 #    - you open our custom file explorer fex (`-t`)
 #    - you move your cursor on a file path
 #    - you open it in a vertical split (`C-w f`)
-#    - you close the latter (`:q`)
+#    - you close the latter (`:quit`)
 #
 # The original 2 horizontal splits are unexpectedly resized.
 #
@@ -848,8 +848,8 @@ nno <plug>(my_ZZ_update) <cmd>update<cr>
 #
 # Example:
 #
-#     $ vim +'helpg Arthur!'
-#     :res 1
+#     $ vim +'helpgrep Arthur!'
+#     :resize 1
 #     " press Enter
 #
 # Indeed, Vim tries to split the qf window to display the entry.
@@ -858,13 +858,13 @@ nno <plug>(my_ZZ_update) <cmd>update<cr>
 #
 # MWE:
 #
-#     $ vim -Nu NONE +'set noequalalways' +'au QuickFixCmdPost * botright cwindow2' +'helpg readnews'
+#     $ vim -Nu NONE +'set noequalalways' +'autocmd QuickFixCmdPost * botright cwindow2' +'helpg readnews'
 #     E36: Not enough room˜
 #
-#     $ vim -Nu NONE +'set noequalalways' +2sp +sp
+#     $ vim -Nu NONE +'set noequalalways | :2 split |split'
 #     E36: Not enough room˜
 #
-# In the last example, the final `:sp` raises `E36`, because:
+# In the last example, the final `:split` raises `E36`, because:
 #
 #    - creating a second window would require 2 lines
 #      (one for the text – because `'winminheight'` is 1 – and one for the status line)
@@ -916,8 +916,8 @@ nno <plug>(my_ZZ_update) <cmd>update<cr>
 # let us squash an unfocused window to 0 columns (useful when we zoom a window with `SPC z`)
 &winminwidth = 0
 
-augroup SetPreviewPopupHeights | au!
-    au VimEnter,VimResized * SetPreviewPopupHeights()
+augroup SetPreviewPopupHeights | autocmd!
+    autocmd VimEnter,VimResized * SetPreviewPopupHeights()
 augroup END
 
 def SetPreviewPopupHeights()

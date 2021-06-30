@@ -40,12 +40,12 @@ def window#unclose#restore(cnt: number) #{{{2
 
     # recreate a closed tab page
     if layout.was_onlywindow
-        exe ':' .. (layout.tabpagenr - 1) .. 'tabnew'
+        execute ':' .. (layout.tabpagenr - 1) .. 'tabnew'
     endif
 
     # make sure we're in the right tab page
     try
-        exe ':' .. layout.tabpagenr .. 'tabnext'
+        execute ':' .. layout.tabpagenr .. 'tabnext'
     # Sometimes, `E16` is raised.{{{
     #
     # Because `layout.tabpagenr` might not match an existing tab page.
@@ -53,9 +53,9 @@ def window#unclose#restore(cnt: number) #{{{2
     # MWE:
     #
     #     $ vim -S <(cat <<'EOF'
-    #         tabe /tmp/file
-    #         sp
-    #         q
+    #         tabedit /tmp/file
+    #         split
+    #         quit
     #         tabclose
     #         call feedkeys(' U')
     #     EOF
@@ -70,8 +70,8 @@ def window#unclose#restore(cnt: number) #{{{2
     # listen to `TabClosed`, because it's fired too late:
     #
     #     $ vim -S <(cat <<'EOF'
-    #         e ~/.shrc
-    #         tabe ~/.bashrc
+    #         edit ~/.shrc
+    #         tabedit ~/.bashrc
     #         call feedkeys(' q U')
     #     EOF
     #     )
@@ -79,8 +79,8 @@ def window#unclose#restore(cnt: number) #{{{2
     # The second tab displays `~/.shrc`; it should display `~/.bashrc`.
     #}}}
     catch /^Vim\%((\a\+)\)\=:E16:/
-        exe ':' .. (layout.tabpagenr - 1) .. 'tabnew'
-        exe ':' .. layout.tabpagenr .. 'tabnext'
+        execute ':' .. (layout.tabpagenr - 1) .. 'tabnew'
+        execute ':' .. layout.tabpagenr .. 'tabnext'
     endtry
 
     # start from a single empty window
@@ -94,13 +94,13 @@ def window#unclose#restore(cnt: number) #{{{2
     # restore view
     winrestview(layout.view)
     # restore windows geometry
-    exe layout.resizecmd
+    execute layout.resizecmd
 
     # remove used layout
     undo_layouts = undo_layouts[: -2]
 
     if bufexists(newbuf)
-        exe 'bw! ' .. newbuf
+        execute 'bwipeout! ' .. newbuf
     endif
 enddef
 # }}}1
@@ -125,17 +125,17 @@ def ApplyLayout(layout: list<any>) #{{{2
     if layout[0] == 'leaf'
         var bufnr: number = layout[1]
         if bufexists(bufnr)
-            exe 'b ' .. bufnr
+            execute 'buffer ' .. bufnr
         endif
     else
-        var split_method: string = {col: 'sp', row: 'vs'}[layout[0]]
-        if split_method == 'sp' && &splitright
-        || split_method == 'vs' && &splitbelow
-            split_method = 'rightb ' .. split_method
+        var split_method: string = {col: 'split', row: 'vsplit'}[layout[0]]
+        if split_method == 'split' && &splitright
+        || split_method == 'vsplit' && &splitbelow
+            split_method = 'rightbelow ' .. split_method
 
-        elseif split_method == 'sp' && !&splitright
-        || split_method == 'vs' && !&splitbelow
-            split_method = 'lefta ' .. split_method
+        elseif split_method == 'split' && !&splitright
+        || split_method == 'vsplit' && !&splitbelow
+            split_method = 'leftabove ' .. split_method
         endif
 
         # recreate windows for a row or column of the original layout, and save their ids
@@ -144,7 +144,7 @@ def ApplyLayout(layout: list<any>) #{{{2
         #                            ├───┘{{{
         #                            └ split n-1 times
         #}}}
-            exe split_method
+            execute split_method
             winids += [win_getid()]
         endfor
 

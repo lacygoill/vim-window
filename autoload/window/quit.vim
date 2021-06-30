@@ -13,11 +13,11 @@ def window#quit#main() #{{{1
     #   │ nothing in a regular buffer
     #   │
     if !getcmdwintype()->empty()
-        q
+        quit
         return
     endif
 
-    # a sign may be left in the sign column if you close an undotree diff panel with `:q` or `:close`
+    # a sign may be left in the sign column if you close an undotree diff panel with `:quit` or `:close`
     if bufname('%') =~ '^diffpanel_\d\+$'
         plugin#undotree#closeDiffPanel()
         return
@@ -48,7 +48,7 @@ def window#quit#main() #{{{1
                || (winnr() == 1 ? 2 : 1)->getwinvar('&diff')
              )
            )
-        qall!
+        quitall!
 
     elseif &buftype == 'terminal'
         # A popup terminal is a special case.{{{
@@ -58,7 +58,7 @@ def window#quit#main() #{{{1
         if window#util#isPopup()
             win_getid()->popup_close()
         else
-            bw!
+            bwipeout!
         endif
 
     else
@@ -66,14 +66,14 @@ def window#quit#main() #{{{1
         # if the window we're closing is associated to a ll window, close the latter too
         # We could also install an autocmd in our vimrc:{{{
         #
-        #     au QuitPre * ++nested if &buftype != 'quickfix' | lclose | endif
+        #     autocmd QuitPre * ++nested if &buftype != 'quickfix' | lclose | endif
         #
         # Inspiration:
         # https://github.com/romainl/vim-qf/blob/5f971f3ed7f59ff11610c00b8a1e343e2dbae510/plugin/qf.vim#L64-L65
         #
         # But in this  case, we couldn't close the current  window with `:close`
         # at the end of the function.
-        # We would have to use `:q`, because `:close` doesn't emit `QuitPre`.
+        # We would have to use `:quit`, because `:close` doesn't emit `QuitPre`.
         # For the moment, I prefer to use `:close` because it doesn't close
         # a window if it's the last one.
         #}}}
@@ -101,9 +101,9 @@ def window#quit#main() #{{{1
                     # Why `:close` instead of `:quit`?{{{
                     #
                     #     $ vim
-                    #     :h
+                    #     :help
                     #     C-w w
-                    #     :q
+                    #     :quit
                     #
                     # Vim quits entirely instead of only closing the window.
                     # It considers help buffers as unimportant.
@@ -118,7 +118,7 @@ def window#quit#main() #{{{1
                     # an important buffer (e.g.: the one opened by `:DebugVimrc`).
                     # So, I don't want to be bothered by an error.
                     #}}}
-                    exe 'close' .. (&l:bufhidden == 'wipe' ? '!' : '')
+                    execute 'close' .. (&l:bufhidden == 'wipe' ? '!' : '')
                     return
                 endif
             endif

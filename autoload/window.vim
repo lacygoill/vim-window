@@ -9,18 +9,18 @@ import GetWinMod from 'lg/window.vim'
 # Interface {{{1
 def window#disableWrapWhenMovingToVertSplit(dir: string) #{{{2
     setwinvar(winnr('#'), '&wrap', false)
-    exe 'wincmd ' .. dir
+    execute 'wincmd ' .. dir
     &l:wrap = false
 enddef
 
 def window#navigate(dir: string) #{{{2
     # Purpose:{{{
     #
-    #     $ vim -Nu NONE +'sp|vs|vs|wincmd l'
+    #     $ vim -Nu NONE +'split | vsplit | vsplit | wincmd l'
     #     :wincmd j
     #     :wincmd k
     #
-    #     $ vim -Nu NONE +'vs|sp|sp|wincmd j'
+    #     $ vim -Nu NONE +'vsplit | split | split | wincmd j'
     #     :wincmd l
     #     :wincmd h
     #
@@ -35,7 +35,7 @@ def window#navigate(dir: string) #{{{2
         endtry
     else
         try
-            exe 'wincmd ' .. dir
+            execute 'wincmd ' .. dir
         catch
             Catch()
             return
@@ -77,7 +77,7 @@ def window#previewOpen() #{{{2
     try
         wincmd }
         wincmd P
-        norm! zMzvzz
+        normal! zMzvzz
         wincmd p
     catch
         Catch()
@@ -108,23 +108,23 @@ def window#resize(key: string) #{{{2
         #}}}
         if winnr('l') != curwin
             keys = key == 'h'
-                ?     "\<c-w>3<"
-                :     "\<c-w>3>"
+                ?     "\<C-W>3<"
+                :     "\<C-W>3>"
         else
             keys = key == 'h'
-                ?     "\<c-w>3>"
-                :     "\<c-w>3<"
+                ?     "\<C-W>3>"
+                :     "\<C-W>3<"
         endif
 
     else
         if winnr('j') != curwin
             keys = key == 'k'
-                ?     "\<c-w>3-"
-                :     "\<c-w>3+"
+                ?     "\<C-W>3-"
+                :     "\<C-W>3+"
         else
             keys = key == 'k'
-                ?     "\<c-w>3+"
-                :     "\<c-w>3-"
+                ?     "\<C-W>3+"
+                :     "\<C-W>3-"
         endif
     endif
 
@@ -137,9 +137,9 @@ def window#terminalClose() #{{{2
         return
     endif
     var curwin: number = win_getid()
-    noa bufwinid(term_buffer)->win_gotoid()
-    noa window#quit#main()
-    noa win_gotoid(curwin)
+    noautocmd bufwinid(term_buffer)->win_gotoid()
+    noautocmd window#quit#main()
+    noautocmd win_gotoid(curwin)
 enddef
 
 def window#terminalOpen() #{{{2
@@ -154,11 +154,11 @@ def window#terminalOpen() #{{{2
 
     var how_to_open: string = mod .. ' terminal'
 
-    var resize: string = mod =~ '^vert'
-        ?     ' | vert resize 30 | resize 30'
+    var resize: string = mod =~ '^vertical'
+        ?     ' | vertical resize 30 | resize 30'
         :     ''
 
-    exe printf('exe %s %s', string(how_to_open), resize)
+    execute printf('execute %s %s', string(how_to_open), resize)
 enddef
 
 def window#zoomToggle() #{{{2
@@ -167,7 +167,7 @@ def window#zoomToggle() #{{{2
     endif
 
     if exists('t:zoom_restore') && win_getid() == t:zoom_restore.winid
-        exe get(t:zoom_restore, 'cmd', '')
+        execute get(t:zoom_restore, 'cmd', '')
         unlet! t:zoom_restore
     else
         var cmd: string = winrestcmd()
