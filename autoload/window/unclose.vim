@@ -1,8 +1,5 @@
 vim9script noclear
 
-if exists('loaded') | finish | endif
-var loaded = true
-
 # Init {{{1
 
 var undo_layouts: list<dict<any>>
@@ -149,15 +146,13 @@ def ApplyLayout(layout: list<any>) #{{{2
         endfor
 
         # recurse on child windows
-        len(winids)
-            ->range()
-            ->mapnew((i: number, _) => {
-                # focus a recreated window
-                winids[i]->win_gotoid()
-                # and load  the buffer  it displayed,  or split  it again  if it
-                # contained child windows
-                layout[1][i]->ApplyLayout()
-            })
+        for i: number in len(winids)->range()
+            # focus a recreated window
+            winids[i]->win_gotoid()
+            # and load  the buffer  it displayed,  or split  it again  if it
+            # contained child windows
+            layout[1][i]->ApplyLayout()
+        endfor
     endif
 enddef
 

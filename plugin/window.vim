@@ -457,41 +457,41 @@ def SetWindowHeight() #{{{2
     # keep that in mind.
     #}}}
     var scrolloff_save: number = &scrolloff | noautocmd &scrolloff = 0
-    special_windows
-        ->mapnew((_, v: list<number>) => {
-            # Necessary to prevent the command-line's height from increasing.{{{
-            #
-            # If there's no  window above nor below  the current window, and  we set its
-            # height to a few lines only, then the command-line's height increases.
-            #
-            # Try this to understand:
-            #
-            #     10wincmd _
-            #}}}
-            if HasNeighborAboveOrBelow(v[0])
-            # Necessary to prevent a regular window from being unmaximized if a special window is on the same row.{{{
-            #
-            #     $ vim -S <(cat <<'EOF'
-            #         vim9script
-            #         writefile(['#!/bin/bash', '', 'name=123'], '/tmp/sh.sh')
-            #         edit /tmp/sh.sh
-            #         split
-            #         # run shellcheck(1) on the current script,
-            #         # put the errors in the location list,
-            #         # open the location window (in a vertical split)
-            #         feedkeys('|c', 'x')
-            #         # focus the regular window on the right
-            #         wincmd l
-            #     EOF
-            #     )
-            #
-            # Without this  condition, the  regular window  in the  bottom right
-            # corner is minimized; I think we want it to be maximized.
-            #}}}
-            && !OnSameRow(v[0])
-                FixSpecialWindow(v)
-            endif
-        })
+    for l: list<number> in special_windows
+        # Necessary to prevent the command-line's height from increasing.{{{
+        #
+        # If there's no  window above nor below  the current window, and  we set its
+        # height to a few lines only, then the command-line's height increases.
+        #
+        # Try this to understand:
+        #
+        #     :10 wincmd _
+        #}}}
+        if HasNeighborAboveOrBelow(l[0])
+        # Necessary to prevent a regular window from being unmaximized if a special window is on the same row.{{{
+        #
+        #     $ vim -S <(cat <<'EOF'
+        #         vim9script
+        #         ['#!/bin/bash', '', 'name=123']
+        #             ->writefile( '/tmp/sh.sh')
+        #         edit /tmp/sh.sh
+        #         split
+        #         # run shellcheck(1) on the current script,
+        #         # put the errors in the location list,
+        #         # open the location window (in a vertical split)
+        #         feedkeys('|c', 'x')
+        #         # focus the regular window on the right
+        #         wincmd l
+        #     EOF
+        #     )
+        #
+        # Without this  condition, the  regular window  in the  bottom right
+        # corner is minimized; I think we want it to be maximized.
+        #}}}
+        && !OnSameRow(l[0])
+            FixSpecialWindow(l)
+        endif
+    endfor
     noautocmd &scrolloff = scrolloff_save
 enddef
 
@@ -623,8 +623,8 @@ MapMeta('G', '<Cmd>call window#popup#scroll("G")<CR>', 'n', 'u')
 # And the mapping in itself can  be confusing to understand/debug; I much prefer
 # a mapping where the lhs is not repeated in the rhs.
 #}}}
-nmap <unique> <Space>q <Plug>(my_quit)
-nnoremap <unique> <Plug>(my_quit) <Cmd>call window#quit#main()<CR>
+nmap <unique> <Space>q <Plug>(my-quit)
+nnoremap <unique> <Plug>(my-quit) <Cmd>call window#quit#main()<CR>
 xnoremap <unique> <Space>q <C-\><C-N><Cmd>call window#quit#main()<CR>
 nnoremap <unique> <Space>Q <Cmd>quitall!<CR>
 xnoremap <unique> <Space>Q <Cmd>quitall!<CR>
@@ -680,20 +680,20 @@ nnoremap <unique> <C-W>L <Cmd>call window#disableWrapWhenMovingToVertSplit('L')<
 #    │ gF │ tabpage, taking into account line indicator like `:123`      │
 #    └────┴──────────────────────────────────────────────────────────────┘
 #}}}
-nnoremap <C-W>f <C-W>fzv
-nnoremap <C-W>F <C-W>Fzv
+nnoremap <unique> <C-W>f <C-W>fzv
+nnoremap <unique> <C-W>F <C-W>Fzv
 
-nnoremap <C-W>gf <C-W>gfzv
-nnoremap <C-W>gF <C-W>gFzv
-nnoremap <C-W>GF <C-W>GFzv
+nnoremap <unique> <C-W>gf <C-W>gfzv
+nnoremap <unique> <C-W>gF <C-W>gFzv
+nnoremap <unique> <C-W>GF <C-W>GFzv
 # easier to press `ZGF` than `ZgF`
 
-xnoremap <C-W>f <C-W>fzv
-xnoremap <C-W>F <C-W>Fzv
+xnoremap <unique> <C-W>f <C-W>fzv
+xnoremap <unique> <C-W>F <C-W>Fzv
 
-xnoremap <C-W>gf <C-W>gfzv
-xnoremap <C-W>gF <C-W>gFzv
-xnoremap <C-W>GF <C-W>GFzv
+xnoremap <unique> <C-W>gf <C-W>gfzv
+xnoremap <unique> <C-W>gF <C-W>gFzv
+xnoremap <unique> <C-W>GF <C-W>GFzv
 
 # TODO:
 # Implement a `<C-w>F` visual mapping which would take into account a line address.
@@ -748,10 +748,6 @@ nnoremap <unique> zp <Cmd>call window#popup#closeAll()<CR>
 # left control with our left pinky.
 # That's 2 pinkys, on different hands; too awkward.
 #}}}
-# Why `<Plug>` mappings?{{{
-#
-# Useful to make them repeatable from another script, via functions provided by `vim-submode`.
-#}}}
 nmap <unique> z<C-H> <Plug>(window-resize-h)
 nmap <unique> z<C-J> <Plug>(window-resize-j)
 nmap <unique> z<C-K> <Plug>(window-resize-k)
@@ -781,11 +777,11 @@ nnoremap <unique> zk <Cmd>aboveleft split<CR>
 #
 #     nnoremap <C-W><CR> <Cmd>echo 'hello'<CR>
 #     nnoremap Z <C-W>
-#     " press 'Z cr': doesn't work ✘
+#     # press 'Z cr': doesn't work ✘
 #
 #     nnoremap <C-W><CR> <Cmd>echo 'hello'<CR>
 #     nmap Z <C-W>
-#     " press 'Z cr': works ✔
+#     # press 'Z cr': works ✔
 #
 # Indeed, once  `Z` has  been expanded into  `C-w`, we might  need to  expand it
 # *further* for custom mappings using `C-w` in their lhs.
@@ -810,8 +806,8 @@ nmap <unique> ZQ <Space>q
 
 # If we press `ZZ`, Vim will remap the keys into `C-w Z`, which doesn't do anything.
 # We need to restore `ZZ` original behavior.
-nmap ZZ <Plug>(my_ZZ_update)<Plug>(my_quit)
-nnoremap <Plug>(my_ZZ_update) <Cmd>update<CR>
+nmap ZZ <Plug>(my-ZZ-update)<Plug>(my-quit)
+nnoremap <Plug>(my-ZZ-update) <Cmd>update<CR>
 # }}}1
 # Options {{{1
 
@@ -850,7 +846,7 @@ nnoremap <Plug>(my_ZZ_update) <Cmd>update<CR>
 #
 #     $ vim +'helpgrep Arthur!'
 #     :resize 1
-#     " press Enter
+#     # press Enter
 #
 # Indeed, Vim tries to split the qf window to display the entry.
 # But if  the window is only  1 line high, and  Vim can't resize any  window, it
@@ -858,10 +854,10 @@ nnoremap <Plug>(my_ZZ_update) <Cmd>update<CR>
 #
 # MWE:
 #
-#     $ vim -Nu NONE +'set noequalalways' +'autocmd QuickFixCmdPost * botright cwindow2' +'helpg readnews'
+#     $ vim -Nu NONE +'set noequalalways' +'autocmd QuickFixCmdPost * botright cwindow 2' +'helpgrep readnews'
 #     E36: Not enough room˜
 #
-#     $ vim -Nu NONE +'set noequalalways | :2 split |split'
+#     $ vim -Nu NONE +'set noequalalways | :2 split | split'
 #     E36: Not enough room˜
 #
 # In the last example, the final `:split` raises `E36`, because:
