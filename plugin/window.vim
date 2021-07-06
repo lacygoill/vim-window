@@ -591,16 +591,16 @@ nnoremap <unique> <C-L> <Cmd>call window#navigate('l')<CR>
 
 # M-[hjkl] du gg G     scroll popup (or preview) window {{{2
 
-MapMeta('h', '<Cmd>call window#popup#scroll("h")<CR>', 'n', 'u')
-MapMeta('j', '<Cmd>call window#popup#scroll("j")<CR>', 'n', 'u')
-MapMeta('k', '<Cmd>call window#popup#scroll("k")<CR>', 'n', 'u')
-MapMeta('l', '<Cmd>call window#popup#scroll("l")<CR>', 'n', 'u')
+MapMeta('nnoremap <unique> <M-H> <Cmd>call window#popup#scroll("h")<CR>')
+MapMeta('nnoremap <unique> <M-J> <Cmd>call window#popup#scroll("j")<CR>')
+MapMeta('nnoremap <unique> <M-K> <Cmd>call window#popup#scroll("k")<CR>')
+MapMeta('nnoremap <unique> <M-L> <Cmd>call window#popup#scroll("l")<CR>')
 
-MapMeta('d', '<Cmd>call window#popup#scroll("C-d")<CR>', 'n', 'u')
-MapMeta('u', '<Cmd>call window#popup#scroll("C-u")<CR>', 'n', 'u')
+MapMeta('nnoremap <unique> <M-D> <Cmd>call window#popup#scroll("C-d")<CR>')
+MapMeta('nnoremap <unique> <M-U> <Cmd>call window#popup#scroll("C-u")<CR>')
 
-MapMeta('g', '<Cmd>call window#popup#scroll("gg")<CR>', 'n', 'u')
-MapMeta('G', '<Cmd>call window#popup#scroll("G")<CR>', 'n', 'u')
+MapMeta('nnoremap <unique> <M-G> <Cmd>call window#popup#scroll("gg")<CR>')
+MapMeta('nnoremap <unique> <M-S-G> <Cmd>call window#popup#scroll("G")<CR>')
 
 # SPC (prefix) {{{2
 
