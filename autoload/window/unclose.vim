@@ -112,7 +112,7 @@ def Winid2bufnr(layout: list<any>) #{{{2
     if layout[0] == 'leaf'
         layout[1] = winbufnr(layout[1])
     else
-        for child_layout in layout[1]
+        for child_layout: list<any> in layout[1]
             Winid2bufnr(child_layout)
         endfor
     endif
@@ -137,9 +137,9 @@ def ApplyLayout(layout: list<any>) #{{{2
 
         # recreate windows for a row or column of the original layout, and save their ids
         var winids: list<number> = [win_getid()]
-        for child_layout in layout[1][1 :]
-        #                            ├───┘{{{
-        #                            └ split n-1 times
+        for child_layout: list<any> in layout[1][1 :]
+        #                                       ├───┘{{{
+        #                                       └ split n-1 times
         #}}}
             execute split_method
             winids += [win_getid()]
